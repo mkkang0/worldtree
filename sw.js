@@ -1,6 +1,6 @@
 // 오프라인용 캐시. 파일을 고쳐서 다시 배포할 때는 CACHE 숫자를 올린다.
 // 새 파일을 만들면 FILES에도 추가한다.
-const CACHE = 'worldtree-v3';
+const CACHE = 'worldtree-v4';
 const FILES = [
   './',
   'index.html',
@@ -64,8 +64,14 @@ const FILES = [
   'js/ui/icons.js',
 ];
 
+// cache: 'reload' = 브라우저 HTTP 캐시를 건너뛰고 서버에서 새로 받는다.
+// (GitHub Pages는 파일을 10분간 캐시하게 해서, 이게 없으면 새 버전 캐시에 예전 파일이 담길 수 있다)
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches.open(CACHE)
+      .then((c) => c.addAll(FILES.map((f) => new Request(f, { cache: 'reload' }))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', (e) => {
@@ -81,5 +87,9 @@ self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
-  e.respondWith(caches.match(e.request, { ignoreSearch: true }).then((hit) => hit || fetch(e.request)));
+  e.respondWith(
+    caches.open(CACHE)
+      .then((c) => c.match(e.request, { ignoreSearch: true }))
+      .then((hit) => hit || fetch(e.request))
+  );
 });
