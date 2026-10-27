@@ -97,6 +97,8 @@
 .mission .chk .ic { width: 14px; height: 14px; }
 .mission.on { background: var(--primary-soft); border-color: transparent; }
 .mission.on .chk { background: var(--primary); border-color: var(--primary); }
+.missions + .tiny + .save-note, .save-note { color: var(--accent); font-weight: 600; }
+.missions ~ .row { margin-top: 12px; }
 
 /* ---------- 상점 ---------- */
 .preview-scene { width: 72%; margin: 0 auto; border-radius: 22px; overflow: hidden; box-shadow: 0 12px 30px rgba(30, 40, 30, .16); border: 1px solid var(--line); }

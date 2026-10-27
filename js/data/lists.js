@@ -29,8 +29,8 @@ export const INTENSITIES = [
 
 export const DEFAULT_MISSIONS = [
   { id: 'water', emoji: '🥤', label: '물 2L 마시기' },
-  { id: 'veggie', emoji: '🥦', label: '채소 한 접시 먹기' },
-  { id: 'breakfast', emoji: '🍳', label: '아침 챙겨 먹기' },
+  { id: 'nosnack', emoji: '🙅', label: '하루 동안 간식 안 먹기' },
+  { id: 'dinner', emoji: '🥗', label: '건강한 저녁 먹기' },
   { id: 'stretch', emoji: '🧘', label: '스트레칭 10분' },
   { id: 'sleep', emoji: '🌙', label: '7시간 이상 자기' },
 ];

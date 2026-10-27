@@ -73,7 +73,7 @@ textarea { resize: vertical; font-family: ui-monospace, Menlo, monospace; font-s
 .btn.gold { background: linear-gradient(180deg, #d9bd7a, #b48c43); color: #1d1a10; }
 .btn.danger { background: var(--danger); color: #fff; }
 .btn.small { min-height: 38px; padding: 8px 12px; font-size: .84rem; border-radius: 12px; }
-.btn.fit { width: auto; }
+.btn.fit { width: auto; flex: none; white-space: nowrap; }
 .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 .btn .cur .ic { color: inherit; }
 .card .btn + .btn, .card .row + .btn, .card .bar + .btn, .card p + .btn, .card form + .btn { margin-top: 10px; }
