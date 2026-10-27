@@ -2,6 +2,7 @@
 import { STAGES, LAST_STAGE } from '../core/scoring.js';
 import { TREES, treeById } from '../data/trees.js';
 import { renderScene } from '../art/scene.js';
+import { JOURNEY_DAYS } from '../core/config.js';
 import { esc, backButton, title } from '../ui/dom.js';
 import { journey } from '../ui/components.js';
 
@@ -12,7 +13,7 @@ export function view(state) {
     <header class="page-head"><h1>세계수의 숲</h1><span class="tiny">${done.size} / ${TREES.length} 완성</span></header>
     <section class="card">
       ${title('세계수 도감', { iconName: 'forest' })}
-      <p class="tiny">30일의 여정을 마친 세계수는 이곳에 심어져요. 포인트와 아이템은 그대로 이어져요.</p>
+      <p class="tiny">${JOURNEY_DAYS}일의 여정을 마친 세계수는 이곳에 심어져요. 포인트와 아이템은 그대로 이어져요.</p>
       <div class="grid">${TREES.map((t) => {
         const have = done.has(t.id);
         const growing = state.plant.species === t.id;

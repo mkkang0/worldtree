@@ -38,7 +38,27 @@ export function journey(state) {
   };
 }
 
+// 시험 D-day. 시험일이 없거나 지났으면 null.
+export function examDday(state) {
+  const date = state.settings.examDate;
+  if (!date) return null;
+  const left = daysBetween(todayKey(), date);
+  if (left < 0) return null;
+  const [, m, d] = date.split('-').map(Number);
+  return { left, label: left === 0 ? 'D-DAY' : `D-${left}`, date: `${m}월 ${d}일` };
+}
+
+// D-day 작은 배지 (시험일이 없으면 빈 문자열)
+export function ddayBadge(state) {
+  const dd = examDday(state);
+  if (!dd) return '';
+  return `<span class="dday ${dd.left === 0 ? 'today' : ''}">${dd.left === 0 ? '오늘 시험 · 화이팅!' : `시험까지 <b>${dd.label}</b>`}</span>`;
+}
+
 export function greeting(state) {
+  const dd = examDday(state);
+  if (dd?.left === 0) return '오늘 시험이에요. 그동안 정말 잘했어요!';
+  if (dd?.left === 1) return '내일이 시험이에요. 오늘은 푹 자요';
   const h = nowHour();
   const hello =
     h < 5 ? '별이 깊은 밤이에요. 푹 쉬어요' : h < 11 ? '좋은 아침이에요. 세계수가 기지개를 켜요' : h < 17 ? '오늘도 와 줘서 고마워요' : h < 21 ? '수고했어요. 노을이 예뻐요' : '오늘 하루도 고생 많았어요';

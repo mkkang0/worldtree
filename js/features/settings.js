@@ -17,6 +17,7 @@ export function view(state) {
         <label>안정시 심박수 (선택, 0이면 사용 안 함)<input name="restHr" type="number" inputmode="numeric" min="0" max="120" value="${s.restHr}"></label>
         <p class="tiny">안정시 심박을 넣으면 심박 예비량(카르보넨) 방식으로 구간을 계산해서 더 개인에게 맞아요.</p>
         <label class="check"><input type="checkbox" name="studyEnabled" ${s.studyEnabled ? 'checked' : ''}> 공부 기록 기능 쓰기 (공부 탭 · 별빛)</label>
+        <label>시험일 (비워두면 D-day를 보여주지 않아요)<input name="examDate" type="date" value="${s.examDate}"></label>
         <label class="check"><input type="checkbox" name="sound" ${s.sound ? 'checked' : ''}> 효과음 켜기</label>
         <label class="check"><input type="checkbox" name="bigText" ${s.bigText ? 'checked' : ''}> 글자 크게 보기</label>
         <button class="btn" type="submit">저장</button>
@@ -66,6 +67,7 @@ export const actions = {
     s.age = clampInt(form.age.value, 30, 10, 90);
     s.restHr = clampInt(form.restHr.value, 0, 0, 120);
     s.studyEnabled = form.studyEnabled.checked;
+    s.examDate = /^\d{4}-\d{2}-\d{2}$/.test(form.examDate.value) ? form.examDate.value : '';
     s.sound = form.sound.checked;
     s.bigText = form.bigText.checked;
     commit();

@@ -1,7 +1,7 @@
 {
-  "name": "세계수 30일",
-  "short_name": "세계수 30일",
-  "description": "운동하고, 잘 먹고, 공부하며 30일 동안 세계수를 키워요",
+  "name": "세계수 21일",
+  "short_name": "세계수 21일",
+  "description": "운동하고, 잘 먹고, 공부하며 21일 동안 세계수를 키워요",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

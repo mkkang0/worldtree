@@ -1,14 +1,14 @@
 // 홈: 세계수 장면, 여정 정보, 돌보기, 오늘 요약, 세계수 완성
 import { ctx, rerender } from '../app/context.js';
 import { gain, settle } from '../app/wallet.js';
-import { CARE_REWARD, DAILY_SUN_CAP, DAILY_STAR_CAP } from '../core/config.js';
+import { CARE_REWARD, DAILY_SUN_CAP, DAILY_STAR_CAP, JOURNEY_DAYS } from '../core/config.js';
 import { todayKey } from '../core/dates.js';
 import { LAST_STAGE, plantXp, stageOf } from '../core/scoring.js';
 import { earnedOn, minutesOn, missionsDone, allMissions, needsRest, studyMinOn, starsOn, streakOf } from '../core/records.js';
 import { TREES, treeById } from '../data/trees.js';
 import { esc, bar, money, title } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
-import { sceneSvg, journey, greeting, wallet, questsCard, weekCard, treePicker } from '../ui/components.js';
+import { sceneSvg, journey, greeting, wallet, questsCard, weekCard, treePicker, ddayBadge } from '../ui/components.js';
 import { toast, chime, confetti } from '../ui/effects.js';
 
 export function view(state, ui) {
@@ -21,7 +21,7 @@ export function view(state, ui) {
       <div class="card hero-info">
         <div class="hero-top">
           <div><span class="eyebrow">${j.tree.label} · ${j.day}일째</span><h1>${j.stageName}</h1></div>
-          <span class="spirit-tag">정령 <b>${esc(state.settings.name)}</b></span>
+          <div class="hero-side">${ddayBadge(state)}<span class="spirit-tag">정령 <b>${esc(state.settings.name)}</b></span></div>
         </div>
         ${bar(j.ratio)}
         <p class="tiny">${j.nextName ? `다음 '${j.nextName}'까지 ${j.remain}점 · ${j.total}일의 여정` : '세계수가 완성됐어요. 숲에 심고 새로운 세계수를 키워요'}</p>
@@ -125,6 +125,6 @@ export const actions = {
     rerender();
     confetti(['✦', '🌿', '✨', '💛']);
     chime('level');
-    toast('세계수를 숲에 심었어요. 새로운 30일을 시작해요');
+    toast(`세계수를 숲에 심었어요. 새로운 ${JOURNEY_DAYS}일을 시작해요`);
   },
 };

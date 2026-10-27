@@ -19,7 +19,7 @@ export function defaultState() {
     version: 4,
     me: newId(),
     onboarded: false,
-    settings: { age: 30, name: DEFAULT_SPIRIT_NAME, restHr: 0, sound: true, bigText: false, cheer: '', studyEnabled: false },
+    settings: { age: 30, name: DEFAULT_SPIRIT_NAME, restHr: 0, sound: true, bigText: false, cheer: '', studyEnabled: false, examDate: '' }, // examDate: 'YYYY-MM-DD' 또는 ''
     // 지갑과 성장
     xp: 0,
     sun: 0, // 햇살 (운동)
@@ -71,6 +71,7 @@ function sanitize(raw) {
     bigText: st.bigText === true,
     cheer: str(st.cheer, '', 30),
     studyEnabled: st.studyEnabled === true,
+    examDate: /^\d{4}-\d{2}-\d{2}$/.test(st.examDate) ? st.examDate : '',
   };
 
   s.xp = Math.max(0, num(raw.xp, 0));

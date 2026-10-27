@@ -10,7 +10,7 @@ import { SUBJECTS, FOCUS_LEVELS, byId } from '../data/lists.js';
 import { newId } from '../data/store.js';
 import { esc, bar, radioChips, stat, money, title } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
-import { barChart } from '../ui/components.js';
+import { barChart, ddayBadge } from '../ui/components.js';
 import { toast, chime, confetti } from '../ui/effects.js';
 
 const [MIN_MIN, MAX_MIN] = STUDY_MIN_RANGE;
@@ -44,7 +44,7 @@ export function view(state) {
   const week = weekSummary(state);
   const started = timer && new Date(timer.start).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' });
   return `
-    <header class="page-head"><h1>공부</h1><span class="tiny">집중한 만큼 별빛이 내려요</span></header>
+    <header class="page-head"><h1>공부</h1>${ddayBadge(state) || '<span class="tiny">집중한 만큼 별빛이 내려요</span>'}</header>
     <section class="card timer">
       <span class="eyebrow">STUDY TIMER</span>
       <div class="timer-ring ${timer ? 'running' : ''}">
