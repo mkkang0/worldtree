@@ -20,6 +20,7 @@ export function view(state, ui) {
     <header class="garden-top">
       <button class="x" data-act="garden.close" aria-label="정원 닫기">${icon('left')}</button>
       <div class="grow"><b>나의 정원</b><span class="tiny">모은 아이템 ${state.owned.length} / ${ITEMS.length}</span></div>
+      <button class="x island-go" data-act="island.open" aria-label="나의 섬으로">🏝️</button>
       <button class="x" data-act="photo.make" aria-label="사진으로 저장">${icon('camera')}</button>
     </header>
     <div class="garden-stage">

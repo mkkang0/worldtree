@@ -18,6 +18,7 @@ import * as onboarding from '../features/onboarding.js';
 import * as photo from '../features/photo.js';
 import * as garden from '../features/garden.js';
 import * as games from '../features/games.js';
+import * as island from '../features/island.js';
 
 // 아래 탭. icon은 ui/icons.js의 이름. show가 있으면 조건이 맞을 때만 보인다.
 const TABS = [
@@ -38,6 +39,8 @@ const MODALS = {
   complete: home.completeModal,
   stageup: home.stageUpModal,
   stages: home.stagesModal,
+  build: island.buildModal,
+  lot: island.lotModal,
   photo: photo.photoModal,
   'study-finish': study.finishModal,
   'study-edit': study.editModal,
@@ -51,6 +54,7 @@ const visibleTabs = (state) => TABS.filter((t) => !t.show || t.show(state));
 function currentPage() {
   const { state, ui } = ctx;
   if (ui.tab === 'garden') return garden; // 나의 정원 (아래 탭 없는 전체 화면)
+  if (ui.tab === 'island') return island; // 나의 섬 (전체 화면)
   if (ui.tab === 'more' && SUB_PAGES[ui.sub]) return SUB_PAGES[ui.sub];
   const tab = visibleTabs(state).find((t) => t.id === ui.tab);
   if (!tab) ui.tab = 'home';
@@ -69,7 +73,7 @@ function applyPrefs(state) {
 
 // 공부 중일 때 다른 탭 위에 떠 있는 띠
 function timerBar(state, ui) {
-  if (!state.study.timer || ui.tab === 'study' || ui.tab === 'garden') return '';
+  if (!state.study.timer || ui.tab === 'study' || ui.tab === 'garden' || ui.tab === 'island') return '';
   return `<button class="timerbar" data-act="nav.tab" data-arg="study">${icon('timer')} 공부 중 <b data-timer>${study.timerText(state)}</b>${icon('right')}</button>`;
 }
 
@@ -93,7 +97,7 @@ export function render() {
   showCelebration(ui);
   const page = currentPage();
   const main = document.getElementById('view');
-  document.body.classList.toggle('immersive', ui.tab === 'garden');
+  document.body.classList.toggle('immersive', ui.tab === 'garden' || ui.tab === 'island');
 
   // 화면을 옮길 때만 등장 애니메이션 (css/motion.css main.entering)
   const route = `${ui.tab}/${ui.sub}`;
@@ -107,6 +111,7 @@ export function render() {
     .map((t) => `<button data-act="nav.tab" data-arg="${t.id}" class="${t.id === ui.tab ? 'on' : ''}" aria-label="${t.label}" ${t.id === ui.tab ? 'aria-current="page"' : ''}>${icon(t.icon)}<small>${t.label}</small></button>`)
     .join('');
   main.innerHTML = page.view(state, ui);
+  page.mounted?.(ui); // 그린 뒤 할 일 (예: 섬 지도 가운데로)
   document.getElementById('timer-slot').innerHTML = timerBar(state, ui);
   const modalEl = document.getElementById('modal');
   modalEl.innerHTML = MODALS[ui.modal] ? MODALS[ui.modal](state, ui) : '';
@@ -114,7 +119,7 @@ export function render() {
 }
 
 export function go(tab, sub = '') {
-  Object.assign(ctx.ui, { tab, sub, bubble: '', mealDay: '', calDay: '', more: {}, quiz: null });
+  Object.assign(ctx.ui, { tab, sub, bubble: '', mealDay: '', calDay: '', more: {}, quiz: null, islandScroll: null });
   if (tab !== 'shop') ctx.ui.preview = {};
   rerender();
   window.scrollTo(0, 0);
@@ -143,5 +148,5 @@ export const actions = {
 export const ALL_ACTIONS = Object.assign(
   {},
   actions,
-  ...[home, workout, study, meal, shop, more, goals, stats, forest, friends, settings, onboarding, photo, garden, games].map((m) => m.actions)
+  ...[home, workout, study, meal, shop, more, goals, stats, forest, friends, settings, onboarding, photo, garden, games, island].map((m) => m.actions)
 );

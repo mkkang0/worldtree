@@ -42,6 +42,10 @@ export const ACHIEVEMENTS = [
   { id: 'study100h', emoji: '🏛️', name: '백 시간의 탑', desc: '누적 공부 100시간', check: (s) => totalStudyMin(s) >= 6000 },
   { id: 'subjects2', emoji: '🌏', name: '두 과목 탐험가', desc: '두 과목을 각각 10시간 이상', check: (s) => deepSubjects(s) >= 2 },
   { id: 'goal7', emoji: '🎯', name: '목표 지킴이', desc: '과목 하루 목표를 7번 채우기', check: (s) => goalDays(s) >= 7 },
+  // 나의 섬
+  { id: 'island1', emoji: '🏠', name: '첫 건물', desc: '섬에 건물 하나 완성', check: (s) => s.island.lots.some((l) => l && l.done) },
+  { id: 'island4', emoji: '🏘️', name: '섬마을', desc: '섬에 건물 4개 완성', check: (s) => s.island.lots.filter((l) => l && l.done).length >= 4 },
+  { id: 'island8', emoji: '🏝️', name: '섬나라의 시작', desc: '섬의 자리 8곳을 모두 채우기', check: (s) => s.island.lots.filter((l) => l && l.done).length >= 8 },
   // 미니게임
   { id: 'kana1', emoji: '🎌', name: '가나 첫걸음', desc: '가나 퀴즈 한 판', check: (s) => s.kana.plays >= 1 },
   { id: 'kana-perfect', emoji: '💮', name: '꽃동그라미', desc: '가나 퀴즈 만점', check: (s) => s.kana.perfect >= 1 },

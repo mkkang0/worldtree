@@ -3,6 +3,7 @@
 import { SLOTS, HUES, itemById } from './items/index.js';
 import { TREES } from './trees.js';
 import { DEFAULT_SUBJECTS } from './lists.js';
+import { buildingById } from './buildings.js';
 import { todayKey } from '../core/dates.js';
 
 const KEY = 'sprout-diary-v1'; // 이름이 바뀌어도 예전 데이터를 이어 쓰기 위해 그대로 둔다
@@ -73,6 +74,8 @@ export function defaultState() {
     quests: {}, // { 'YYYY-MM-DD': { claimed: [questId] } }
     weekClaims: [], // 보상 받은 주 시작일
     achievements: {}, // { id: 'YYYY-MM-DD' }
+    // 나의 섬: 건물 자리 8곳 (features/island.js, core/island.js)
+    island: { lots: Array(8).fill(null) },
     // 미니게임: 가나 퀴즈 (features/games.js)
     kana: { stats: {}, plays: 0, best: 0, perfect: 0, day: null, prefs: { script: 'hira', groups: ['basic'], dir: 'both', count: 10 } },
     // 함께하기
@@ -213,6 +216,22 @@ function sanitize(raw) {
       cheer: str(f.cheer, '', 30),
       updated: str(f.updated, '', 10),
     }));
+  const lots = arr(obj(raw.island).lots);
+  s.island = {
+    lots: Array.from({ length: 8 }, (_, i) => {
+      const l = lots[i];
+      if (!l || typeof l !== 'object' || !buildingById(l.b)) return null;
+      return { b: l.b, done: l.done === true, progress: Math.max(0, num(l.progress, 0)), ...(isDate(l.date) ? { date: l.date } : {}) };
+    }),
+  };
+  // 짓는 중인 건물은 하나만
+  let busy = false;
+  s.island.lots.forEach((l, i) => {
+    if (l && !l.done) {
+      if (busy) s.island.lots[i] = null;
+      busy = true;
+    }
+  });
   const kana = obj(raw.kana);
   const prefs = obj(kana.prefs);
   const groups = strs(prefs.groups, 5).filter((g) => ['basic', 'voiced', 'combo'].includes(g));

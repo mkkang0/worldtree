@@ -4,7 +4,8 @@ import { xpOf, stageOf, plantXp } from '../core/scoring.js';
 import { checkAchievements } from '../core/achievements.js';
 import { ACHIEVEMENT_REWARD, EXCHANGE_RATE } from '../core/config.js';
 import { todayKey } from '../core/dates.js';
-import { toast, chime } from '../ui/effects.js';
+import { toast, chime, confetti } from '../ui/effects.js';
+import { addWork } from '../core/island.js';
 
 const KEYS = ['sun', 'water', 'star'];
 
@@ -15,6 +16,15 @@ export function gain(r = {}) {
   KEYS.forEach((k) => (s[k] += r[k] || 0));
   s.xp += xpOf(r);
   const after = stageOf(plantXp(s));
+  // 나의 섬: 받은 성장 점수만큼 짓는 중인 건물이 올라간다
+  const built = addWork(s, xpOf(r));
+  if (built) {
+    setTimeout(() => {
+      toast(`🏝️ ${built.name} 완성! 섬에 가서 보세요`);
+      chime('level');
+      confetti([built.emoji, '✨', '🌿']);
+    }, 700);
+  }
   // 자랐으면 화면이 다시 그려질 때 축하 창을 띄운다 (app/render.js showCelebration)
   if (after > before) ctx.ui.celebrate = Math.max(ctx.ui.celebrate ?? -1, after);
 }

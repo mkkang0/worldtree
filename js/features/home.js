@@ -7,6 +7,8 @@ import { LAST_STAGE, STAGES, plantXp, stageOf } from '../core/scoring.js';
 import { earnedOn, minutesOn, missionsDone, allMissions, needsRest, studyMinOn, starsOn, streakOf, studyMinBySubjectOn, recentXpPerDay } from '../core/records.js';
 import { LINES, STAGE_LINES, fill } from '../data/lines.js';
 import { activeSubjects } from '../data/lists.js';
+import { buildingById, islandLevel } from '../data/buildings.js';
+import { builtCount, buildingNow } from '../core/island.js';
 import { TREES, treeById } from '../data/trees.js';
 import { esc, bar, money, title } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
@@ -36,6 +38,7 @@ export function view(state, ui) {
       </div>
     </section>
     ${wallet(state)}
+    ${islandLink(state)}
     ${needsRest(state) ? '<section class="card note">3일 연속 하루 상한까지 달렸어요. 오늘은 스트레칭이나 푹 쉬는 것도 세계수에게 좋아요.</section>' : ''}
     ${todayCard(state)}
     ${questsCard(state, todayKey())}
@@ -109,6 +112,16 @@ export function stagesModal(state) {
     }</p>
     <button class="btn" data-act="modal.close">닫기</button>
   </div>`;
+}
+
+// 홈의 '나의 섬' 바로 가기: 섬 단계와 짓는 중인 건물
+function islandLink(state) {
+  const built = builtCount(state);
+  const now = buildingNow(state);
+  const l = now >= 0 && state.island.lots[now];
+  const b = l && buildingById(l.b);
+  const sub = b ? `${b.emoji} ${b.name} 짓는 중 · ${Math.floor((l.progress / b.work) * 100)}%` : `${islandLevel(built).name} · 건물 ${built} / 8 · 빈 자리에 지어 보세요`;
+  return `<button class="card garden-link" data-act="island.open"><span class="em">🏝️</span><span class="grow"><b>나의 섬</b><span class="tiny">${sub}</span>${b ? bar(l.progress / b.work) : ''}</span>${icon('right')}</button>`;
 }
 
 // 하루 목표를 정한 과목들 (예: 🇯🇵 30/60분 · 🇨🇳 60/60분 ✓)

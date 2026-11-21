@@ -428,3 +428,32 @@ body.immersive main { padding-top: 6px; padding-bottom: calc(28px + env(safe-are
   .stage-portrait svg { max-height: 110px; }
   .garden-stage .scene { height: min(44vh, calc((100vw - 32px) * 1.2)); }
 }
+
+/* ---------- 나의 섬 (features/island.js) — 전체 화면 ---------- */
+.island { display: flex; flex-direction: column; gap: 12px; }
+.island-map { --mh: min(46vh, 340px); overflow-x: auto; overflow-y: hidden; margin: 0 -16px; padding: 0 16px; scrollbar-width: none; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; }
+.island-map::-webkit-scrollbar { display: none; }
+.map-inner { position: relative; height: var(--mh); width: calc(var(--mh) * 900 / 390); border-radius: 24px; overflow: hidden; box-shadow: 0 16px 36px rgba(0, 0, 0, .22); border: 1px solid var(--line); }
+.map-inner > svg { display: block; width: 100%; height: 100%; }
+.map-hint { margin-top: -6px; }
+.lot-btn { position: absolute; width: 66px; height: 84px; transform: translate(-50%, -88%); border: 0; background: none; border-radius: 16px; cursor: pointer; padding: 0; }
+.lot-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.lot-btn.empty:active, .lot-btn.built:active { background: rgba(255, 255, 255, .25); }
+.island-go { font-size: 1.2rem; }
+.grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.bcell { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; border-radius: 14px; background: var(--surface-solid); border: 1px solid var(--line); font-size: .7rem; }
+.bcell .bart svg { width: 100%; height: 58px; display: block; }
+.bcell:not(.on) .bart { filter: grayscale(1) brightness(.5); opacity: .45; }
+.bcell.on { background: var(--accent-soft); }
+.build-list { list-style: none; margin: 12px 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.build-list li { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); }
+.build-list li.has { opacity: .55; }
+.build-list .bart { width: 56px; flex: none; border-radius: 12px; background: linear-gradient(#cfe8f7, #e9f5fb 60%, #8ccc72 60%); }
+.build-list .bart svg { width: 56px; height: 64px; display: block; }
+.build-list b { display: block; font-size: .92rem; }
+.build-list .tiny { display: block; }
+.build-list .btn { width: auto; flex: none; min-width: 84px; }
+.lot-art { width: 46%; margin: 8px auto; border-radius: 18px; background: linear-gradient(#cfe8f7, #e9f5fb 62%, #8ccc72 62%); }
+.lot-art svg { width: 100%; height: auto; display: block; }
+.build-now .bar { height: 8px; }
+.garden-link .bar { margin: 6px 0 0; height: 4px; }

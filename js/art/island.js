@@ -1,0 +1,109 @@
+// 나의 섬 지도: 가로로 넓은 떠 있는 섬. 가운데 세계수, 양옆에 건물 자리 8곳.
+// 크기 900 x 390. 섬 윗면 높이는 islandTop(x). 건물 자리 위치는 LOTS (features/island.js가 눌림 버튼을 같은 자리에 둔다).
+import { nextUid, rng, n, linear, radial, glow, times, hueDefs, tint } from './svg.js';
+import { treeArt } from './tree.js';
+import { leafTree } from './leaves.js';
+import { bloomArt } from './blooms.js';
+import { ornamentArt } from './ornaments.js';
+import { spiritArt } from './spirit.js';
+import { buildingArt, constructionArt } from './buildings.js';
+import { HUES, placed } from '../data/items/index.js';
+
+export const MAP = { w: 900, h: 390 };
+const MID = 450;
+
+// 섬 윗면 높이: 가운데가 조금 높고 양끝으로 내려간다
+export const islandTop = (x) => n(300 + 20 * ((x - MID) / 440) ** 2);
+
+// 건물 자리 (세계수 뿌리를 피해 양옆에 넷씩)
+export const LOTS = [60, 134, 208, 282, 618, 692, 766, 840].map((x) => ({ x, y: islandTop(x) }));
+
+const puff = (x, y, s, o = 0.95) =>
+  `<g transform="translate(${x} ${y}) scale(${s})" opacity="${o}"><ellipse rx="34" ry="13" fill="#fff"/><ellipse cx="-16" cy="-8" rx="16" ry="12" fill="#fff"/><ellipse cx="6" cy="-14" rx="20" ry="16" fill="#fff"/><ellipse cx="22" cy="-5" rx="14" ry="10" fill="#f3f8ff"/><ellipse cx="2" cy="4" rx="30" ry="6" fill="#dce9f5" opacity=".7"/></g>`;
+
+const islet = (x, y, w) =>
+  `<ellipse cx="${x}" cy="${y + 1.5}" rx="${n(w * 1.15)}" ry="${n(w * 0.28)}" fill="#e9ddb0" opacity=".9"/><ellipse cx="${x}" cy="${y}" rx="${w}" ry="${n(w * 0.32)}" fill="#4f9a5a"/><ellipse cx="${n(x - w * 0.25)}" cy="${n(y - w * 0.16)}" rx="${n(w * 0.5)}" ry="${n(w * 0.26)}" fill="#6fb86a"/>`;
+
+function backdrop(uid) {
+  const r = rng('island-map');
+  return (
+    `<defs>${linear(`isk-${uid}`, [[0, '#3f8fd6'], [0.5, '#8cc6ef'], [0.66, '#cfe8f7'], [1, '#e9f5fb']])}${linear(`isea-${uid}`, [[0, '#7cc4e8'], [1, '#2f7fb8']])}</defs>` +
+    `<rect width="${MAP.w}" height="${MAP.h}" fill="url(#isk-${uid})"/>` +
+    glow(`isun-${uid}`, 140, 46, 80, '#fffbe6', 0.9) +
+    `<g class="cloud-pass" style="animation-duration:120s">${puff(80, 70, 1.4)}${puff(560, 50, 1.6)}</g>` +
+    puff(300, 92, 1.1, 0.9) + puff(800, 84, 1.3, 0.9) +
+    `<rect y="200" width="${MAP.w}" height="${MAP.h - 200}" fill="url(#isea-${uid})"/><rect y="200" width="${MAP.w}" height="3" fill="#fff" opacity=".5"/>` +
+    islet(70, 220, 26) + islet(250, 210, 12) + islet(640, 214, 18) + islet(860, 224, 28) + islet(470, 206, 9) +
+    times(20, () => `<ellipse class="shimmer" cx="${n(r() * MAP.w)}" cy="${n(208 + r() * 80)}" rx="${n(3 + r() * 7)}" ry=".7" fill="#fff" opacity=".6" style="animation-delay:-${n(r() * 2.6)}s"/>`) +
+    puff(150, 250, 1, 0.85) + puff(760, 246, 1.1, 0.85)
+  );
+}
+
+function island(uid) {
+  const r = rng('island-ground');
+  let topEdge = '';
+  let cliffEdge = '';
+  for (let x = -10; x <= MAP.w + 10; x += 30) {
+    topEdge += ` L${x} ${islandTop(x)}`;
+    cliffEdge += ` L${x} ${n(islandTop(x) + 12)}`;
+  }
+  const fall = (x, w) => {
+    const y0 = islandTop(x) + 14;
+    return `<path d="M${x} ${y0} q-2 ${n((MAP.h - y0) / 2)} ${-3 - w} ${MAP.h - y0 + 10} h${w * 2 + 3} q0 ${n(-(MAP.h - y0) / 2)} ${-w} ${n(-(MAP.h - y0) - 10)}Z" fill="#eef8ff" opacity=".85" class="shimmer"/>`;
+  };
+  return (
+    `<defs>${linear(`irk-${uid}`, [[0, '#8a6e52'], [0.5, '#6b5440'], [1, '#4a3a2c']])}${linear(`ig-${uid}`, [[0, '#8ccc72'], [1, '#4f8a48']])}</defs>` +
+    // 아래 바위 절벽 (가운데가 깊게)
+    `<path d="M-10 ${n(islandTop(-10) + 12)}${cliffEdge} L${MAP.w + 10} ${n(islandTop(MAP.w + 10) + 30)} Q760 360 600 376 L300 376 Q140 360 -10 ${n(islandTop(-10) + 30)}Z" fill="url(#irk-${uid})"/>` +
+    `<path d="M40 338 Q200 350 330 354 M520 352 Q700 348 860 336 M200 366 Q450 378 700 366" fill="none" stroke="#3d2f24" stroke-width="1.2" opacity=".4"/>` +
+    fall(26, 5) + fall(874, 6) + fall(330, 3) + fall(570, 4) +
+    puff(60, 382, 1.4) + puff(240, 392, 1.6) + puff(450, 396, 1.8) + puff(660, 392, 1.6) + puff(850, 384, 1.4) +
+    // 윗면 풀밭
+    `<path d="M-10 ${islandTop(-10)}${topEdge} L${MAP.w + 10} ${islandTop(MAP.w + 10) + 16} L-10 ${islandTop(-10) + 16}Z" fill="url(#ig-${uid})"/>` +
+    `<path d="M-10 ${islandTop(-10)}${topEdge}" fill="none" stroke="#c4e6a8" stroke-width="1.6" opacity=".75"/>` +
+    times(60, (i) => {
+      const x = n(4 + i * 15 + r() * 6);
+      const y = n(islandTop(x) + 1 + r() * 3);
+      return `<path d="M${x} ${y} q-1.5 -4 -3.5 -6 M${x} ${y} q0 -5 .8 -8 M${x} ${y} q1.4 -3.5 3.2 -5.5" stroke="#cfeaa8" stroke-width=".9" fill="none" stroke-linecap="round" opacity=".7"/>`;
+    }) +
+    times(22, (i) => `<circle cx="${n(r() * MAP.w)}" cy="${n(304 + r() * 10)}" r="1.4" fill="${['#fff', '#ffe08a', '#ffc6d9'][i % 3]}"/>`)
+  );
+}
+
+// 빈 자리 · 잠긴 자리 표시
+const emptyLot = (x, y) =>
+  `<ellipse cx="${x}" cy="${y + 2}" rx="24" ry="6" fill="#ffffff" opacity=".35" stroke="#ffffff" stroke-width="1.4" stroke-dasharray="4 3"/>` +
+  `<g class="float" style="animation-duration:2.6s"><circle cx="${x}" cy="${y - 18}" r="12" fill="#fffaf0" opacity=".92"/><path d="M${x - 6} ${y - 18} h12 M${x} ${y - 24} v12" stroke="#b48c43" stroke-width="2.4" stroke-linecap="round"/></g>`;
+const lockedLot = (x, y) =>
+  `<ellipse cx="${x}" cy="${y + 2}" rx="20" ry="5" fill="#000" opacity=".1"/>` +
+  `<path d="M${x - 14} ${y + 1} q4 -9 9 -3 q4 -8 10 -1 q5 -6 9 4Z" fill="#7a8a6a" opacity=".7"/>` +
+  `<g opacity=".75"><rect x="${x - 5}" y="${y - 16}" width="10" height="8" rx="1.5" fill="#fffaf0"/><path d="M${x - 3} ${y - 16} v-2.5 a3 3 0 0 1 6 0 v2.5" fill="none" stroke="#fffaf0" stroke-width="1.6"/></g>`;
+
+// lots: [{ state: 'built' | 'building' | 'empty' | 'locked', id, ratio }]
+export function islandMap({ growth, stage, tree, equipped = {}, custom = {}, mood = 'calm', lots = [] }) {
+  const uid = nextUid();
+  const one = (slot) => placed(equipped, slot)[0];
+  const t = treeArt({ growth, stage, tree: leafTree(tree, one('leaf')), uid });
+  const ty = islandTop(MID) - 292;
+  const hue = (id) => custom[id]?.hue || 0;
+  const lotArt = LOTS.map(({ x, y }, i) => {
+    const l = lots[i] || { state: 'locked' };
+    if (l.state === 'built') return `<g transform="translate(${x} ${y}) scale(1.25)">${buildingArt(l.id, `${uid}-${i}`)}</g>`;
+    if (l.state === 'building') return `<g transform="translate(${x} ${y}) scale(1.25)">${constructionArt(l.ratio, `${uid}-${i}`)}</g>`;
+    if (l.state === 'empty') return emptyLot(x, y);
+    return lockedLot(x, y);
+  }).join('');
+  return (
+    `<svg viewBox="0 0 ${MAP.w} ${MAP.h}" role="img" aria-label="나의 섬" xmlns="http://www.w3.org/2000/svg">` +
+    hueDefs(uid, HUES) +
+    backdrop(uid) +
+    island(uid) +
+    `<g transform="translate(${MID - 150} ${ty})">` +
+    t.svg +
+    (stage >= 2 ? tint(bloomArt(one('bloom'), t.clusters, uid), uid, hue(one('bloom'))) + tint(ornamentArt(one('ornament'), t.anchors, uid), uid, hue(one('ornament'))) : '') +
+    `</g>` +
+    lotArt +
+    spiritArt({ x: MID + 74, y: islandTop(MID + 74) + 2, scale: 0.5, mood, wardrobe: Object.fromEntries(['hat', 'face', 'neck', 'hand'].map((s) => [s, one(s)])), hues: {}, tree, uid, motion: one('motion'), light: { color: '#fff1d6', wash: 0.06, halo: 0.12 } }) +
+    `</svg>`
+  );
+}

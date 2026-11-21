@@ -5,6 +5,7 @@ import { icon } from '../ui/icons.js';
 
 export function view(state) {
   const entries = [
+    ['island', 'forest', '나의 섬', ''],
     ['games', 'sparkle', '미니게임', `가나 퀴즈 · ${state.kana.plays}판`],
     ['forest', 'forest', '세계수의 숲', `${new Set(state.dex.map((d) => d.species)).size} / ${TREES.length} 완성`],
     ['goals', 'trophy', '퀘스트 · 업적', `업적 ${Object.keys(state.achievements).length} / ${ACHIEVEMENTS.length}`],
@@ -16,7 +17,7 @@ export function view(state) {
     <section class="card"><ul class="menu">${entries
       .map(
         ([id, ic, label, sub]) =>
-          `<li><button class="menu-item" data-act="nav.sub" data-arg="${id}">${icon(ic)}<span class="grow"><b>${label}</b><span class="tiny">${sub}</span></span>${icon('right')}</button></li>`
+          `<li><button class="menu-item" ${id === 'island' ? 'data-act="island.open"' : `data-act="nav.sub" data-arg="${id}"`}>${icon(ic)}<span class="grow"><b>${label}</b><span class="tiny">${sub}</span></span>${icon('right')}</button></li>`
       )
       .join('')}</ul></section>`;
 }
