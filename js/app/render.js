@@ -40,6 +40,7 @@ const MODALS = {
   stages: home.stagesModal,
   build: island.buildModal,
   lot: island.lotModal,
+  nation: island.nationModal,
   photo: photo.photoModal,
   'study-finish': study.finishModal,
   'study-edit': study.editModal,

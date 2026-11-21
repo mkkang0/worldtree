@@ -6,6 +6,7 @@ import { canAfford, pay, settle, exchange } from '../app/wallet.js';
 import { isOn, put, toggle, cycleHue, cyclePos, posName, posShort } from '../app/decor.js';
 import { EXCHANGE_RATE, EXCHANGE_BUNDLES } from '../core/config.js';
 import { todayKey } from '../core/dates.js';
+import { festivalOn, nextFestival, festivalById, canBuyFestItem, STAMP_GOAL } from '../core/festivals.js';
 import { ITEMS, SLOTS, itemById, slotById, placed, withPreview } from '../data/items/index.js';
 import { treeById } from '../data/trees.js';
 import { esc, costHtml, money, title, CURRENCIES } from '../ui/dom.js';
@@ -26,7 +27,7 @@ const DEAL_OFF = 0.3; // 오늘의 특가 할인율
 // 날짜마다 같은 4개 (가진 것도 포함해서 골라 하루 동안 바뀌지 않게). 첫 번째가 30% 특가.
 export function dailyPicks(day = todayKey()) {
   const r = rng('shop-' + day);
-  const pool = ITEMS.filter((i) => i.slot !== 'theme');
+  const pool = ITEMS.filter((i) => i.slot !== 'theme' && !i.fest); // 축제 아이템은 추천에 넣지 않는다
   const out = [];
   while (out.length < 4) out.push(pool.splice(Math.floor(r() * pool.length), 1)[0].id);
   return out;
@@ -65,6 +66,7 @@ function home(state, ui) {
       ${title('오늘의 추천', { iconName: 'gift', aside: '매일 바뀌어요' })}
       <div class="grid items picks">${picks.map((i) => itemCard(state, ui, i, { showSlot: true })).join('')}</div>
     </section>
+    ${festivalShop(state, ui)}
     <section class="card legend-card">
       ${title('✨ 전설 아이템', { aside: `${ITEMS.filter((i) => i.rare && state.owned.includes(i.id)).length} / ${ITEMS.filter((i) => i.rare).length}` })}
       <p class="tiny">빛나고 움직이는 특별한 꾸미기예요. 포인트를 모아 하나씩 데려와요.</p>
@@ -86,6 +88,21 @@ function home(state, ui) {
     </section>
     <button class="card garden-link" data-act="garden.open">${icon('tree')}<span class="grow"><b>나의 정원</b><span class="tiny">가진 아이템으로 꾸미고 코디를 저장해요</span></span>${icon('right')}</button>
     ${exchangeCard(state)}`;
+}
+
+// 🎉 축제 한정: 축제 동안 파는 아이템 + 도장 선물 (축제가 아니면 다음 축제 안내)
+function festivalShop(state, ui) {
+  const f = festivalOn();
+  if (!f) {
+    const nx = nextFestival();
+    return `<section class="card note fest-note" id="fest-shop">${nx.emoji} 다음 축제는 <b>${nx.name}</b> · ${nx.inDays}일 뒤에 열려요. 축제 동안만 파는 한정 아이템이 있어요.</section>`;
+  }
+  const items = ITEMS.filter((i) => i.fest === f.id);
+  return `<section class="card fest-shop fest-${f.id}" id="fest-shop">
+    ${title(`🎉 ${f.name} 한정`, { aside: '기간 한정' })}
+    <p class="tiny">축제 동안만 살 수 있어요. 선물 아이템은 축제 도장 ${STAMP_GOAL}개를 모으면 받아요.</p>
+    <div class="grid three items">${items.map((i) => itemCard(state, ui, i, { showSlot: true })).join('')}</div>
+  </section>`;
 }
 
 // 한 종류만 보기
@@ -157,9 +174,13 @@ function itemCard(state, ui, item, { showSlot = false } = {}) {
   const hue = state.custom[item.id]?.hue || 0;
   const price = priceOf(item);
   const deal = isDeal(item) && !owned;
+  const fest = item.fest && festivalById(item.fest);
+  const locked = !owned && !canBuyFestItem(item);
   const main = owned
     ? `<button class="btn small ${on ? 'soft' : ''}" data-act="shop.equip" data-arg="${item.id}">${on ? (slot.multi ? '빼기' : '해제') : slot.multi ? '놓기' : '장착'}</button>`
-    : `<button class="btn small ${canAfford(price) ? '' : 'soft'}" data-act="shop.buy" data-arg="${item.id}" ${canAfford(price) ? '' : 'disabled'}>${costHtml(price)}</button>`;
+    : locked
+      ? `<button class="btn small soft" disabled>${item.prize ? '🎁 도장 선물' : `${fest.emoji} 축제 때`}</button>`
+      : `<button class="btn small ${canAfford(price) ? '' : 'soft'}" data-act="shop.buy" data-arg="${item.id}" ${canAfford(price) ? '' : 'disabled'}>${costHtml(price)}</button>`;
   const tools = owned
     ? [
         slot.tint ? `<button class="tool" data-act="shop.hue" data-arg="${item.id}" aria-label="${item.name} 색 바꾸기 (지금 ${hue + 1}번)">🎨<small>${hue + 1}</small></button>` : '',
@@ -169,7 +190,7 @@ function itemCard(state, ui, item, { showSlot = false } = {}) {
   const art = item.swatch ? `<span class="swatch" style="background:linear-gradient(135deg,${item.swatch[0]} 50%,${item.swatch[1]} 50%)"></span>` : itemThumb(item, hue);
   return `<div class="item ${on ? 'on' : ''} ${seen ? 'seen' : ''} ${item.cost.star ? 'study-item' : ''} ${item.rare ? 'rare' : ''}">
     <button class="item-body" data-act="shop.preview" data-arg="${item.id}" aria-label="${item.name} 미리보기">
-      <span class="thumb">${art}${deal ? '<i class="deal">-30%</i>' : item.rare ? '<i class="legend">✨ 전설</i>' : ''}${owned ? '<i class="owned">보유</i>' : ''}</span>
+      <span class="thumb">${art}${deal ? '<i class="deal">-30%</i>' : item.rare ? '<i class="legend">✨ 전설</i>' : fest ? `<i class="legend fest">${fest.emoji} 한정</i>` : ''}${owned ? '<i class="owned">보유</i>' : ''}</span>
       <span class="item-name">${item.name}</span>${showSlot ? `<span class="item-slot">${slot.emoji} ${slot.label}</span>` : ''}
     </button>
     ${tools ? `<div class="item-tools">${tools}</div>` : ''}${main}
@@ -246,7 +267,7 @@ export const actions = {
   'shop.buy': (el) => {
     const item = itemById(el.dataset.arg);
     const s = ctx.state;
-    if (!item || s.owned.includes(item.id)) return;
+    if (!item || s.owned.includes(item.id) || !canBuyFestItem(item)) return;
     const price = priceOf(item);
     if (!canAfford(price)) return toast('포인트가 조금 부족해요');
     pay(price);

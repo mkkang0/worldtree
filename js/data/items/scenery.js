@@ -71,6 +71,8 @@ export const SCENERY = [
   { id: 'orn-runes', slot: 'ornament', name: '룬 문양', cost: c(100, 40) },
   { id: 'orn-pages', slot: 'ornament', name: '지혜의 책장', cost: c(0, 0, 60) },
   { id: 'orn-prism', slot: 'ornament', name: '프리즘 수정', cost: c(160, 60, 40), rare: true },
+  // 🎉 축제 한정 (core/festivals.js) — fest: 그 축제 동안만 판다, prize: 도장 7개 선물(살 수 없다)
+  { id: 'orn-persimmon', slot: 'ornament', name: '곶감 줄', cost: c(50, 30), fest: 'autumn' },
 
   /* ---------- 대지 (land) ---------- */
   { id: 'land-flowers', slot: 'land', name: '꽃밭', cost: c(0, 30) },
@@ -85,6 +87,11 @@ export const SCENERY = [
   { id: 'land-magic', slot: 'land', name: '빛의 마법진', cost: c(180, 60, 60), rare: true },
   { id: 'land-bamboo', slot: 'land', name: '대나무 숲', cost: c(0, 0, 45) },
   { id: 'land-pond', slot: 'land', name: '잉어 연못', cost: c(80, 30) },
+  // 🎉 축제 한정
+  { id: 'land-picnic', slot: 'land', name: '벚꽃 소풍 돗자리', cost: c(60, 30), fest: 'spring' },
+  { id: 'land-beach', slot: 'land', name: '모래성과 파라솔', cost: c(60, 30), fest: 'summer' },
+  { id: 'land-snowman', slot: 'land', name: '눈사람', cost: c(60, 30), fest: 'winter' },
+  { id: 'land-harvest', slot: 'land', name: '수확 바구니', cost: c(0), fest: 'autumn', prize: true },
 
   /* ---------- 친구 (companion) ---------- */
   { id: 'comp-wisp-gold', slot: 'companion', name: '금빛 정령불', cost: c(30, 10) },

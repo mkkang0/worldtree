@@ -19,6 +19,8 @@ const nightSky = (uid) => `<defs>${linear(`tn-${uid}`, [[0, '#1b2440'], [1, '#3b
 const leafBlob = `<ellipse cx="150" cy="160" rx="70" ry="24" fill="#3f7d55"/><ellipse cx="130" cy="152" rx="30" ry="14" fill="#5f9a6a"/><ellipse cx="174" cy="154" rx="26" ry="12" fill="#5f9a6a"/>`;
 const blobClusters = [{ x: 118, y: 158, r: 20 }, { x: 150, y: 160, r: 24 }, { x: 182, y: 158, r: 20 }, { x: 132, y: 150, r: 14 }, { x: 172, y: 152, r: 14 }];
 
+const FEST_LAND = ['land-picnic', 'land-beach', 'land-snowman', 'land-harvest'];
+
 const THUMBS = {
   world: (id, uid) => svg('0 60 300 260', worldArt(id, uid, 12)),
   sky: (id, uid) => svg('0 0 300 220', nightSky(uid) + skyArt(id, uid)),
@@ -29,7 +31,8 @@ const THUMBS = {
     const anchors = [{ x: 118, y: 176 }, { x: 150, y: 182 }, { x: 182, y: 176 }];
     return svg('80 120 140 110', nightSky(uid) + leafBlob + tint(ornamentArt(id, anchors, uid), uid, h));
   },
-  land: (id, uid, h) => svg('10 240 280 110', worldArt('world-day', uid, 12) + tint(landArt(id, uid), uid, h)),
+  // 축제 소품은 왼쪽에 크게 서 있어서 그 자리를 가까이
+  land: (id, uid, h) => svg(FEST_LAND.includes(id) ? '16 256 164 96' : '10 240 280 110', worldArt('world-day', uid, 12) + tint(landArt(id, uid), uid, h)),
   // 친구는 가까이. 떠다니는 친구는 위쪽, 흩어지는 친구는 넓게
   companion: (id, uid, h) => svg(companionCrop(id), worldArt('world-day', uid, 12) + tint(companionArt(id, uid), uid, h)),
   fx: (id, uid, h) => svg('0 40 300 280', nightSky(uid) + tint(effectArt(id, uid, null), uid, h)),

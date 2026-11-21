@@ -11,11 +11,14 @@ import { ctx, rerender, commit } from '../app/context.js';
 import { go } from '../app/render.js';
 import { canAfford, pay, gain, settle } from '../app/wallet.js';
 import { builtCount, buildingNow, shownLevel, lotsOf, isleCount, RESIDENTS, residentCount, residentsOn, bedCount, waitingCount, giftOf } from '../core/island.js';
+import { requestsFor, claimRequest, heartsOf, bestFriendCount, HEART_MAX, CROWN_AT, REQUEST_REWARD } from '../core/island.js';
+import { festivalOn } from '../core/festivals.js';
+import { festivalCard } from '../ui/components.js';
 import { todayKey } from '../core/dates.js';
 import { STAGES, stageOf, plantXp } from '../core/scoring.js';
 import { moodOf } from '../core/records.js';
 import { BUILDINGS, buildingById, LOT_COUNT, lotsOpen, islandLevel, costOf, workOf, bedsOf, MAX_LEVEL } from '../data/buildings.js';
-import { themeOf, nationName, ISLE_EMOJI } from '../data/isles.js';
+import { themeOf, nationName, ISLE_EMOJI, EMBLEMS } from '../data/isles.js';
 import { treeById } from '../data/trees.js';
 import { islandMap, archipelagoArt, LOTS, MAP, STRIP } from '../art/island.js';
 import { buildingArt, constructionArt } from '../art/buildings.js';
@@ -65,8 +68,20 @@ function isleInfo(state, k) {
 const smallArt = (id, building, lv = 1) =>
   `<svg viewBox="-40 -104 80 110" aria-hidden="true">${building ? constructionArt(0.4, nextUid()) : buildingArt(id, nextUid(), lv)}</svg>`;
 
-const residentFace = (r, tree) =>
-  `<svg viewBox="-34 -50 68 86" aria-hidden="true">${spiritArt({ x: 0, y: 0, scale: 1, mood: 'happy', wardrobe: {}, tree, uid: nextUid(), body: r.color })}</svg>`;
+// 주민 얼굴 (하트가 쌓이면 화관 · 나비넥타이)
+const residentFace = (r, tree, hearts = 0) => {
+  const wardrobe = hearts >= CROWN_AT ? { hat: 'hat-flower', ...(hearts >= HEART_MAX ? { neck: 'neck-bow' } : {}) } : {};
+  return `<svg viewBox="-34 -50 68 86" aria-hidden="true">${spiritArt({ x: 0, y: 0, scale: 1, mood: 'happy', wardrobe, tree, uid: nextUid(), body: r.color })}</svg>`;
+};
+const heartRow = (n) => `<span class="hearts" aria-label="우정 하트 ${n} / ${HEART_MAX}">${'♥'.repeat(n)}<i>${'♡'.repeat(HEART_MAX - n)}</i></span>`;
+
+// 나라 이름 · 문장 (정하지 않았으면 나라 단계 이름)
+export function nationLabel(state) {
+  const { name, emblem } = state.island.nation;
+  const level = nationName(isleCount(state));
+  if (!level) return '';
+  return name ? `${emblem || '🗺️'} ${esc(name)}` : level;
+}
 
 /* ---------- 화면 ---------- */
 
@@ -88,7 +103,7 @@ export function view(state, ui) {
   return `<div class="island">
     <header class="garden-top">
       <button class="x" data-act="island.close" aria-label="섬 닫기">${icon('left')}</button>
-      <div class="grow"><b>${info.emoji} ${esc(info.name)}</b><span class="tiny">${nation ? `${nation} · 섬 ${isles}개 · ` : ''}${lvl.name} · 건물 ${built} / ${LOT_COUNT} · 주민 ${residentCount(state)}명</span></div>
+      <div class="grow"><b>${info.emoji} ${esc(info.name)}</b><span class="tiny">${nation ? `${nationLabel(state)} · 섬 ${isles}개 · ` : ''}${lvl.name} · 건물 ${built} / ${LOT_COUNT} · 주민 ${residentCount(state)}명</span></div>
       <button class="x" data-act="garden.open" aria-label="정원에서 꾸미기">${icon('tree')}</button>
     </header>
     ${stripView(state, k)}
@@ -101,13 +116,17 @@ export function view(state, ui) {
         custom: k ? {} : state.custom,
         mood: moodOf(state),
         lots,
-        residents: residentsOn(state, k),
+        residents: residentsOn(state, k).map((r) => ({ ...r, hearts: heartsOf(state, r.id) })),
         theme: info.theme,
         spirit: !k,
+        festival: festivalOn(),
+        hour: new Date().getHours(),
       })}${buttons}</div>
     </div>
     <p class="tiny center map-hint">← 옆으로 밀어서 섬 전체를 봐요 · 건물을 누르면 레벨을 올려요 →</p>
     ${giftCard(state)}
+    ${requestsCard(state, treeById(state.plant.species))}
+    ${festivalCard(state)}
     ${nowCard(state)}
     ${nationCard(state, k, lvl, built)}
     ${residentsCard(state, treeById(state.plant.species))}
@@ -138,7 +157,7 @@ function stripView(state, k) {
         : `<button class="isle-btn ${j === k ? 'on' : ''}" style="left:${j * STRIP.step}px" data-act="island.go" data-arg="${j}" aria-pressed="${j === k}"><small>${t.emoji} ${esc(t.name)}</small></button>`
     )
     .join('');
-  return `<div class="isle-strip" role="tablist" aria-label="군도 지도"><div class="strip-inner" style="width:${list.length * STRIP.step}px">${archipelagoArt(list, k)}${buttons}</div></div>`;
+  return `<div class="isle-strip" role="tablist" aria-label="군도 지도"><div class="strip-inner" style="width:${list.length * STRIP.step}px">${archipelagoArt(list, k, state.island.nation.name ? state.island.nation.emblem : '')}${buttons}</div></div>`;
 }
 
 // 주민들의 하루 선물
@@ -146,9 +165,30 @@ function giftCard(state) {
   const n = residentCount(state);
   if (!n) return '';
   const got = state.island.giftDay === todayKey();
+  const best = bestFriendCount(state);
   return `<section class="card gift-card">
-    <span class="em">🎁</span><span class="grow"><b>주민들의 선물</b><span class="tiny">${got ? '오늘 선물을 받았어요. 내일 또 와요!' : `주민 ${n}명이 선물을 준비했어요`}</span></span>
-    <button class="btn small ${got ? 'soft' : 'gold'} fit" data-act="island.gift" ${got ? 'disabled' : ''}>${got ? '받음' : rewardHtml(giftOf(n))}</button>
+    <span class="em">🎁</span><span class="grow"><b>주민들의 선물</b><span class="tiny">${got ? '오늘 선물을 받았어요. 내일 또 와요!' : `주민 ${n}명이 선물을 준비했어요${best ? ` · 단짝 ${best}명이 한 몫 더` : ''}`}</span></span>
+    <button class="btn small ${got ? 'soft' : 'gold'} fit" data-act="island.gift" ${got ? 'disabled' : ''}>${got ? '받음' : rewardHtml(giftOf(n, best))}</button>
+  </section>`;
+}
+
+// 주민의 부탁: 날마다 2~3명이 하나씩 부탁한다. 들어주면 보상과 우정 하트
+function requestsCard(state, tree) {
+  const list = requestsFor(state);
+  if (!list.length) return '';
+  const left = list.filter((q) => !q.claimed).length;
+  return `<section class="card req-card">
+    ${title('주민의 부탁', { iconName: 'heart', aside: left ? `${left}개 남음` : '오늘 다 했어요 ✓' })}
+    <ul class="reqs">${list
+      .map(
+        (q) => `<li class="${q.claimed ? 'done' : q.ready ? 'ready' : ''}">
+        <span class="rface">${residentFace(q.r, tree, q.hearts)}</span>
+        <span class="grow"><b>${q.r.name} ${heartRow(q.hearts)}</b><span class="tiny">${q.emoji} ${q.label} · ${q.cur} / ${q.goal}</span>${q.claimed ? '' : bar(q.cur / q.goal)}</span>
+        ${q.claimed ? '<span class="tiny thanks">고마워!</span>' : `<button class="btn small ${q.ready ? 'gold' : 'soft'} fit" data-act="island.request" data-arg="${q.r.id}" ${q.ready ? '' : 'disabled'}>${q.ready ? rewardHtml(REQUEST_REWARD) : '하는 중'}</button>`}
+      </li>`
+      )
+      .join('')}</ul>
+    <p class="tiny">부탁을 들어주면 우정 하트가 하나씩 쌓여요. 하트 ${CROWN_AT}개면 꽃 화관을 쓰고, ${HEART_MAX}개면 단짝이 되어 하루 선물이 늘어나요.</p>
   </section>`;
 }
 
@@ -179,7 +219,8 @@ function nationCard(state, k, lvl, built) {
     ${title(`섬 단계 · ${lvl.name}`, { iconName: 'forest', aside: `열린 자리 ${open} / ${LOT_COUNT}` })}
     ${lvl.next ? `${bar((built - lvl.at) / (lvl.next.at - lvl.at))}<p class="tiny">이 섬에 건물 ${lvl.next.at - built}개를 더 지으면 '${lvl.next.name}'</p>` : '<p class="tiny">이 섬의 모든 자리를 채웠어요. 레벨을 올려 마을을 키워요!</p>'}
     ${!k && open < LOT_COUNT ? '<p class="tiny">세계수가 자랄수록 본섬 자리가 하나씩 열려요. 세계수를 완성하면 모든 자리가 열려요.</p>' : ''}
-    <div class="nation-row"><span class="em">🗺️</span><span class="grow"><b>${nation || '아직 섬 하나'}</b><span class="tiny">섬 ${isles}개 · 모든 섬의 건물 ${builtCount(state)}개${nextNation ? ` · 섬 ${nextNation}개가 되면 '${nationName(nextNation)}'` : ''}</span></span></div>
+    <div class="nation-row"><span class="em">${(nation && state.island.nation.emblem) || '🗺️'}</span><span class="grow"><b>${nation ? (state.island.nation.name ? `${esc(state.island.nation.name)} <small>${nation}</small>` : nation) : '아직 섬 하나'}</b><span class="tiny">섬 ${isles}개 · 모든 섬의 건물 ${builtCount(state)}개${nextNation ? ` · 섬 ${nextNation}개가 되면 '${nationName(nextNation)}'` : ''}</span></span>
+      ${nation ? `<button class="btn small ${state.island.nation.name ? 'ghost' : 'gold'} fit" data-act="island.nationOpen">${state.island.nation.name ? '바꾸기' : '이름 짓기'}</button>` : ''}</div>
     <p class="tiny">세계수를 하나 완성해 숲에 심을 때마다 그 세계수가 선 새 섬이 생기고, 다리로 이어져요.</p>
   </section>`;
 }
@@ -195,7 +236,7 @@ function residentsCard(state, tree) {
     <ul class="residents">${RESIDENTS.map((r) => {
       const day = state.island.residents[r.id];
       return day
-        ? `<li class="on"><span class="rface">${residentFace(r, tree)}</span><span class="grow"><b>${r.name}</b><span class="tiny">“${esc(r.line)}”</span></span><span class="tiny">${day.slice(5).replace('-', '/')} 이사</span></li>`
+        ? `<li class="on"><span class="rface">${residentFace(r, tree, heartsOf(state, r.id))}</span><span class="grow"><b>${r.name} ${heartRow(heartsOf(state, r.id))}</b><span class="tiny">“${esc(r.line)}”</span></span><span class="tiny">${heartsOf(state, r.id) >= HEART_MAX ? '단짝 💛' : `${day.slice(5).replace('-', '/')} 이사`}</span></li>`
         : `<li><span class="rface off">${residentFace(r, tree)}</span><span class="grow"><b>???</b><span class="tiny">${r.hint} · 빈 집이 있으면 이사 와요</span></span>${r.when(state) ? '<span class="tiny ready">집이 필요해요</span>' : ''}</li>`;
     }).join('')}</ul>
     <p class="tiny">집은 레벨마다 주민 2명, 찻집·도서관·등대는 Lv.2부터 한 명씩 더 살 수 있어요. 모든 섬의 집을 함께 써요.</p>
@@ -216,6 +257,20 @@ export function mounted(ui) {
 }
 
 /* ---------- 창 ---------- */
+
+// 나라 이름 · 문장 정하기 (섬이 2개부터)
+export function nationModal(state) {
+  const { name, emblem } = state.island.nation;
+  const pick = emblem || EMBLEMS[0];
+  return `<form class="sheet" data-form="island.nation" autocomplete="off" role="dialog" aria-labelledby="nation-title">
+    <div class="intro"><span class="eyebrow">MY NATION · ${nationName(isleCount(state))}</span><h1 id="nation-title">나라 이름 짓기</h1>
+    <p class="muted">섬들이 다리로 이어져 나라가 되었어요. 이름과 깃발에 그릴 문장을 정해 주세요.</p></div>
+    <label>나라 이름 (12자)<input name="nation" maxlength="12" value="${esc(name)}" placeholder="예: 새싹 군도" required></label>
+    <span class="tiny">문장</span>
+    <div class="emblems" role="radiogroup" aria-label="나라 문장">${EMBLEMS.map((e) => `<label class="emblem"><input type="radio" name="emblem" value="${e}" ${e === pick ? 'checked' : ''}><span>${e}</span></label>`).join('')}</div>
+    <div class="row two"><button class="btn ghost" type="button" data-act="modal.close">닫기</button><button class="btn gold" type="submit">정하기</button></div>
+  </form>`;
+}
 
 // 빈 자리: 건물 고르기 (건물 종류는 섬마다 하나씩)
 export function buildModal(state, ui) {
@@ -379,12 +434,49 @@ export const actions = {
     rerender();
   },
 
+  // 주민의 부탁 들어주기 → 보상 + 우정 하트
+  'island.request': (el) => {
+    const s = ctx.state;
+    const r = RESIDENTS.find((x) => x.id === el.dataset.arg);
+    const got = r && claimRequest(s, r.id);
+    if (!got) return;
+    gain(got.reward);
+    settle();
+    chime('level');
+    confetti(['💛', '♥', '✨']);
+    rerender();
+    toast(got.hearts >= HEART_MAX ? `💛 ${r.name}와 단짝이 됐어요! 하루 선물이 늘어나요` : got.hearts === CROWN_AT ? `🌼 ${r.name}가 꽃 화관을 썼어요! (하트 ${got.hearts})` : `${r.name}: 고마워! · 우정 하트 ${got.hearts} / ${HEART_MAX}`);
+  },
+
+  'island.nationOpen': () => {
+    if (isleCount(ctx.state) < 2) return;
+    ctx.ui.modal = 'nation';
+    ctx.ui.modalData = null;
+    rerender();
+  },
+
+  'island.nation': (form) => {
+    const name = form.elements.nation.value.trim().slice(0, 12);
+    const emblem = form.elements.emblem.value;
+    if (!name) return toast('나라 이름을 적어 주세요');
+    const first = !ctx.state.island.nation.name;
+    ctx.state.island.nation = { name, emblem: EMBLEMS.includes(emblem) ? emblem : EMBLEMS[0] };
+    closeModal();
+    commit();
+    rerender();
+    if (first) {
+      confetti([ctx.state.island.nation.emblem, '🎉', '✨']);
+      chime('level');
+    }
+    toast(`${ctx.state.island.nation.emblem} ${name}, 멋진 이름이에요!`);
+  },
+
   // 주민들의 선물 (하루 한 번)
   'island.gift': () => {
     const s = ctx.state;
     const n = residentCount(s);
     if (!n || s.island.giftDay === todayKey()) return;
-    const g = giftOf(n);
+    const g = giftOf(n, bestFriendCount(s));
     s.island.giftDay = todayKey();
     gain(g);
     settle();

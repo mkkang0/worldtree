@@ -4,7 +4,7 @@ import { streakOf, totalStudyMin, studyBySubject } from './records.js';
 import { DEFAULT_MISSIONS } from '../data/lists.js';
 import { TREES } from '../data/trees.js';
 import { KANA_GROUPS, toKatakana } from '../data/kana.js';
-import { builtCount, hasLevel } from './island.js';
+import { builtCount, hasLevel, HEART_MAX } from './island.js';
 
 const totalMin = (s) => s.log.reduce((a, e) => a + e.min, 0);
 const maxZone = (s) => s.log.reduce((a, e) => Math.max(a, e.zone), 0);
@@ -53,6 +53,8 @@ export const ACHIEVEMENTS = [
   { id: 'isle4', emoji: '🗺️', name: '군도', desc: '섬 4개 잇기', check: (s) => s.island.isles.length >= 3 },
   { id: 'nation', emoji: '👑', name: '섬나라', desc: '섬 8개와 건물 40개', check: (s) => s.island.isles.length >= 7 && builtCount(s) >= 40 },
   { id: 'island8', emoji: '🏝️', name: '꽉 찬 섬', desc: '본섬의 자리 8곳을 모두 채우기', check: (s) => s.island.lots.filter((l) => l && l.done).length >= 8 },
+  { id: 'bestie', emoji: '💛', name: '단짝', desc: '주민 하나와 우정 하트 5개', check: (s) => Object.values(s.island.hearts).some((h) => h >= HEART_MAX) },
+  { id: 'festival', emoji: '🎉', name: '축제 손님', desc: '계절 축제 도장 7개 모으기', check: (s) => Object.keys(s.festivals).length >= 1 },
   // 미니게임
   { id: 'kana1', emoji: '🎌', name: '가나 첫걸음', desc: '가나 퀴즈 한 판', check: (s) => s.kana.plays >= 1 },
   { id: 'kana-perfect', emoji: '💮', name: '꽃동그라미', desc: '가나 퀴즈 만점', check: (s) => s.kana.perfect >= 1 },

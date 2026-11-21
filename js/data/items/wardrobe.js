@@ -25,6 +25,8 @@ export const WARDROBE = [
   { id: 'hat-sakura-pin', slot: 'hat', name: '벚꽃 머리핀', cost: c(0, 0, 40) },
   { id: 'hat-pencil', slot: 'hat', name: '귀에 꽂은 연필', cost: c(0, 0, 30) },
   { id: 'hat-grad', slot: 'hat', name: '학사모', cost: c(0, 0, 90) },
+  { id: 'hat-sakura-crown', slot: 'hat', name: '벚꽃 화관', cost: c(0), fest: 'spring', prize: true },
+  { id: 'hat-earmuff', slot: 'hat', name: '털 귀마개', cost: c(0), fest: 'winter', prize: true },
 
   /* ---------- 정령 얼굴 (face) ---------- */
   { id: 'face-freckle', slot: 'face', name: '주근깨', cost: c(15) },
@@ -49,6 +51,7 @@ export const WARDROBE = [
   { id: 'neck-id', slot: 'neck', name: '사원증', cost: c(0, 0, 50) },
   { id: 'neck-bandana', slot: 'neck', name: '반다나', cost: c(30, 10) },
   { id: 'neck-wordcard', slot: 'neck', name: '단어 카드', cost: c(0, 0, 35) },
+  { id: 'neck-shell', slot: 'neck', name: '조개 목걸이', cost: c(0), fest: 'summer', prize: true },
 
   /* ---------- 정령 손 (hand) — 오른손에 든다 ---------- */
   { id: 'hand-book', slot: 'hand', name: '작은 책', cost: c(0, 0, 25) },

@@ -25,6 +25,9 @@ export function isleName(species, existing = []) {
 // 섬마다 대표 그림
 export const ISLE_EMOJI = { yggdrasil: '🌳', sakura: '🌸', starlight: '✨', golden: '🌟', frost: '❄️', moonlight: '🌙', maple: '🍁', jade: '💠' };
 
+// 나라 문장 (섬이 2개가 되면 나라 이름과 함께 고른다)
+export const EMBLEMS = ['🌳', '🌸', '⭐', '🌙', '🍁', '❄️', '🐚', '👑', '🦊', '🕊️', '🌈', '🔥', '💎', '🍀', '🐋', '☀️'];
+
 // 나라 단계: 섬 수로 정한다 (섬이 하나일 때는 섬 단계 이름을 쓴다)
 export function nationName(isles) {
   if (isles >= 8) return '섬나라';

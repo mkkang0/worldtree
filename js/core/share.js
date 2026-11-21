@@ -4,6 +4,7 @@ import { GIFT_MAX } from './config.js';
 import { todayKey } from './dates.js';
 import { stageOf, plantXp } from './scoring.js';
 import { weekSummary, streakOf } from './records.js';
+import { isleCount, builtCount, residentCount } from './island.js';
 
 const PREFIX = 'SPR1.';
 
@@ -36,6 +37,12 @@ export function makeFriendCode(state) {
     sk: streakOf(state),
     c: state.settings.cheer,
     t: todayKey(),
+    // 섬 (4단계): 섬 수, 건물 수, 주민 수, 나라 이름 · 문장
+    is: isleCount(state),
+    bd: builtCount(state),
+    rs: residentCount(state),
+    nn: state.island.nation.name,
+    ne: state.island.nation.emblem,
   });
 }
 
@@ -65,6 +72,11 @@ export function parseCode(raw) {
         streak: clamp(o.sk, 1000),
         cheer: text(o.c, 30),
         updated: text(o.t, 10),
+        isles: clamp(o.is, 9),
+        buildings: clamp(o.bd, 72),
+        residents: clamp(o.rs, 8),
+        nation: text(o.nn, 12),
+        emblem: text(o.ne, 4),
       },
     };
   }

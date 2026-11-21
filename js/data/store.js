@@ -4,7 +4,7 @@ import { SLOTS, HUES, itemById } from './items/index.js';
 import { TREES } from './trees.js';
 import { DEFAULT_SUBJECTS } from './lists.js';
 import { buildingById } from './buildings.js';
-import { isleName } from './isles.js';
+import { isleName, EMBLEMS } from './isles.js';
 import { todayKey } from '../core/dates.js';
 
 const KEY = 'sprout-diary-v1'; // 이름이 바뀌어도 예전 데이터를 이어 쓰기 위해 그대로 둔다
@@ -76,7 +76,10 @@ export function defaultState() {
     weekClaims: [], // 보상 받은 주 시작일
     achievements: {}, // { id: 'YYYY-MM-DD' }
     // 나의 섬: 건물 자리 8곳 (features/island.js, core/island.js)
-    island: { lots: Array(8).fill(null), residents: {}, giftDay: '', isles: [] }, // isles: 완성한 세계수마다 생기는 새 섬 { species, name, date, lots }
+    island: { lots: Array(8).fill(null), residents: {}, giftDay: '', isles: [], req: { date: '', done: [] }, hearts: {}, nation: { name: '', emblem: '' } },
+    // isles: 완성한 세계수마다 생기는 새 섬 { species, name, date, lots }
+    // req: 오늘 들어준 주민 부탁, hearts: 주민마다 우정 하트 0~5, nation: 섬이 2개부터 정하는 나라 이름 · 문장
+    festivals: {}, // 계절 축제 선물 받은 기록 { 'autumn-2026': 'YYYY-MM-DD' } (core/festivals.js)
     // 미니게임: 가나 퀴즈 (features/games.js)
     kana: { stats: {}, plays: 0, best: 0, perfect: 0, day: null, prefs: { script: 'hira', groups: ['basic'], dir: 'both', count: 10 } },
     // 함께하기
@@ -217,6 +220,11 @@ function sanitize(raw) {
       streak: Math.max(0, num(f.streak, 0)),
       cheer: str(f.cheer, '', 30),
       updated: str(f.updated, '', 10),
+      isles: clampNum(f.isles, 0, 0, 9), // 예전 코드에는 섬 정보가 없다 (0이면 보여주지 않는다)
+      buildings: clampNum(f.buildings, 0, 0, 72),
+      residents: clampNum(f.residents, 0, 0, 8),
+      nation: str(f.nation, '', 12),
+      emblem: str(f.emblem, '', 4),
     }));
   const cleanLots = (lots) =>
     Array.from({ length: 8 }, (_, i) => {
@@ -238,6 +246,15 @@ function sanitize(raw) {
     isles,
     residents: Object.fromEntries(Object.entries(obj(obj(raw.island).residents)).filter(([k, v]) => /^[a-z]{2,10}$/.test(k) && isDate(v))),
     giftDay: isDate(obj(raw.island).giftDay) ? raw.island.giftDay : '',
+    req: (() => {
+      const r = obj(obj(raw.island).req);
+      return isDate(r.date) ? { date: r.date, done: strs(r.done, 8) } : { date: '', done: [] };
+    })(),
+    hearts: Object.fromEntries(Object.entries(obj(obj(raw.island).hearts)).filter(([k, v]) => /^[a-z]{2,10}$/.test(k) && Number.isFinite(v)).map(([k, v]) => [k, clampNum(v, 0, 0, 5)])),
+    nation: (() => {
+      const x = obj(obj(raw.island).nation);
+      return { name: str(x.name, '', 12).trim(), emblem: EMBLEMS.includes(x.emblem) ? x.emblem : '' };
+    })(),
   };
   // 짓는 중인 건물은 모든 섬을 통틀어 하나만
   let busy = false;
@@ -261,7 +278,7 @@ function sanitize(raw) {
     plays: Math.max(0, num(kana.plays, 0)),
     best: Math.max(0, num(kana.best, 0)),
     perfect: Math.max(0, num(kana.perfect, 0)),
-    day: kana.day && isDate(kana.day.date) ? { date: kana.day.date, stars: Math.max(0, num(kana.day.stars, 0)) } : null,
+    day: kana.day && isDate(kana.day.date) ? { date: kana.day.date, stars: Math.max(0, num(kana.day.stars, 0)), plays: Math.max(0, num(kana.day.plays, 0)) } : null,
     prefs: {
       script: ['hira', 'kata', 'mix'].includes(prefs.script) ? prefs.script : 'hira',
       groups: groups.length ? groups : ['basic'],
@@ -269,6 +286,7 @@ function sanitize(raw) {
       count: prefs.count === 20 ? 20 : 10,
     },
   };
+  s.festivals = Object.fromEntries(Object.entries(obj(raw.festivals)).filter(([k, v]) => /^[a-z]+-\d{4}$/.test(k) && isDate(v)));
   s.redeemed = strs(raw.redeemed);
   s.sentGifts = strs(raw.sentGifts);
   return s;

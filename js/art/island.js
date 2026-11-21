@@ -86,21 +86,87 @@ const lockedLot = (x, y) =>
 // 주민이 거니는 자리 (건물과 세계수 사이)
 const STROLL = [98, 172, 246, 352, 548, 656, 730, 804];
 
+// 우정 하트 3개부터 꽃 화관, 5개(단짝)면 나비넥타이도 (core/island.js CROWN_AT, HEART_MAX)
 function residentsArt(residents, tree, uid) {
   return residents
     .map((r, i) => {
       const x = STROLL[i % STROLL.length];
       const y = islandTop(x) + 4;
       const dur = (7 + (i % 3) * 2.5).toFixed(1);
+      const wardrobe = (r.hearts || 0) >= 3 ? { hat: 'hat-flower', ...((r.hearts || 0) >= 5 ? { neck: 'neck-bow' } : {}) } : {};
       return `<g class="stroll" style="animation-duration:${dur}s;animation-delay:-${(i * 1.7).toFixed(1)}s">` +
-        spiritArt({ x, y, scale: 0.34, mood: 'happy', wardrobe: {}, hues: {}, tree, uid: `${uid}-r${i}`, body: r.color, light: { color: '#fff1d6', wash: 0.04, halo: 0.08 } }) +
+        spiritArt({ x, y, scale: 0.34, mood: 'happy', wardrobe, hues: {}, tree, uid: `${uid}-r${i}`, body: r.color, light: { color: '#fff1d6', wash: 0.04, halo: 0.08 } }) +
         `</g>`;
     })
     .join('');
 }
 
+// 축제 깃발: 하늘을 가로지르는 두 줄 (세계수 뒤)
+function bunting(colors) {
+  const line = (x1, x2) => {
+    const sag = 46;
+    const y = 150;
+    let s = `<path d="M${x1} ${y} Q${(x1 + x2) / 2} ${y + sag * 2} ${x2} ${y}" fill="none" stroke="#fff" stroke-width="1.4" opacity=".85"/>`;
+    for (let i = 1; i < 12; i++) {
+      const t = i / 12;
+      const x = n((1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * ((x1 + x2) / 2) + t * t * x2);
+      const yy = n((1 - t) * (1 - t) * y + 2 * (1 - t) * t * (y + sag * 2) + t * t * y);
+      s += `<path class="swing" style="transform-origin:${x}px ${yy}px;animation-delay:-${(i * 0.37).toFixed(2)}s" d="M${x - 7} ${yy} h14 l-7 14Z" fill="${colors[i % colors.length]}" stroke="#00000014"/>`;
+    }
+    return s;
+  };
+  return `<g>${line(14, 420)}${line(480, 886)}</g>`;
+}
+
+// 축제마다 날리는 것: 꽃잎 · 물방울 · 낙엽 · 눈
+function festivalParticles(kind) {
+  const r = rng('fest-' + kind);
+  return times(22, () => {
+    const x = n(r() * MAP.w);
+    const y = n(-30 + r() * 220);
+    const d = n(r() * 8);
+    const rot = n(r() * 180);
+    if (kind === 'bubble') return `<circle class="rise" style="animation-delay:-${d}s" cx="${x}" cy="${n(300 + r() * 80)}" r="${n(2 + r() * 3)}" fill="#ffffff55" stroke="#fff" stroke-width=".8"/>`;
+    const shape =
+      kind === 'leaf'
+        ? `<path d="M0 -5 Q4 -1 0 5 Q-4 -1 0 -5Z" fill="${['#e0784a', '#f0a050', '#c0502a', '#ffc65a'][Math.floor(r() * 4)]}" transform="rotate(${rot})"/>`
+        : kind === 'snow'
+          ? `<circle r="${n(1.6 + r() * 2)}" fill="#fff" opacity=".95"/>`
+          : `<ellipse rx="3" ry="1.8" fill="#ffc6d9" transform="rotate(${rot})"/>`;
+    return `<g class="fall" style="animation-delay:-${d}s;animation-duration:${n(7 + r() * 5)}s"><g transform="translate(${x} ${y})">${shape}</g></g>`;
+  });
+}
+
+// 시간에 따라: 해 질 녘(17~19시)은 노을빛, 밤(19~5시)은 어둡게 덮고 별 · 달 · 불 켜진 창
+export const timeOfDay = (hour) => (hour >= 19 || hour < 5 ? 'night' : hour >= 17 ? 'dusk' : 'day');
+function nightCover(phase, uid, lots) {
+  if (phase === 'day') return '';
+  const lit = LOTS.map(({ x, y }, i) => {
+    const l = lots[i];
+    if (!l || (l.state !== 'built' && l.state !== 'upgrading')) return '';
+    return glow(`win-${uid}-${i}`, x, y - 26, 34, '#ffd27a', phase === 'night' ? 0.75 : 0.4) + `<rect x="${x - 4}" y="${y - 30}" width="8" height="7" rx="1.5" fill="#ffe9a8" opacity="${phase === 'night' ? 0.95 : 0.6}"/>`;
+  }).join('');
+  if (phase === 'dusk')
+    return (
+      `<defs>${linear(`dusk-${uid}`, [[0, '#6a3f8a'], [0.45, '#e0705a'], [0.6, '#ffb070'], [1, '#ff9a5a']])}</defs>` +
+      `<rect width="${MAP.w}" height="${MAP.h}" fill="url(#dusk-${uid})" opacity=".34"/>` +
+      glow(`dsun-${uid}`, 140, 196, 120, '#ffcf7a', 0.5) +
+      lit
+    );
+  const r = rng('island-night');
+  return (
+    `<rect width="${MAP.w}" height="${MAP.h}" fill="#141c44" opacity=".52"/>` +
+    times(40, () => `<circle class="twinkle" style="animation-delay:-${n(r() * 3)}s" cx="${n(r() * MAP.w)}" cy="${n(r() * 150)}" r="${n(0.6 + r() * 1.3)}" fill="#fff"/>`) +
+    glow(`moon-${uid}`, 770, 58, 46, '#fff6d8', 0.5) +
+    `<circle cx="770" cy="58" r="15" fill="#fff6d8"/><circle cx="777" cy="53" r="13" fill="#e9e4f7" opacity=".35"/>` +
+    lit
+  );
+}
+
 // lots: [{ state: 'built' | 'upgrading' | 'building' | 'empty' | 'locked', id, lv, ratio }], residents: [{ id, color }]
-export function islandMap({ growth, stage, tree, equipped = {}, custom = {}, mood = 'calm', lots = [], residents = [], theme = {}, spirit = true }) {
+// festival: core/festivals.js festivalOn() (없으면 null), hour: 지금 시각 (저녁 · 밤 그림)
+export function islandMap({ growth, stage, tree, equipped = {}, custom = {}, mood = 'calm', lots = [], residents = [], theme = {}, spirit = true, festival = null, hour = 12 }) {
+  const phase = timeOfDay(hour);
   const th = { ...DEFAULT_THEME, ...theme };
   const uid = nextUid();
   const one = (slot) => placed(equipped, slot)[0];
@@ -120,20 +186,23 @@ export function islandMap({ growth, stage, tree, equipped = {}, custom = {}, moo
     `<svg viewBox="0 0 ${MAP.w} ${MAP.h}" role="img" aria-label="나의 섬" xmlns="http://www.w3.org/2000/svg">` +
     hueDefs(uid, HUES) +
     withPaint(backdrop(uid, th) + island(uid, th), `m${uid}`, { scale: 5, freq: 0.05, seed: 9 }) +
+    (festival ? bunting(festival.flags) : '') +
     `<g transform="translate(${MID - 150} ${ty})">` +
     t.svg +
     (stage >= 2 ? tint(bloomArt(one('bloom'), t.clusters, uid), uid, hue(one('bloom'))) + tint(ornamentArt(one('ornament'), t.anchors, uid), uid, hue(one('ornament'))) : '') +
     `</g>` +
     lotArt +
+    nightCover(phase, uid, lots) +
     residentsArt(residents, tree, uid) +
     (spirit ? spiritArt({ x: MID + 74, y: islandTop(MID + 74) + 2, scale: 0.5, mood, wardrobe: Object.fromEntries(['hat', 'face', 'neck', 'hand'].map((s) => [s, one(s)])), hues: {}, tree, uid, motion: one('motion'), light: { color: '#fff1d6', wash: 0.06, halo: 0.12 } }) : '') +
+    (festival ? festivalParticles(festival.particle) : '') +
     `</svg>`
   );
 }
 
 // 군도 지도: 섬들을 다리로 이은 작은 그림 (섬 화면 위쪽 띠). isles = [{ species, palette, grass, locked }]
 export const STRIP = { step: 92, h: 92 };
-export function archipelagoArt(isles, selected) {
+export function archipelagoArt(isles, selected, emblem = '') {
   const W = isles.length * STRIP.step;
   const pos = (i) => ({ x: STRIP.step / 2 + i * STRIP.step, y: i % 2 ? 54 : 44 });
   let s = `<svg viewBox="0 0 ${W} ${STRIP.h}" width="${W}" height="${STRIP.h}" aria-hidden="true">`;
@@ -157,7 +226,8 @@ export function archipelagoArt(isles, selected) {
       `<ellipse cx="${x}" cy="${y + 10}" rx="27" ry="8" fill="${t.grass}"/>` +
       `<rect x="${x - 1.6}" y="${y - 6}" width="3.2" height="16" fill="${t.palette.trunk[1]}"/>` +
       `<ellipse cx="${x}" cy="${y - 10}" rx="13" ry="10" fill="${t.palette.canopy[1]}"/><ellipse cx="${x - 4}" cy="${y - 13}" rx="6" ry="4.5" fill="${t.palette.canopy[2]}" opacity=".8"/>` +
-      (t.built ? times(Math.min(4, t.built), (j) => `<rect x="${x - 22 + j * 6 + (j > 1 ? 22 : 0)}" y="${y + 3}" width="5" height="5" fill="#fbf1dc" stroke="#d9584a" stroke-width=".8"/>`) : '');
+      (t.built ? times(Math.min(4, t.built), (j) => `<rect x="${x - 22 + j * 6 + (j > 1 ? 22 : 0)}" y="${y + 3}" width="5" height="5" fill="#fbf1dc" stroke="#d9584a" stroke-width=".8"/>`) : '') +
+      (i === 0 && emblem ? `<line x1="${x + 18}" y1="${y + 8}" x2="${x + 18}" y2="${y - 22}" stroke="#6b4a2f" stroke-width="1.4"/><path d="M${x + 18} ${y - 22} h20 v13 h-20Z" fill="#fffaf0" stroke="#d9b45a" stroke-width=".8"/><text x="${x + 28}" y="${y - 12}" font-size="10" text-anchor="middle">${emblem}</text>` : '');
   });
   return s + '</svg>';
 }

@@ -38,6 +38,29 @@ export function hatArt(id, cx, top, r) {
         `<circle cx="${cx}" cy="${top - 13}" r="13" fill="#fff" stroke="#e3e3e3"/>` +
         `<rect x="${cx - 19}" y="${top}" width="38" height="12" rx="4" fill="#fff" stroke="#e3e3e3"/>`
       );
+    case 'hat-sakura-crown': {
+      // 🎉 봄꽃 축제 선물: 머리를 두른 벚꽃과 연두 잎
+      const sakura = (x, y, s) =>
+        `<g transform="translate(${x} ${y}) scale(${s})">${[0, 72, 144, 216, 288]
+          .map((d) => `<path d="M0 0 C-3 -3 -3.4 -7 -1 -8 L0 -6.6 L1 -8 C3.4 -7 3 -3 0 0Z" fill="#ffd0e0" stroke="#ff9fbf" stroke-width=".5" transform="rotate(${d})"/>`)
+          .join('')}<circle r="1.8" fill="#ffd34d"/></g>`;
+      let s = '';
+      [-2, -1, 0, 1, 2].forEach((i) => {
+        const x = cx + i * r * 0.4;
+        const y = top + 4 + i * i * 1.7;
+        s += `<ellipse cx="${x + 5}" cy="${y + 2}" rx="4.5" ry="2" fill="#9fd88a" transform="rotate(${20 + i * 10} ${x + 5} ${y + 2})"/>`;
+      });
+      [-2, -1, 0, 1, 2].forEach((i) => (s += sakura(cx + i * r * 0.4, top + 3 + i * i * 1.7, i === 0 ? 1.15 : 0.95)));
+      return s;
+    }
+    case 'hat-earmuff': {
+      // 🎉 겨울 눈꽃 축제 선물: 머리띠와 복슬복슬 귀마개
+      const muff = (x) =>
+        `<circle cx="${x}" cy="${top + r * 0.78}" r="${r * 0.36}" fill="#f6f2ec"/>` +
+        `<circle cx="${x}" cy="${top + r * 0.78}" r="${r * 0.36}" fill="none" stroke="#e8e0d4" stroke-width="2" stroke-dasharray="2 2.5"/>` +
+        `<circle cx="${x}" cy="${top + r * 0.78}" r="${r * 0.2}" fill="#e5605b"/>`;
+      return `<path d="M${cx - r * 0.94} ${top + r * 0.7} Q${cx} ${top - r * 0.62} ${cx + r * 0.94} ${top + r * 0.7}" fill="none" stroke="#e5605b" stroke-width="4" stroke-linecap="round"/>` + muff(cx - r * 0.96) + muff(cx + r * 0.96);
+    }
     case 'hat-flower': {
       let s = '';
       [-2, -1, 0, 1, 2].forEach((i) => {
@@ -225,6 +248,21 @@ export function neckArt(id, cx, cy, r) {
         `<path d="M${cx} ${y + 2} L${cx + 15} ${y - 7} L${cx + 15} ${y + 11} Z" fill="#7aa7ff"/>` +
         `<circle cx="${cx}" cy="${y + 2}" r="4.5" fill="#4f7de0"/>`
       );
+    case 'neck-shell': {
+      // 🎉 여름 바다 축제 선물: 진주 줄에 꿴 조개
+      const pearls = [-1, -0.6, -0.3, 0.3, 0.6, 1]
+        .map((t) => `<circle cx="${cx + t * r * 0.72}" cy="${y - 3 + (1 - t * t) * 9}" r="2.2" fill="#fffaf0" stroke="#e8dcc4" stroke-width=".5"/>`)
+        .join('');
+      const sx = cx;
+      const sy = y + 7;
+      return (
+        `<path d="M${cx - r * 0.72} ${y - 3} Q${cx} ${y + 15} ${cx + r * 0.72} ${y - 3}" fill="none" stroke="#c9b48a" stroke-width="1"/>` +
+        pearls +
+        `<path d="M${sx} ${sy + 8} L${sx - 8} ${sy - 1} Q${sx} ${sy - 9} ${sx + 8} ${sy - 1}Z" fill="#ffc6d9" stroke="#e98aa9" stroke-width=".8"/>` +
+        `<path d="M${sx} ${sy + 8} L${sx - 4.5} ${sy - 4} M${sx} ${sy + 8} L${sx} ${sy - 5.5} M${sx} ${sy + 8} L${sx + 4.5} ${sy - 4}" stroke="#e98aa9" stroke-width=".7"/>` +
+        `<rect x="${sx - 2.5}" y="${sy + 7}" width="5" height="2.4" rx="1" fill="#e98aa9"/>`
+      );
+    }
     case 'neck-bell':
       return (
         `<path d="M${cx - r * 0.7} ${y - 2} Q${cx} ${y + 9} ${cx + r * 0.7} ${y - 2}" fill="none" stroke="#e5605b" stroke-width="4" stroke-linecap="round"/>` +

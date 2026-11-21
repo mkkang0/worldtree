@@ -14,6 +14,12 @@ const hang = (a, len, body, i, count) =>
 const every = (anchors, f) => anchors.map((a, i) => f(a, i, anchors.length)).join('');
 
 export const ORNAMENTS = {
+  // 🎉 가을 수확 축제: 줄에 꿴 곶감 세 개
+  'orn-persimmon': (anchors) =>
+    every(anchors, (a, i, c) =>
+      hang(a, 6, [0, 7, 14].map((y) => `<rect x="-3.4" y="${y}" width="6.8" height="6.2" rx="2.6" fill="#e8873a"/><rect x="-1.8" y="${y + 1}" width="2.4" height="1.6" rx=".8" fill="#ffc27a" opacity=".8"/>`).join('') + `<path d="M-2 0 l2 -2 l2 2" stroke="#6b8a3a" stroke-width="1" fill="none"/>`, i, c)
+    ),
+
   // ✨ 전설: 무지개빛으로 반짝이는 프리즘 수정
   'orn-prism': (anchors, uid) => {
     const colors = ['#ff8fa3', '#ffd36b', '#8ff0b0', '#8fd0ff', '#c3a6ff'];

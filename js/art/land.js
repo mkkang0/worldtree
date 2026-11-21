@@ -103,6 +103,80 @@ export const LAND = {
     );
   },
 
+  // 🎉 봄꽃 축제: 체크무늬 돗자리, 도시락 바구니, 흩날린 꽃잎
+  'land-picnic': (uid) => {
+    const r = rng('picnic');
+    let checks = '';
+    for (let i = 0; i < 6; i++)
+      for (let j = 0; j < 3; j++)
+        if ((i + j) % 2 === 0) checks += `<path d="M${n(40 + i * 15 + j * 6)} ${n(342 - j * 6)} l15 0 l6 -6 l-15 0Z" fill="#ff9fbf" opacity=".85"/>`;
+    return (
+      `<defs>${linear(`pk-${uid}`, [[0, '#d9a066'], [1, '#a86f3a']])}</defs>` +
+      `<ellipse cx="94" cy="336" rx="64" ry="9" fill="#3f6a3a" opacity=".22"/>` +
+      `<path d="M40 342 l90 0 l18 -18 l-90 0Z" fill="#fff6fa"/>` + checks +
+      `<path d="M40 342 l90 0 l18 -18 l-90 0Z" fill="none" stroke="#e98aa9" stroke-width="1"/>` +
+      // 도시락 바구니
+      `<path d="M92 330 h26 l-3 -12 h-20Z" fill="url(#pk-${uid})"/><path d="M95 318 q10 -12 20 0" fill="none" stroke="#a86f3a" stroke-width="2"/>` +
+      `<path d="M94 324 h22 M93.5 327 h23" stroke="#8a5a2a" stroke-width=".7" opacity=".6"/>` +
+      `<circle cx="101" cy="317" r="3.2" fill="#e5605b"/><circle cx="108" cy="316" r="3" fill="#ffd36b"/>` +
+      // 찻잔 두 개
+      `<path d="M62 334 h8 l-1 5 h-6Z" fill="#fff"/><path d="M76 331 h8 l-1 5 h-6Z" fill="#fff"/><ellipse cx="66" cy="334" rx="4" ry="1" fill="#c98a5a"/><ellipse cx="80" cy="331" rx="4" ry="1" fill="#c98a5a"/>` +
+      times(14, () => {
+        const x = n(24 + r() * 130);
+        const y = n(300 + r() * 46);
+        return `<ellipse cx="${x}" cy="${y}" rx="2.2" ry="1.3" fill="#ffc6d9" transform="rotate(${n(r() * 180)} ${x} ${y})" opacity=".9"/>`;
+      })
+    );
+  },
+
+  // 🎉 여름 바다 축제: 모래밭, 모래성, 줄무늬 파라솔, 조개
+  'land-beach': (uid) =>
+    `<defs>${radial(`sd-${uid}`, [[0, '#fff2c8'], [1, '#e8c98a']], { cx: 0.5, cy: 0.4 })}</defs>` +
+    `<ellipse cx="88" cy="334" rx="66" ry="13" fill="url(#sd-${uid})"/>` +
+    // 파라솔
+    `<line x1="58" y1="336" x2="66" y2="284" stroke="#8a6a4a" stroke-width="2"/>` +
+    `<path d="M34 292 Q66 262 100 282 Q90 286 84 290 Q76 284 66 286 Q56 284 48 290 Q42 288 34 292Z" fill="#ff8a6b"/>` +
+    `<path d="M48 290 Q56 270 66 268 Q62 278 66 286 Q56 284 48 290Z M84 290 Q80 274 66 268 Q76 272 84 290Z" fill="#fffdf6"/>` +
+    // 모래성
+    `<path d="M96 336 v-14 h4 v-4 h4 v4 h6 v-4 h4 v4 h4 v14Z" fill="#e8c98a" stroke="#c9a463" stroke-width=".8"/>` +
+    `<path d="M104 322 v-10 h3 v-3 h3 v3 h3 v10Z" fill="#f0d59c" stroke="#c9a463" stroke-width=".8"/>` +
+    `<line x1="108.5" y1="309" x2="108.5" y2="300" stroke="#8a6a4a" stroke-width=".8"/><path d="M108.5 300 l7 2.5 l-7 2.5Z" fill="#4fb3e8"/>` +
+    `<path d="M104 336 v-5 a3 3 0 0 1 6 0 v5Z" fill="#c9a463"/>` +
+    // 조개 · 불가사리
+    `<path d="M132 340 l-5 -6 q5 -5 10 0Z" fill="#ffc6d9"/><path d="M132 340 l-2.5 -6 M132 340 l0 -7 M132 340 l2.5 -6" stroke="#e98aa9" stroke-width=".6"/>` +
+    `<path d="M40 340 l2 -4 l2 4 l4 1 l-3 2.5 l1 4 l-4 -2 l-4 2 l1 -4 l-3 -2.5Z" fill="#ff9f5a"/>`,
+
+  // 🎉 겨울 눈꽃 축제: 눈 쌓인 땅과 목도리 두른 눈사람
+  'land-snowman': (uid) =>
+    `<defs>${radial(`sn-${uid}`, [[0, '#ffffff'], [1, '#dbe8f3']], { cx: 0.4, cy: 0.35 })}</defs>` +
+    `<ellipse cx="86" cy="338" rx="62" ry="10" fill="#f4f9fc"/><ellipse cx="60" cy="336" rx="22" ry="5" fill="#fff"/>` +
+    `<circle cx="86" cy="320" r="17" fill="url(#sn-${uid})"/>` +
+    `<circle cx="86" cy="292" r="12" fill="url(#sn-${uid})"/>` +
+    `<path d="M73 300 q13 7 26 0 l0 4 q-13 7 -26 0Z" fill="#e5605b"/><path d="M93 303 l4 12 l-5 1 l-3 -12Z" fill="#e5605b"/>` +
+    `<circle cx="82" cy="289" r="1.5" fill="#2b2b33"/><circle cx="90" cy="289" r="1.5" fill="#2b2b33"/>` +
+    `<path d="M86 293 l9 2 l-9 1.5Z" fill="#ff8a3d"/>` +
+    `<circle cx="86" cy="314" r="1.4" fill="#2b2b33"/><circle cx="86" cy="321" r="1.4" fill="#2b2b33"/>` +
+    `<path d="M70 314 l-14 -10 M60 307 l-4 -5 M101 314 l14 -10 M111 307 l4 -5" stroke="#7a5a3a" stroke-width="1.6" stroke-linecap="round"/>` +
+    `<path d="M77 282 h18 l-2 -10 h-14Z" fill="#3b4a6b"/><rect x="75" y="281" width="22" height="3" rx="1.5" fill="#2b3550"/>` +
+    `<circle cx="128" cy="336" r="5" fill="#fff"/><circle cx="136" cy="338" r="3.5" fill="#f4f9fc"/>`,
+
+  // 🎉 가을 수확 축제 선물: 열매가 넘치는 바구니와 호박, 밀단
+  'land-harvest': (uid) =>
+    `<defs>${linear(`hv-${uid}`, [[0, '#d9a066'], [1, '#8a5a2a']])}${radial(`pm-${uid}`, [[0, '#ffc06a'], [1, '#d9702a']], { cx: 0.4, cy: 0.35 })}</defs>` +
+    `<ellipse cx="88" cy="340" rx="58" ry="7" fill="#3f6a3a" opacity=".25"/>` +
+    // 밀단
+    `<g stroke="#d9b45a" stroke-width="1.4" stroke-linecap="round">${times(7, (i) => `<path d="M${46 + i * 2} 340 q${(i - 3) * 1.5} -20 ${(i - 3) * 4} -36"/>`)}</g>` +
+    times(7, (i) => `<ellipse cx="${n(46 + i * 2 + (i - 3) * 4)}" cy="304" rx="2.4" ry="6" fill="#f0cf6a" transform="rotate(${(i - 3) * 8} ${n(46 + i * 2 + (i - 3) * 4)} 304)"/>`) +
+    `<path d="M42 326 h16" stroke="#b5562e" stroke-width="2.4"/>` +
+    // 바구니 + 열매
+    `<circle cx="80" cy="318" r="6" fill="#e5605b"/><circle cx="92" cy="315" r="6.5" fill="#ffb347"/><circle cx="103" cy="319" r="5.5" fill="#c0392b"/>` +
+    `<g fill="#8e5bb5">${times(6, (i) => `<circle cx="${n(86 + (i % 3) * 4)}" cy="${n(320 + Math.floor(i / 3) * 4)}" r="2.4"/>`)}</g>` +
+    `<path d="M70 322 h42 l-5 18 h-32Z" fill="url(#hv-${uid})"/>` +
+    `<path d="M71 327 h40 M72.5 332 h37 M74 337 h34" stroke="#6b4a2f" stroke-width=".7" opacity=".6"/>` +
+    // 호박
+    `<ellipse cx="128" cy="334" rx="12" ry="9" fill="url(#pm-${uid})"/><path d="M122 327 q-2 7 0 15 M128 325 v18 M134 327 q2 7 0 15" stroke="#b5562e" stroke-width=".8" fill="none" opacity=".7"/>` +
+    `<path d="M128 325 q1 -5 4 -6" stroke="#5f7a3a" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+
   // ✨ 전설: 세계수 밑동에서 천천히 도는 빛의 마법진
   'land-magic': (uid) => {
     const runes = times(12, (i) => {

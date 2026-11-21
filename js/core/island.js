@@ -5,9 +5,11 @@
 //   섬 번호 k: 0 = 본섬, 1부터 = isles[k-1]
 // 짓기는 모든 섬을 통틀어 한 번에 하나. 주민의 집 칸도 모든 섬을 합쳐 센다.
 // state.island.residents = { 주민 id: 이사 온 날 }, state.island.giftDay = 선물 받은 날
+// 4단계: state.island.req = { date, done: [주민 id] } 오늘 들어준 부탁, state.island.hearts = { 주민 id: 0~5 } 우정 하트
 import { buildingById, workOf, bedsOf } from '../data/buildings.js';
 import { todayKey } from './dates.js';
-import { streakOf, totalStudyMin } from './records.js';
+import { streakOf, totalStudyMin, missionsDone, minutesOn, studyMinOn, logsOn, sessionsOn } from './records.js';
+import { seeded } from './quests.js';
 
 export const isleCount = (state) => 1 + state.island.isles.length;
 export const lotsOf = (state, k = 0) => (k ? state.island.isles[k - 1]?.lots || [] : state.island.lots);
@@ -91,5 +93,70 @@ export function moveIn(state, day = todayKey()) {
 // 이사 조건은 채웠는데 집이 모자라서 기다리는 주민 수
 export const waitingCount = (state) => RESIDENTS.filter((r) => !state.island.residents[r.id] && r.when(state)).length;
 
-// 주민들의 하루 선물 (주민 수만큼)
-export const giftOf = (n) => ({ sun: n * 2, water: n * 2, star: n });
+/* ---------- 주민 부탁 · 우정 하트 (섬 키우기 4단계) ---------- */
+
+// 주민마다 어울리는 부탁. study: 공부 기능을 끈 사람에게는 alt를 낸다.
+const care = (s, d) => Object.values(s.care[d] || {}).filter(Boolean).length;
+const kanaPlays = (s, d) => (s.kana.day?.date === d ? s.kana.day.plays || 0 : 0);
+export const REQUESTS = {
+  momo: { emoji: '🥗', label: '식단 미션 2개 하기', goal: 2, cur: missionsDone },
+  toto: { emoji: '📝', label: '오늘 기록 3개 남기기', goal: 3, cur: (s, d) => logsOn(s, d).length + sessionsOn(s, d).length + missionsDone(s, d) },
+  kuku: { emoji: '🏃', label: '운동 30분 하기', goal: 30, cur: minutesOn },
+  bibi: { emoji: '📚', label: '공부 45분 하기', goal: 45, cur: studyMinOn, study: true, alt: { emoji: '🧘', label: '운동 20분 하기', goal: 20, cur: minutesOn } },
+  nana: { emoji: '🥤', label: '물 6잔 마시기', goal: 6, cur: (s, d) => s.cups[d] || 0 },
+  ruru: { emoji: '🎴', label: '가나 퀴즈 한 판 하기', goal: 1, cur: kanaPlays },
+  popo: { emoji: '💚', label: '세계수 돌보기 (이슬 + 햇살)', goal: 2, cur: care },
+  jiji: {
+    emoji: '🌈',
+    label: '운동 · 공부 · 식단 모두 하기',
+    goal: 3,
+    cur: (s, d) => [minutesOn(s, d) > 0, studyMinOn(s, d) > 0, missionsDone(s, d) > 0].filter(Boolean).length,
+    study: true,
+    alt: { emoji: '🌈', label: '운동 · 식단 · 물 모두 하기', goal: 3, cur: (s, d) => [minutesOn(s, d) > 0, missionsDone(s, d) > 0, (s.cups[d] || 0) > 0].filter(Boolean).length },
+  },
+};
+export const HEART_MAX = 5;
+export const CROWN_AT = 3; // 하트 3개부터 꽃 화관을 쓴다 (5개면 리본도)
+export const REQUEST_REWARD = { sun: 6, water: 6, star: 3 };
+export const heartsOf = (state, id) => state.island.hearts[id] || 0;
+
+const requestOf = (state, id) => {
+  const q = REQUESTS[id];
+  return q.study && !state.settings.studyEnabled ? q.alt : q;
+};
+
+// 오늘의 부탁: 이사 온 주민 중 날짜마다 같은 2명(주민 6명부터 3명)
+export function requestsFor(state, day = todayKey()) {
+  const here = RESIDENTS.filter((r) => state.island.residents[r.id] && state.island.residents[r.id] <= day);
+  if (!here.length) return [];
+  const want = Math.min(here.length, here.length >= 6 ? 3 : 2);
+  const rand = seeded('req-' + day);
+  const pool = [...here];
+  const picks = [];
+  while (picks.length < want) picks.push(pool.splice(Math.floor(rand() * pool.length), 1)[0]);
+  const done = state.island.req.date === day ? state.island.req.done : [];
+  return picks.map((r) => {
+    const q = requestOf(state, r.id);
+    const cur = Math.min(q.goal, q.cur(state, day));
+    return { r, emoji: q.emoji, label: q.label, goal: q.goal, cur, ready: cur >= q.goal, claimed: done.includes(r.id), hearts: heartsOf(state, r.id) };
+  });
+}
+
+// 부탁을 들어주고 하트를 받는다. 보상을 돌려준다 (지급은 부르는 쪽에서 gain)
+export function claimRequest(state, id, day = todayKey()) {
+  const q = requestsFor(state, day).find((x) => x.r.id === id);
+  if (!q || !q.ready || q.claimed) return null;
+  if (state.island.req.date !== day) state.island.req = { date: day, done: [] };
+  state.island.req.done.push(id);
+  state.island.hearts[id] = Math.min(HEART_MAX, heartsOf(state, id) + 1);
+  return { reward: REQUEST_REWARD, hearts: state.island.hearts[id] };
+}
+
+// 아직 들어주지 않은 오늘의 부탁 수 / 지금 받을 수 있는 수
+export const openRequests = (state, day = todayKey()) => requestsFor(state, day).filter((q) => !q.claimed);
+
+// 하트를 다 채운 단짝 수 (하루 선물이 늘어난다)
+export const bestFriendCount = (state) => RESIDENTS.filter((r) => state.island.residents[r.id] && heartsOf(state, r.id) >= HEART_MAX).length;
+
+// 주민들의 하루 선물 (주민 수만큼, 단짝은 한 몫 더)
+export const giftOf = (n, best = 0) => ({ sun: (n + best) * 2, water: (n + best) * 2, star: n + best });

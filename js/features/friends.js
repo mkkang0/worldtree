@@ -21,7 +21,7 @@ export function view(state, ui) {
     ${state.friends.length ? `<section class="card">${title('함께 목표', { iconName: 'users', aside: `${members}명` })}<p class="lead">이번 주 운동 <b>${teamMin}</b> / ${goal}분</p>${bar(teamMin / goal)}</section>` : ''}
     <section class="card">
       ${title('내 코드 보내기', { iconName: 'forest' })}
-      <p class="tiny">코드를 복사해 메신저로 보내면 친구 앱에 내 세계수가 나타나요. 주 1~2번 새 코드를 보내 주세요.</p>
+      <p class="tiny">코드를 복사해 메신저로 보내면 친구 앱에 내 세계수와 섬이 나타나요. 주 1~2번 새 코드를 보내 주세요.</p>
       <label>친구에게 보여줄 응원 한마디 (30자)
         <input data-input="friends.cheer" maxlength="30" value="${esc(state.settings.cheer)}" placeholder="예: 오늘도 같이 화이팅!">
       </label>
@@ -59,6 +59,7 @@ function friendRow(f) {
     <div class="art">${art}</div>
     <div class="grow"><b class="serif">${esc(f.name)}</b> <span class="tiny">${tree.label} · ${STAGES[f.stage].name}</span>
       <div class="tiny">이번 주 운동 ${f.weekMin}분${f.studyMin ? ` · 공부 ${hoursMinutes(f.studyMin)}` : ''} · 연속 ${f.streak}일 · ${esc(f.updated)} 기준</div>
+      ${f.isles ? `<div class="tiny friend-isle">${f.nation ? `${esc(f.emblem || '🗺️')} ${esc(f.nation)} · ` : '🏝️ '}섬 ${f.isles}개 · 건물 ${f.buildings} · 주민 ${f.residents}명</div>` : ''}
       ${f.cheer ? `<div class="cheer">${esc(f.cheer)}</div>` : ''}</div>
     <button class="x" data-act="friends.delete" data-arg="${esc(f.id)}" aria-label="친구 삭제">${icon('close')}</button>
   </div>`;

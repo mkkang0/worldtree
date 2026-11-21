@@ -32,7 +32,8 @@ export function view(state) {
       </form>
     </section>
     <section class="card">
-      ${title('심박 자동 입력 (단축어)', { iconName: 'heart' })}
+      <details class="fold plain">
+      <summary>${icon('heart')} 심박 자동 입력 (단축어)${icon('right', 'fold-ic')}</summary>
       <p class="tiny">웹앱은 건강 앱을 직접 읽을 수 없어서, 아이폰 단축어가 대신 읽어서 복사해 줘요. 메뉴 이름은 iOS 버전에 따라 조금 다를 수 있어요.</p>
       <ol class="steps">
         <li>단축어 앱에서 새 단축어를 만들어요.</li>
@@ -45,6 +46,7 @@ export function view(state) {
       <textarea rows="2" readonly id="shortcut-text">min=【운동 분】&hr=【평균 심박】&type=run</textarea>
       <p class="tiny">type은 run(러닝), bike(자전거), strength(근력), stretch(스트레칭) 중 하나예요. 아이폰은 홈 화면 앱과 사파리의 저장 공간이 따로라서, 단축어가 주소를 직접 여는 방식은 쓰지 않아요.</p>
       <button class="btn small soft" data-act="settings.copyShortcut">문장 복사</button>
+      </details>
     </section>
     <section class="card">
       ${title('백업', { iconName: 'scroll', aside: backupAside(state) })}

@@ -6,6 +6,8 @@ import { stageOf, plantXp, progress, STAGES, LAST_STAGE } from '../core/scoring.
 import { moodOf } from '../core/records.js';
 import { todayKey, daysBetween } from '../core/dates.js';
 import { questsFor, weekGoal } from '../core/quests.js';
+import { festivalState, STAMP_GOAL } from '../core/festivals.js';
+import { itemById } from '../data/items/index.js';
 import { WEEK_REWARD, JOURNEY_DAYS } from '../core/config.js';
 import { esc, bar, rewardHtml, money, CURRENCIES, title } from './dom.js';
 import { icon } from './icons.js';
@@ -14,6 +16,21 @@ const nowHour = () => new Date().getHours();
 
 // 지금 키우는 세계수 장면. equipped에 미리보기 아이템 { slot: id }를 넘기면 겹쳐 그린다.
 // base·custom을 넘기면 저장한 코디처럼 다른 꾸미기로 그린다.
+// 계절 축제 카드 (홈 · 섬): 도장 7칸, 남은 날, 선물 받기, 한정 아이템 보러 가기
+export function festivalCard(state) {
+  const fs = festivalState(state);
+  if (!fs) return '';
+  const { f, stamps, claimed, ready, left } = fs;
+  const prize = itemById(f.prize);
+  const cells = Array.from({ length: STAMP_GOAL }, (_, i) => `<i class="${i < stamps ? 'on' : ''}">${i < stamps ? f.emoji : i + 1}</i>`).join('');
+  return `<section class="card fest-card fest-${f.id}">
+    <div class="fest-head"><span class="em">${f.emoji}</span><span class="grow"><b>${f.name}</b><span class="tiny">${f.line} · ${left}일 남음</span></span><span class="tiny">${Math.min(stamps, STAMP_GOAL)} / ${STAMP_GOAL}</span></div>
+    <div class="stamps" role="img" aria-label="축제 도장 ${Math.min(stamps, STAMP_GOAL)} / ${STAMP_GOAL}">${cells}</div>
+    <p class="tiny">${claimed ? `선물 '${prize.name}'을(를) 받았어요. 축제를 마음껏 즐겨요!` : `축제 동안 기록한 날마다 도장 하나 · ${STAMP_GOAL}개 모으면 '${prize.name}' 선물`}</p>
+    <div class="fest-btns">${ready ? '<button class="btn small gold" data-act="festival.claim">🎁 선물 받기</button>' : ''}<button class="btn small soft" data-act="festival.shop">🎉 축제 한정 아이템</button></div>
+  </section>`;
+}
+
 export function sceneSvg(state, { equipped = {}, base = state.equipped, custom = state.custom, ...rest } = {}) {
   const xp = plantXp(state);
   return renderScene({

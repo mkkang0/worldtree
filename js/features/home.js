@@ -9,12 +9,15 @@ import { LINES, STAGE_LINES, fill } from '../data/lines.js';
 import { activeSubjects } from '../data/lists.js';
 import { buildingById, islandLevel, workOf } from '../data/buildings.js';
 import { isleName, nationName } from '../data/isles.js';
-import { builtCount, buildingNow, residentCount, isleCount } from '../core/island.js';
+import { builtCount, buildingNow, residentCount, isleCount, openRequests } from '../core/island.js';
+import { festivalState } from '../core/festivals.js';
+import { itemById } from '../data/items/index.js';
+import { go } from '../app/render.js';
 import { saveBackupFile, backupDue, daysSinceBackup } from '../app/backup.js';
 import { TREES, treeById } from '../data/trees.js';
 import { esc, bar, money, title } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
-import { sceneSvg, journey, greeting, wallet, questsCard, weekCard, treePicker, ddayBadge, examDday } from '../ui/components.js';
+import { sceneSvg, journey, greeting, wallet, questsCard, weekCard, treePicker, ddayBadge, examDday, festivalCard } from '../ui/components.js';
 import { toast, chime, confetti } from '../ui/effects.js';
 
 export function view(state, ui) {
@@ -41,6 +44,7 @@ export function view(state, ui) {
     </section>
     ${wallet(state)}
     ${backupNote(state, ui)}
+    ${festivalCard(state)}
     ${islandLink(state)}
     ${needsRest(state) ? '<section class="card note">3일 연속 하루 상한까지 달렸어요. 오늘은 스트레칭이나 푹 쉬는 것도 세계수에게 좋아요.</section>' : ''}
     ${todayCard(state)}
@@ -134,10 +138,12 @@ function islandLink(state) {
   const b = l && buildingById(l.b);
   const nation = nationName(isleCount(state));
   const need = b && workOf(b, l.lv);
-  const gift = residentCount(state) && state.island.giftDay !== todayKey() ? ' · 🎁 선물이 있어요' : '';
+  const asks = openRequests(state);
+  const gift = (residentCount(state) && state.island.giftDay !== todayKey() ? ' · 🎁 선물이 있어요' : '') + (asks.length ? ` · 💌 부탁 ${asks.length}개${asks.some((q) => q.ready) ? ' (완료!)' : ''}` : '');
+  const nationLabel = state.island.nation.name ? `${state.island.nation.emblem || '🗺️'} ${esc(state.island.nation.name)}` : nation;
   const sub = b
     ? `${b.emoji} ${b.name}${l.lv > 1 ? ` Lv.${l.lv}로 올리는 중` : ' 짓는 중'} · ${Math.floor((l.progress / need) * 100)}%${gift}`
-    : `${nation ? `${nation} · 섬 ${isleCount(state)}개` : islandLevel(built).name} · 건물 ${built}${nation ? '' : ' / 8'} · 주민 ${residentCount(state)}명${gift}`;
+    : `${nation ? `${nationLabel} · 섬 ${isleCount(state)}개` : islandLevel(built).name} · 건물 ${built}${nation ? '' : ' / 8'} · 주민 ${residentCount(state)}명${gift}`;
   return `<button class="card garden-link" data-act="island.open"><span class="em">🏝️</span><span class="grow"><b>나의 섬</b><span class="tiny">${sub}</span>${b ? bar(l.progress / need) : ''}</span>${icon('right')}</button>`;
 }
 
@@ -238,6 +244,26 @@ export const actions = {
     chime('ok');
     ctx.ui.bubble = kind === 'water' ? '촉촉한 이슬이 반짝여요' : '따스한 햇살에 잎이 반짝여요';
     rerender();
+  },
+
+  // 계절 축제: 도장 7개 → 한정 선물
+  'festival.claim': () => {
+    const s = ctx.state;
+    const fs = festivalState(s);
+    if (!fs || !fs.ready) return;
+    s.festivals[fs.f.key] = todayKey();
+    if (!s.owned.includes(fs.f.prize)) s.owned.push(fs.f.prize);
+    settle();
+    chime('level');
+    confetti([fs.f.emoji, '🎉', '✨']);
+    rerender();
+    toast(`🎁 축제 선물 '${itemById(fs.f.prize).name}'을(를) 받았어요! 정원에서 꾸며 보세요`);
+  },
+  'festival.shop': () => {
+    ctx.ui.shopSlot = '';
+    ctx.ui.shopQuery = '';
+    go('shop');
+    setTimeout(() => document.getElementById('fest-shop')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
   },
 
   'backup.save': () => saveBackupFile(() => rerender()),

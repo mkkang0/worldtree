@@ -200,7 +200,8 @@ function finish(quiz) {
   const perfect = quiz.score === n && n >= 10;
   const want = quiz.score + (perfect ? PERFECT_BONUS : 0);
   const give = Math.max(0, Math.min(want, KANA_DAILY_STARS - todayStars(s)));
-  s.kana.day = { date: todayKey(), stars: todayStars(s) + give };
+  const playsToday = s.kana.day?.date === todayKey() ? s.kana.day.plays || 0 : 0;
+  s.kana.day = { date: todayKey(), stars: todayStars(s) + give, plays: playsToday + 1 };
   s.kana.plays += 1;
   s.kana.best = Math.max(s.kana.best, quiz.best);
   if (perfect) s.kana.perfect += 1;
