@@ -1,6 +1,6 @@
 // 나의 섬 지도: 가로로 넓은 떠 있는 섬. 가운데 세계수, 양옆에 건물 자리 8곳.
 // 크기 900 x 390. 섬 윗면 높이는 islandTop(x). 건물 자리 위치는 LOTS (features/island.js가 눌림 버튼을 같은 자리에 둔다).
-import { nextUid, rng, n, linear, radial, glow, times, hueDefs, tint, PAINT, withPaint } from './svg.js';
+import { nextUid, rng, n, linear, glow, times, hueDefs, tint, withPaint, PAINT } from './svg.js';
 import { treeArt } from './tree.js';
 import { leafTree } from './leaves.js';
 import { bloomArt } from './blooms.js';

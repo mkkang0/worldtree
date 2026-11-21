@@ -1,6 +1,5 @@
 // 화면 목록과 그리기. 새 화면을 만들면 TABS 또는 SUB_PAGES에 등록한다.
 import { ctx, rerender } from './context.js';
-import { clock } from '../core/dates.js';
 import { icon } from '../ui/icons.js';
 import { confetti, chime } from '../ui/effects.js';
 import * as home from '../features/home.js';

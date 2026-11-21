@@ -48,7 +48,7 @@ export function defaultState() {
     version: 6,
     me: newId(),
     onboarded: false,
-    settings: { age: 30, name: DEFAULT_SPIRIT_NAME, restHr: 0, sound: true, bigText: false, cheer: '', studyEnabled: false, examDate: '', appearance: 'auto' }, // examDate: 'YYYY-MM-DD' 또는 '' / appearance: auto·light·dark
+    settings: { age: 30, name: DEFAULT_SPIRIT_NAME, restHr: 0, sound: true, bigText: false, cheer: '', studyEnabled: false, examDate: '', appearance: 'auto', lastBackup: '' }, // examDate: 'YYYY-MM-DD' 또는 '' / appearance: auto·light·dark
     // 지갑과 성장
     xp: 0,
     sun: 0, // 햇살 (운동)
@@ -111,6 +111,7 @@ function sanitize(raw) {
     studyEnabled: st.studyEnabled === true,
     examDate: isDate(st.examDate) ? st.examDate : '',
     appearance: ['light', 'dark'].includes(st.appearance) ? st.appearance : 'auto',
+    lastBackup: isDate(st.lastBackup) ? st.lastBackup : '',
   };
 
   s.xp = Math.max(0, num(raw.xp, 0));

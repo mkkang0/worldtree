@@ -5,6 +5,7 @@ import { esc, backButton, title, radioChips } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { DEFAULT_SPIRIT_NAME } from '../data/store.js';
 import { toast, copyText } from '../ui/effects.js';
+import { saveBackupFile, markBackup, daysSinceBackup } from '../app/backup.js';
 
 export function view(state) {
   const s = state.settings;
@@ -46,11 +47,16 @@ export function view(state) {
       <button class="btn small soft" data-act="settings.copyShortcut">문장 복사</button>
     </section>
     <section class="card">
-      ${title('백업', { iconName: 'scroll' })}
-      <p class="tiny">데이터는 이 폰 안에만 있어요. 폰을 바꾸거나 앱을 지우기 전에 꼭 백업하세요.</p>
+      ${title('백업', { iconName: 'scroll', aside: backupAside(state) })}
+      <p class="tiny">데이터는 이 폰 안에만 있어요. 폰을 바꾸거나 앱을 지우기 전에 꼭 백업하세요. 파일로 저장하면 '파일' 앱이나 클라우드에 보관할 수 있어요.</p>
       <div class="row two">
-        <button class="btn" data-act="settings.export">백업 만들기</button>
-        <button class="btn soft" data-act="settings.importStart">백업 가져오기</button>
+        <button class="btn gold" data-act="settings.saveFile">💾 파일로 저장</button>
+        <label class="btn soft file-btn">📂 파일에서 가져오기<input type="file" accept=".json,application/json,text/plain" data-change="settings.loadFile"></label>
+      </div>
+      <p class="tiny">파일 대신 글자로 옮기려면:</p>
+      <div class="row two">
+        <button class="btn small soft" data-act="settings.export">글자로 백업 만들기</button>
+        <button class="btn small soft" data-act="settings.importStart">글자 붙여넣기</button>
       </div>
       <textarea id="backup-text" rows="6" placeholder="여기에 백업 내용이 표시되거나, 붙여넣어서 가져올 수 있어요" spellcheck="false"></textarea>
       <div class="row two">
@@ -65,6 +71,25 @@ export function view(state) {
 }
 
 const backupBox = () => document.getElementById('backup-text');
+
+function backupAside(state) {
+  const d = daysSinceBackup(state);
+  return d === null ? '아직 안 했어요' : d === 0 ? '오늘 백업함' : `${d}일 전 백업`;
+}
+
+// 가져온 내용으로 바꾸기 (글자 · 파일 같이 쓴다)
+function restoreFrom(text) {
+  let next;
+  try {
+    next = importJson(text);
+  } catch {
+    return toast('백업 내용을 읽을 수 없어요');
+  }
+  if (!confirm('현재 데이터가 백업 내용으로 바뀌어요. 진행할까요?')) return;
+  replaceState(next);
+  rerender();
+  toast('복원했어요');
+}
 const clampInt = (v, d, lo, hi) => Math.min(hi, Math.max(lo, Math.round(Number(v)) || d));
 
 export const actions = {
@@ -88,6 +113,20 @@ export const actions = {
   'settings.export': () => {
     backupBox().value = exportJson(ctx.state);
     backupBox().select();
+    markBackup();
+  },
+
+  'settings.saveFile': () => saveBackupFile(() => rerender()),
+
+  // 파일 고르기 → 읽어서 복원
+  'settings.loadFile': (input) => {
+    const file = input.files?.[0];
+    if (!file) return;
+    file
+      .text()
+      .then(restoreFrom)
+      .catch(() => toast('파일을 읽을 수 없어요'));
+    input.value = '';
   },
   'settings.importStart': () => {
     backupBox().value = '';
@@ -96,19 +135,9 @@ export const actions = {
   'settings.copyBackup': () => {
     if (!backupBox().value) backupBox().value = exportJson(ctx.state);
     copyText(backupBox().value);
+    markBackup();
   },
-  'settings.restore': () => {
-    let next;
-    try {
-      next = importJson(backupBox().value);
-    } catch {
-      return toast('백업 내용을 읽을 수 없어요');
-    }
-    if (!confirm('현재 데이터가 백업 내용으로 바뀌어요. 진행할까요?')) return;
-    replaceState(next);
-    rerender();
-    toast('복원했어요');
-  },
+  'settings.restore': () => restoreFrom(backupBox().value),
 
   'settings.reset': () => {
     if (!confirm('정말 모든 데이터를 지울까요? 되돌릴 수 없어요.')) return;

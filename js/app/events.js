@@ -24,6 +24,12 @@ export function bindEvents() {
     run(form.dataset.form, form, e);
   });
 
+  // data-change="기능.동작" → 값이 바뀌었을 때 (파일 고르기 등)
+  document.addEventListener('change', (e) => {
+    const el = e.target.closest('[data-change]');
+    if (el) run(el.dataset.change, el, e);
+  });
+
   document.addEventListener('input', (e) => {
     const el = e.target.closest('[data-input]');
     if (el) run(el.dataset.input, el, e);

@@ -26,7 +26,7 @@ export function addWorkout({ type, date, min, hr, intensity, mood = '', note = '
   const points = workoutPoints(min, zone);
   const earned = capEarn(points, earnedOn(ctx.state, date), DAILY_SUN_CAP);
   ctx.state.log.unshift({ id: newId(), date, type, min, hr: hr || null, zone, points, earned, mood, note: note.slice(0, 80) });
-  ctx.state.log = ctx.state.log.slice(0, 300);
+  ctx.state.log = ctx.state.log.slice(0, 3000); // 하루 몇 번씩 몇 년을 써도 남도록 (저장 공간은 충분하다)
   gain({ sun: earned });
   settle();
   return { zone, points, earned };

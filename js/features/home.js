@@ -9,6 +9,7 @@ import { LINES, STAGE_LINES, fill } from '../data/lines.js';
 import { activeSubjects } from '../data/lists.js';
 import { buildingById, islandLevel, workOf } from '../data/buildings.js';
 import { builtCount, buildingNow, residentCount } from '../core/island.js';
+import { saveBackupFile, backupDue, daysSinceBackup } from '../app/backup.js';
 import { TREES, treeById } from '../data/trees.js';
 import { esc, bar, money, title } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
@@ -38,6 +39,7 @@ export function view(state, ui) {
       </div>
     </section>
     ${wallet(state)}
+    ${backupNote(state, ui)}
     ${islandLink(state)}
     ${needsRest(state) ? '<section class="card note">3일 연속 하루 상한까지 달렸어요. 오늘은 스트레칭이나 푹 쉬는 것도 세계수에게 좋아요.</section>' : ''}
     ${todayCard(state)}
@@ -112,6 +114,15 @@ export function stagesModal(state) {
     }</p>
     <button class="btn" data-act="modal.close">닫기</button>
   </div>`;
+}
+
+// 백업을 권하는 알림 (7일마다, 처음 쓰기 시작하고 3일 뒤부터)
+function backupNote(state, ui) {
+  if (ui.backupLater || !backupDue(state)) return '';
+  const d = daysSinceBackup(state);
+  return `<section class="card note backup-note"><span class="em">💾</span>
+    <span class="grow"><b>${d === null ? '아직 백업한 적이 없어요' : `마지막 백업이 ${d}일 전이에요`}</b><span class="tiny">데이터는 이 폰 안에만 있어요. 파일로 저장해 두면 폰을 바꿔도 이어서 키울 수 있어요.</span></span>
+    <span class="backup-btns"><button class="btn small gold" data-act="backup.save">파일로 저장</button><button class="btn small ghost" data-act="backup.later">나중에</button></span></section>`;
 }
 
 // 홈의 '나의 섬' 바로 가기: 섬 단계와 짓는 중인 건물
@@ -224,6 +235,12 @@ export const actions = {
     settle();
     chime('ok');
     ctx.ui.bubble = kind === 'water' ? '촉촉한 이슬이 반짝여요' : '따스한 햇살에 잎이 반짝여요';
+    rerender();
+  },
+
+  'backup.save': () => saveBackupFile(() => rerender()),
+  'backup.later': () => {
+    ctx.ui.backupLater = true;
     rerender();
   },
 

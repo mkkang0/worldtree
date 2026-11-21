@@ -64,7 +64,7 @@ export function tickTimers() {
 export function addSession({ date, min, focus, subject, note = '' }) {
   const stars = capEarn(studyStars(min, focus), starsOn(ctx.state, date), DAILY_STAR_CAP);
   ctx.state.study.sessions.unshift({ id: newId(), date, subject, min, focus, stars, note: note.slice(0, 80) });
-  ctx.state.study.sessions = ctx.state.study.sessions.slice(0, 500);
+  ctx.state.study.sessions = ctx.state.study.sessions.slice(0, 3000); // 하루 몇 번씩 몇 년을 써도 남도록
   gain({ star: stars });
   settle();
   return { stars, full: studyStars(min, focus) };

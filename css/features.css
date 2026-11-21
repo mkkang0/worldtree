@@ -477,3 +477,15 @@ body.immersive main { padding-top: 6px; padding-bottom: calc(28px + env(safe-are
 /* 그림 위에 얹는 종이 결: 손으로 그린 그림 같은 느낌 (사진 저장에는 들어가지 않는다) */
 .scene::after, .stage-scene::after, .map-inner::after, .celebrate-art::after { content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5  0 0 0 0 .45  0 0 0 0 .35  0 0 1.2 0 -.35'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E"); background-size: 160px; opacity: .18; mix-blend-mode: multiply; }
 .celebrate-art { position: relative; }
+
+/* 백업 알림 · 새 버전 띠 */
+.backup-note { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.backup-note .em { font-size: 1.5rem; }
+.backup-note b { display: block; }
+.backup-note .grow { flex: 1 1 200px; }
+.backup-btns { display: flex; gap: 6px; flex-basis: 100%; justify-content: flex-end; }
+.backup-btns .btn { width: auto; }
+.file-btn { position: relative; overflow: hidden; margin: 0; }
+.file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; margin: 0; }
+#update-bar { position: fixed; left: 50%; top: calc(env(safe-area-inset-top) + 10px); transform: translateX(-50%); z-index: 60; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; border-radius: 99px; background: var(--surface-solid); color: var(--ink); border: 1px solid var(--accent); box-shadow: var(--shadow); font-size: .88rem; white-space: nowrap; animation: pop .3s ease; }
+#update-bar button { font: inherit; font-weight: 700; border: 0; border-radius: 99px; padding: 7px 14px; background: linear-gradient(180deg, #d9bd7a, #b48c43); color: #1d1a10; cursor: pointer; }

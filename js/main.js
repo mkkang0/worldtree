@@ -31,4 +31,30 @@ document.addEventListener('visibilitychange', () => {
 });
 
 navigator.storage?.persist?.().catch(() => {});
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+// 오프라인 캐시(sw.js). 새 버전이 올라오면 앱을 다시 열 때마다 확인하고, 준비되면 '새로고침' 띠를 띄운다.
+// (예전에는 앱을 두 번 열어야 새 버전이 보였다)
+if ('serviceWorker' in navigator) {
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker
+    .register('sw.js')
+    .then((reg) => {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') reg.update().catch(() => {});
+      });
+    })
+    .catch(() => {});
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hadController) showUpdateBanner();
+  });
+}
+
+function showUpdateBanner() {
+  if (document.getElementById('update-bar')) return;
+  const bar = document.createElement('div');
+  bar.id = 'update-bar';
+  bar.setAttribute('role', 'status');
+  bar.innerHTML = '<span>✨ 새 버전이 준비됐어요</span><button type="button">새로고침</button>';
+  bar.querySelector('button').addEventListener('click', () => location.reload());
+  document.body.appendChild(bar);
+}
