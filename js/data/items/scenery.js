@@ -17,6 +17,7 @@ export const SCENERY = [
   { id: 'world-cosmos', slot: 'world', name: '우주', cost: c(150, 50) },
   { id: 'world-library', slot: 'world', name: '지혜의 도서관', cost: c(0, 0, 100) },
   // ✨ 전설
+  { id: 'world-skyisland', slot: 'world', name: '하늘섬', cost: c(220, 80, 60), rare: true },
   { id: 'world-celestial', slot: 'world', name: '천상의 정원', cost: c(240, 80, 60), rare: true },
   { id: 'world-galaxy', slot: 'world', name: '은하수', cost: c(200, 60, 80), rare: true },
   // 움직이는 배경

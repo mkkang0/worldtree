@@ -4,7 +4,7 @@
 import { nextUid, radial, hueDefs, tint } from './svg.js';
 import { treeArt } from './tree.js';
 import { spiritArt } from './spirit.js';
-import { worldArt } from './worlds.js';
+import { worldArt, lightOf } from './worlds.js';
 import { skyArt } from './sky.js';
 import { ornamentArt } from './ornaments.js';
 import { landArt } from './land.js';
@@ -36,6 +36,7 @@ export function renderScene({ growth = 0, stage = 0, tree, equipped = {}, custom
   const t = treeArt({ growth, stage, tree: leafTree(tree, one('leaf')), uid });
   const many = (slot, art) => placed(equipped, slot).map((id) => tint(move(slot, id, custom[id]?.pos, art(id)), uid, hue(id))).join('');
   const wear = Object.fromEntries(['hat', 'face', 'neck', 'hand'].map((s) => [s, one(s)]));
+  const light = lightOf(one('world'), hour);
   const layers = [
     hueDefs(uid, HUES),
     worldArt(one('world'), uid, hour),
@@ -46,8 +47,10 @@ export function renderScene({ growth = 0, stage = 0, tree, equipped = {}, custom
     many('land', (id) => landArt(id, uid)),
     many('companion', (id) => companionArt(id, uid)),
     spirit
-      ? spiritArt({ x: 226, y: 300, scale: 0.55, mood, wardrobe: wear, hues: Object.fromEntries(Object.entries(wear).map(([s, id]) => [s, hue(id)])), tree, uid, motion: one('motion') })
+      ? spiritArt({ x: 214, y: 302, scale: 0.5, mood, wardrobe: wear, hues: Object.fromEntries(Object.entries(wear).map(([s, id]) => [s, hue(id)])), tree, uid, motion: one('motion'), light })
       : '',
+    // 장면 전체에 배경의 빛을 얹어 나무·소품·정령이 같은 빛 아래 있는 것처럼
+    `<rect width="${VIEW.w}" height="${VIEW.h}" fill="${light.color}" opacity="${light.wash}" style="mix-blend-mode:multiply" pointer-events="none"/>`,
     tint(effectArt(one('fx'), uid, t), uid, hue(one('fx'))),
     // 가장자리를 살짝 어둡게 해 깊이감을 준다
     `<defs>${radial(`vg-${uid}`, [[0.55, '#000', 0], [1, '#000', 0.22]], { r: 0.75 })}</defs><rect width="${VIEW.w}" height="${VIEW.h}" fill="url(#vg-${uid})" pointer-events="none"/>`,

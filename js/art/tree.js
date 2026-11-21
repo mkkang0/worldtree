@@ -43,7 +43,7 @@ function sprout(pal, uid, t) {
 function clusterTemplate(seedId) {
   const r = rng('crown-' + seedId);
   const pts = [];
-  for (let i = 0; i < 48; i++) {
+  for (let i = 0; i < 90; i++) {
     const u = r() * 2 - 1;
     const edge = Math.sqrt(1 - u * u);
     pts.push({ u: u * 0.95, v: -edge * (0.1 + 0.9 * r()) + 0.32 * (r() - 0.25), s: 0.75 + r() * 0.5, k: r() });
@@ -53,7 +53,7 @@ function clusterTemplate(seedId) {
 
 function trunkPath(x, y, h, wb, wt, bend) {
   const top = y - h;
-  const flare = wb * 0.35; // 밑동이 넓게 퍼짐
+  const flare = wb * 0.55; // 밑동이 넓게 퍼짐
   return (
     `M${n(x - wb / 2 - flare)} ${y}` +
     ` C${n(x - wb / 2)} ${n(y - 6)} ${n(x - wb * 0.32)} ${n(y - h * 0.35)} ${n(x - wt / 2 + bend)} ${n(top)}` +
@@ -78,19 +78,20 @@ export function treeArt({ growth, stage, tree, uid }) {
   const t = clamp01((growth - 0.07) / 0.93); // 묘목~세계수 사이 진행도
   const e = Math.pow(t, 0.7);
   const r = rng('tree-' + tree.id);
-  const h = lerp(44, 126, e);
-  const wb = lerp(6, 46, e);
-  const wt = lerp(3, 19, e);
+  // 다 자라면 수관이 장면 폭을 거의 채우고, 줄기는 굵게 꼬인다
+  const h = lerp(44, 128, e);
+  const wb = lerp(6, 58, e);
+  const wt = lerp(3, 24, e);
   const bend = lerp(0, 5, e) * (r() > 0.5 ? 1 : -1);
-  const rx = lerp(24, 112, e);
-  const ry = lerp(24, 66, e);
+  const rx = lerp(24, 132, e);
+  const ry = lerp(24, 78, e);
   const top = y - h;
   const cx = x + bend;
-  const cy = top - ry * lerp(0.35, 0.62, e); // 크면 수관이 줄기 위로 떠서 큰 가지가 드러난다
-  const leaf = lerp(14, 25, e);
+  const cy = top - ry * lerp(0.35, 0.45, e); // 크면 수관이 줄기 위로 떠서 큰 가지가 드러난다
+  const leaf = lerp(14, 28, e);
 
   const clusters = clusterTemplate(tree.id)
-    .slice(0, Math.round(lerp(6, 48, e)))
+    .slice(0, Math.round(lerp(6, 86, e)))
     .map((p) => ({ x: cx + p.u * rx, y: cy + p.v * ry, r: leaf * p.s, k: p.k }))
     .sort((a, b) => a.y - b.y); // 위쪽부터 그려 아래쪽 잎이 앞에 오게
 
@@ -121,11 +122,14 @@ export function treeArt({ growth, stage, tree, uid }) {
 
   // 뿌리: 땅 위로 드러나 굽이친다
   if (stage >= ROOTS_FROM) {
-    const count = Math.round(lerp(2, 8, t));
+    const count = Math.round(lerp(2, 12, t));
     for (let i = 0; i < count; i++) {
       const side = i % 2 ? 1 : -1;
-      const reach = lerp(20, 112, e) * (0.5 + 0.5 * (((i * 37) % 10) / 10));
-      back += `<path d="${taper(x + side * wb * 0.3, y - 2, x + side * reach, y + 2 + ((i * 5) % 8), Math.max(1.5, wb * 0.21), -5 - wb * 0.12)}" fill="url(#tk-${uid})"/>`;
+      const reach = lerp(20, 140, e) * (0.45 + 0.55 * (((i * 37) % 10) / 10));
+      const drop = 2 + ((i * 5) % 10);
+      back += `<path d="${taper(x + side * wb * 0.3, y - 3, x + side * reach, y + drop, Math.max(1.5, wb * (i < 4 ? 0.24 : 0.15)), -6 - wb * 0.14)}" fill="url(#tk-${uid})"/>`;
+      // 뿌리 위 밝은 결
+      if (e > 0.4) back += `<path d="M${n(x + side * wb * 0.35)} ${y - 4} Q${n(x + side * reach * 0.5)} ${n(y - 8 - wb * 0.08)} ${n(x + side * reach * 0.92)} ${n(y + drop - 1)}" fill="none" stroke="${pal.trunk[2]}" stroke-width=".8" opacity=".4"/>`;
     }
   }
 
@@ -138,6 +142,13 @@ export function treeArt({ growth, stage, tree, uid }) {
 
   // 줄기와 껍질 무늬
   back += `<path d="${trunkPath(x, y, h, wb, wt, bend)}" fill="url(#tk-${uid})"/>`;
+  // 큰 나무는 줄기 위로 꼬여 올라가는 가닥 두 줄
+  if (e > 0.3) {
+    [-1, 1].forEach((side) => {
+      const sx = x + side * wb * 0.42;
+      back += `<path d="M${n(sx - side * wb * 0.12)} ${y - 2} C${n(sx + side * wb * 0.1)} ${n(y - h * 0.3)} ${n(x - side * wb * 0.3)} ${n(y - h * 0.62)} ${n(cx + side * wt * 0.35)} ${n(top + 6)} L${n(cx + side * wt * 0.12)} ${n(top + 8)} C${n(x - side * wb * 0.38)} ${n(y - h * 0.6)} ${n(sx - side * wb * 0.02)} ${n(y - h * 0.32)} ${n(sx - side * wb * 0.32)} ${y - 2}Z" fill="${side < 0 ? pal.trunk[2] : pal.trunk[0]}" opacity=".35"/>`;
+    });
+  }
   // 빛 받는 왼쪽 면
   back += `<path d="${trunkPath(x - wb * 0.18, y, h * 0.96, wb * 0.28, wt * 0.3, bend)}" fill="#fff" opacity=".08"/>`;
   // 옹이
@@ -153,8 +164,9 @@ export function treeArt({ growth, stage, tree, uid }) {
       back += `<ellipse cx="${n(mx)}" cy="${n(y - 2 - (i % 2) * 3)}" rx="${n(wb * 0.12 + 1)}" ry="${n(2 + (i % 3))}" fill="${i % 2 ? pal.canopy[0] : pal.canopy[1]}" opacity=".75"/>`;
     }
   }
-  for (let i = 0; i < 4; i++) {
-    const ox = (i - 1.5) * wb * 0.16;
+  const barks = Math.round(lerp(4, 8, e));
+  for (let i = 0; i < barks; i++) {
+    const ox = (i - (barks - 1) / 2) * wb * (0.64 / barks);
     back += `<path d="M${n(x + ox * 1.3)} ${y - 3} C${n(x + ox)} ${n(y - h * 0.4)} ${n(cx + ox * 0.5)} ${n(top + h * 0.3)} ${n(cx + ox * 0.35)} ${n(top + 4)}" fill="none" stroke="${i % 2 ? pal.trunk[0] : pal.trunk[2]}" stroke-width="${n(lerp(0.5, 1.6, e))}" opacity=".35"/>`;
   }
 
@@ -168,6 +180,39 @@ export function treeArt({ growth, stage, tree, uid }) {
         (c.k > 0.7 ? `<ellipse cx="${n(c.x - c.r * 0.3)}" cy="${n(c.y - c.r * 0.3)}" rx="${n(c.r * 0.5)}" ry="${n(c.r * 0.36)}" fill="url(#ch-${uid})"/>` : '')
     )
     .join('');
+
+  // 색 섞기: 몇몇 잎 덩어리는 따뜻한 빛(열매 색), 몇몇은 연둣빛으로 (그림 같은 색 변화)
+  clusters.forEach((c, i) => {
+    if (i % 7 === 3) front += `<ellipse cx="${n(c.x + c.r * 0.15)}" cy="${n(c.y + c.r * 0.1)}" rx="${n(c.r * 0.8)}" ry="${n(c.r * 0.6)}" fill="${pal.fruit}" opacity=".28"/>`;
+    else if (i % 5 === 1) front += `<ellipse cx="${n(c.x - c.r * 0.2)}" cy="${n(c.y - c.r * 0.15)}" rx="${n(c.r * 0.75)}" ry="${n(c.r * 0.55)}" fill="${pal.canopy[2]}" opacity=".22"/>`;
+  });
+
+  // 수관 전체 명암: 잎 덩어리 모양으로 잘라 위는 밝게, 아래는 어둡게
+  if (e > 0.15) {
+    const clip = clusters.map((c) => `<ellipse cx="${n(c.x)}" cy="${n(c.y)}" rx="${n(c.r * 1.12)}" ry="${n(c.r * 0.88)}"/>`).join('');
+    defs +=
+      `<clipPath id="cc-${uid}">${clip}</clipPath>` +
+      linear(`cs-${uid}`, [[0, '#ffffff', 0.16], [0.45, '#ffffff', 0], [0.7, '#000', 0.12], [1, '#000', 0.4]]) +
+      radial(`cl-${uid}`, [[0, '#fff6d8', 0.3], [1, '#fff6d8', 0]], { cx: 0.3, cy: 0.2, r: 0.6 });
+    const bx = n(cx - rx - leaf * 1.3);
+    const by = n(cy - ry - leaf * 1.3);
+    const bw = n(rx * 2 + leaf * 2.6);
+    const bh = n(ry * 1.6 + leaf * 2.6);
+    front += `<g clip-path="url(#cc-${uid})"><rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="url(#cs-${uid})"/><rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="url(#cl-${uid})"/></g>`;
+  }
+
+  // 붓결: 잎 덩어리 위의 짧은 곡선 (손으로 그린 듯한 잎 질감)
+  const strokes = Math.round(lerp(0, 3, e));
+  clusters.forEach((c) => {
+    for (let k = 0; k < strokes; k++) {
+      const a = r() * Math.PI * 2;
+      const d = c.r * r() * 0.7;
+      const sx = c.x + Math.cos(a) * d;
+      const sy = c.y + Math.sin(a) * d * 0.8;
+      const L = c.r * (0.3 + r() * 0.25);
+      front += `<path d="M${n(sx - L / 2)} ${n(sy)} q${n(L / 2)} ${n(-L * 0.45)} ${n(L)} 0" fill="none" stroke="${k % 2 ? pal.canopy[2] : pal.canopy[0]}" stroke-width="${n(0.7 + e * 0.6)}" stroke-linecap="round" opacity="${k % 2 ? 0.5 : 0.35}"/>`;
+    }
+  });
 
   // 잎 결: 빛 받는 왼쪽 위에 작은 잎 모양을 겹친다
   const perCluster = Math.round(lerp(1, 4, e));
@@ -214,6 +259,21 @@ export function treeArt({ growth, stage, tree, uid }) {
       const s = n(1.4 + r() * 1.3);
       front += `<circle cx="${bx}" cy="${by}" r="${s}" fill="${pal.blossom}" opacity=".95"/><circle cx="${bx}" cy="${by}" r="${n(s * 0.4)}" fill="${pal.glow}"/>`;
     }
+  }
+
+  // 큰 나무부터: 수관 아래로 늘어진 덩굴
+  if (stage >= BLOSSOM_FROM) {
+    clusters
+      .filter((c) => c.y > cy + ry * 0.05)
+      .filter((_, i) => i % 3 === 0)
+      .slice(0, 9)
+      .forEach((c, i) => {
+        const vx = c.x + (r() - 0.5) * c.r;
+        const vy = c.y + c.r * 0.6;
+        const L = 12 + r() * 22;
+        front += `<g class="swing" style="transform-origin:${n(vx)}px ${n(vy)}px;animation-delay:-${(i * 0.6).toFixed(1)}s"><path d="M${n(vx)} ${n(vy)} q${n(2 + r() * 3)} ${n(L / 2)} 0 ${n(L)}" fill="none" stroke="${pal.canopy[0]}" stroke-width=".9"/>` +
+          `<ellipse cx="${n(vx + 1)}" cy="${n(vy + L * 0.45)}" rx="1.8" ry="1" fill="${pal.canopy[1]}"/><ellipse cx="${n(vx - 0.5)}" cy="${n(vy + L)}" rx="2" ry="1.2" fill="${pal.canopy[2]}"/></g>`;
+      });
   }
 
   // 아래쪽 가장자리 잎 덩어리 (장식·열매를 매다는 자리)

@@ -241,6 +241,50 @@ export const WORLDS = {
     );
   },
 
+  // ✨ 전설: 하늘섬 — 세계수가 구름 위에 떠 있는 섬에 서 있다. 아래로는 바다와 작은 섬들
+  'world-skyisland': (uid) => {
+    const r = rng('skyisland');
+    // 멀리 바다 위의 작은 섬
+    const islet = (x, y, w) =>
+      `<ellipse cx="${x}" cy="${y + 1.5}" rx="${n(w * 1.15)}" ry="${n(w * 0.28)}" fill="#e9ddb0" opacity=".9"/>` +
+      `<ellipse cx="${x}" cy="${y}" rx="${w}" ry="${n(w * 0.32)}" fill="#4f9a5a"/>` +
+      `<ellipse cx="${n(x - w * 0.25)}" cy="${n(y - w * 0.16)}" rx="${n(w * 0.5)}" ry="${n(w * 0.26)}" fill="#6fb86a"/>`;
+    // 구름 덩어리 (크고 몽글몽글)
+    const puff = (x, y, s, o = 0.95) =>
+      `<g transform="translate(${x} ${y}) scale(${s})" opacity="${o}"><ellipse cx="0" cy="0" rx="34" ry="13" fill="#ffffff"/><ellipse cx="-16" cy="-8" rx="16" ry="12" fill="#ffffff"/><ellipse cx="6" cy="-14" rx="20" ry="16" fill="#ffffff"/><ellipse cx="22" cy="-5" rx="14" ry="10" fill="#f3f8ff"/><ellipse cx="2" cy="4" rx="30" ry="6" fill="#dce9f5" opacity=".7"/></g>`;
+    // 섬 아래로 떨어지는 폭포
+    const fall = (x, y0, w) =>
+      `<path d="M${x} ${y0} q-2 ${n((H - y0) / 2)} ${n(-3 - w)} ${H - y0 + 10} h${n(w * 2 + 3)} q0 ${n(-(H - y0) / 2)} ${-w} ${n(-(H - y0) - 10)}Z" fill="#eef8ff" opacity=".85" class="shimmer"/>` +
+      `<ellipse cx="${x}" cy="${n(y0 + 1)}" rx="${n(w + 2)}" ry="2" fill="#ffffff"/>`;
+    return (
+      sky(uid, [[0, '#3f8fd6'], [0.45, '#8cc6ef'], [0.62, '#cfe8f7'], [1, '#e9f5fb']]) +
+      glow(`isun-${uid}`, 62, 40, 70, '#fffbe6', 0.9) +
+      sunRays(uid, 62, 40, '#ffffff', 0.18) +
+      puff(30, 70, 1.3) + puff(262, 52, 1.5) + puff(190, 112, 0.8, 0.85) +
+      // 아래 멀리 보이는 바다
+      `<defs>${linear(`sea-${uid}`, [[0, '#7cc4e8'], [1, '#2f7fb8']])}</defs>` +
+      `<rect y="196" width="${W}" height="${H - 196}" fill="url(#sea-${uid})"/>` +
+      `<rect y="196" width="${W}" height="3" fill="#ffffff" opacity=".5"/>` +
+      islet(42, 214, 22) + islet(120, 206, 10) + islet(248, 220, 26) + islet(196, 208, 8) +
+      puff(70, 236, 0.9, 0.9) + puff(240, 246, 1, 0.9) +
+      times(14, () => `<ellipse class="shimmer" cx="${n(r() * W)}" cy="${n(204 + r() * 70)}" rx="${n(3 + r() * 6)}" ry=".7" fill="#ffffff" opacity=".6" style="animation-delay:-${n(r() * 2.6)}s"/>`) +
+      // 떠 있는 섬: 아래 바위 절벽 → 폭포 → 윗면 풀밭
+      `<defs>${linear(`rk-${uid}`, [[0, '#8a6e52'], [0.5, '#6b5440'], [1, '#4a3a2c']])}${linear(`ig-${uid}`, [[0, '#86c070'], [1, '#4f8a48']])}</defs>` +
+      `<path d="M-12 312 Q60 318 150 320 T312 312 L300 330 Q250 352 214 360 L86 360 Q42 348 2 330Z" fill="url(#rk-${uid})"/>` +
+      `<path d="M10 322 Q70 330 130 332 M40 336 Q100 344 160 342 M180 334 Q230 330 290 322" fill="none" stroke="#3d2f24" stroke-width="1" opacity=".45"/>` +
+      fall(18, 318, 5) + fall(286, 316, 6) + fall(118, 330, 3) +
+      puff(30, 352, 1.1, 0.95) + puff(278, 350, 1.2, 0.95) + puff(150, 362, 1.4, 0.9) +
+      `<path d="M-12 300 Q75 282 150 288 T312 298 L312 314 Q150 326 -12 314Z" fill="url(#ig-${uid})"/>` +
+      `<path d="M-12 300 Q75 282 150 288 T312 298" fill="none" stroke="#c4e6a8" stroke-width="1.4" opacity=".7"/>` +
+      times(26, (i) => {
+        const x = n(2 + i * 11.5 + r() * 5);
+        const y = n(rimY(Math.min(299, x)) - 1 + r() * 4);
+        return `<path d="M${x} ${y} q-1.5 -4 -3.5 -6 M${x} ${y} q0 -5 .8 -8 M${x} ${y} q1.4 -3.5 3.2 -5.5" stroke="#cfeaa8" stroke-width=".9" fill="none" stroke-linecap="round" opacity=".7"/>`;
+      }) +
+      times(8, (i) => `<circle cx="${n(20 + r() * 260)}" cy="${n(300 + r() * 10)}" r="1.4" fill="${['#fff', '#ffe08a', '#ffc6d9'][i % 3]}"/>`)
+    );
+  },
+
   // ✨ 전설 배경
   'world-celestial': (uid) => {
     const r = rng('celestial');
@@ -342,6 +386,30 @@ export const WORLDS = {
     );
   },
 };
+
+// 배경마다 빛: color = 장면 전체에 얹는 빛 색, wash = 그 세기, halo = 정령의 은은한 빛 세기
+// (밤처럼 어두운 곳에서는 정령이 작은 등불처럼 빛나고, 낮에는 빛을 줄여 배경에 녹아든다)
+const LIGHT = {
+  dawn: { color: '#ffcdb8', wash: 0.16, halo: 0.25 },
+  day: { color: '#fff1d6', wash: 0.06, halo: 0.12 },
+  dusk: { color: '#f0a070', wash: 0.24, halo: 0.3 },
+  night: { color: '#6f82c4', wash: 0.36, halo: 0.55 },
+  'world-mist': { color: '#dfe6e1', wash: 0.12, halo: 0.18 },
+  'world-sakura': { color: '#ffcadb', wash: 0.12, halo: 0.18 },
+  'world-snow': { color: '#d9e6f7', wash: 0.12, halo: 0.2 },
+  'world-golden': { color: '#ffd486', wash: 0.2, halo: 0.25 },
+  'world-cosmos': { color: '#9d86e0', wash: 0.32, halo: 0.55 },
+  'world-library': { color: '#ffc982', wash: 0.24, halo: 0.35 },
+  'world-clouds': { color: '#fff1d6', wash: 0.06, halo: 0.12 },
+  'world-rain': { color: '#a3b3b8', wash: 0.22, halo: 0.25 },
+  'world-shooting': { color: '#6f82c4', wash: 0.36, halo: 0.55 },
+  'world-sea': { color: '#fff0cc', wash: 0.08, halo: 0.12 },
+  'world-celestial': { color: '#ffdcb8', wash: 0.12, halo: 0.3 },
+  'world-galaxy': { color: '#8f80e0', wash: 0.36, halo: 0.6 },
+  'world-skyisland': { color: '#e8f4ff', wash: 0.06, halo: 0.12 },
+};
+const TIME_LIGHT = (hour) => (hour >= 5 && hour < 10 ? LIGHT.dawn : hour >= 10 && hour < 17 ? LIGHT.day : hour >= 17 && hour < 20 ? LIGHT.dusk : LIGHT.night);
+export const lightOf = (id, hour) => LIGHT[id] || (WORLDS[id] ? LIGHT.day : TIME_LIGHT(hour));
 
 export function worldArt(id, uid, hour) {
   return (WORLDS[id] || timeOfDay(hour))(uid);
