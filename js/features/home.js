@@ -19,7 +19,7 @@ export function view(state, ui) {
   return `
     <section class="hero">
       <div class="bubble">${esc(ui.bubble || greeting(state))}</div>
-      <div class="scene" id="scene" role="button" tabindex="0" data-act="home.pet" aria-label="정령 ${esc(state.settings.name)} 쓰다듬기">${sceneSvg(state)}</div>
+      <div class="scene" id="scene" role="button" tabindex="0" data-act="garden.open" aria-label="나의 정원 열기 (세계수를 크게 보며 꾸미기)">${sceneSvg(state)}<span class="scene-hint">${icon('sparkle')} 눌러서 꾸미기</span></div>
       <button class="photo-btn" data-act="photo.make" aria-label="세계수 사진으로 저장">${icon('camera')}</button>
       <div class="card hero-info">
         <div class="hero-top">

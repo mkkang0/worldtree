@@ -1,6 +1,6 @@
 // 오프라인용 캐시. 파일을 고쳐서 다시 배포할 때는 CACHE 숫자를 올린다.
 // 새 파일을 만들면 FILES에도 추가한다.
-const CACHE = 'worldtree-v8';
+const CACHE = 'worldtree-v9';
 const FILES = [
   './',
   'index.html',
@@ -15,6 +15,7 @@ const FILES = [
   'css/motion.css',
   'css/tokens.css',
   'js/app/context.js',
+  'js/app/decor.js',
   'js/app/events.js',
   'js/app/render.js',
   'js/app/wallet.js',
@@ -35,10 +36,12 @@ const FILES = [
   'js/core/achievements.js',
   'js/core/config.js',
   'js/core/dates.js',
+  'js/core/pomodoro.js',
   'js/core/quests.js',
   'js/core/records.js',
   'js/core/scoring.js',
   'js/core/share.js',
+  'js/data/kana.js',
   'js/data/items/cost.js',
   'js/data/items/index.js',
   'js/data/items/scenery.js',
@@ -49,6 +52,8 @@ const FILES = [
   'js/data/store.js',
   'js/data/trees.js',
   'js/features/forest.js',
+  'js/features/games.js',
+  'js/features/garden.js',
   'js/features/friends.js',
   'js/features/goals.js',
   'js/features/home.js',

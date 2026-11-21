@@ -5,6 +5,7 @@ import { icon } from '../ui/icons.js';
 
 export function view(state) {
   const entries = [
+    ['games', 'sparkle', '미니게임', `가나 퀴즈 · ${state.kana.plays}판`],
     ['forest', 'forest', '세계수의 숲', `${new Set(state.dex.map((d) => d.species)).size} / ${TREES.length} 완성`],
     ['goals', 'trophy', '퀘스트 · 업적', `업적 ${Object.keys(state.achievements).length} / ${ACHIEVEMENTS.length}`],
     ['stats', 'chart', '기록 · 달력', `운동 ${state.log.length}번${state.settings.studyEnabled ? ` · 공부 ${state.study.sessions.length}번` : ''}`],

@@ -42,7 +42,7 @@ export function view(state) {
         <li>운동 탭의 <b>단축어 값 붙여넣기</b> 칸에 붙여넣으면 폼이 채워져요.</li>
       </ol>
       <textarea rows="2" readonly id="shortcut-text">min=【운동 분】&hr=【평균 심박】&type=run</textarea>
-      <p class="tiny">type은 walk, run, bike, strength, yoga, swim, dance, etc 중 하나예요. 아이폰은 홈 화면 앱과 사파리의 저장 공간이 따로라서, 단축어가 주소를 직접 여는 방식은 쓰지 않아요.</p>
+      <p class="tiny">type은 run(러닝), bike(자전거), strength(근력), stretch(스트레칭) 중 하나예요. 아이폰은 홈 화면 앱과 사파리의 저장 공간이 따로라서, 단축어가 주소를 직접 여는 방식은 쓰지 않아요.</p>
       <button class="btn small soft" data-act="settings.copyShortcut">문장 복사</button>
     </section>
     <section class="card">

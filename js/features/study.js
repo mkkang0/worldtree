@@ -14,15 +14,50 @@ import { icon } from '../ui/icons.js';
 import { barChart, ddayBadge } from '../ui/components.js';
 import { toast, chime, confetti } from '../ui/effects.js';
 import { byDateDesc } from './workout.js';
+import { TIMER_MODES, modeById, isPomo, pomoState, countdown } from '../core/pomodoro.js';
 
 const [MIN_MIN, MAX_MIN] = STUDY_MIN_RANGE;
 
 export const elapsedMs = (state) => (state.study.timer ? Date.now() - state.study.timer.start : 0);
 
-// 1초마다 main.js가 부른다. 화면 전체를 다시 그리지 않고 시계 글자만 바꾼다.
+// 기록할 공부 시간(밀리초): 포모도로는 쉬는 시간을 뺀 집중 시간만
+const studiedMs = (state) => (isPomo(state.study.timer) ? pomoState(state.study.timer).focusMs : elapsedMs(state));
+
+// 시계 글자: 자유 타이머는 흐른 시간, 포모도로는 지금 단계의 남은 시간
+// emoji: 떠 있는 띠(다른 탭)에는 단계 그림을 붙이고, 타이머 원 안에는 숫자만
+export function timerText(state, emoji = true) {
+  const t = state.study.timer;
+  if (!t) return clock(0);
+  if (!isPomo(t)) return clock(elapsedMs(state));
+  const p = pomoState(t);
+  return `${emoji ? (p.focusing ? '🍅 ' : '☕ ') : ''}${countdown(p.leftMs)}`;
+}
+
+const RING = 2 * Math.PI * 98; // 타이머 원 둘레
+const phaseText = (p) => (p.focusing ? `🍅 ${p.round}번째 집중` : '☕ 쉬는 시간');
+
+// 1초마다 main.js가 부른다. 화면 전체를 다시 그리지 않고 시계 글자와 원만 바꾼다.
+// 포모도로 단계가 바뀌면 소리와 알림으로 알려준다.
+let lastPhase = '';
 export function tickTimers() {
-  const text = clock(elapsedMs(ctx.state));
-  document.querySelectorAll('[data-timer]').forEach((el) => (el.textContent = text));
+  const t = ctx.state.study.timer;
+  const text = timerText(ctx.state);
+  const bare = timerText(ctx.state, false);
+  document.querySelectorAll('[data-timer]').forEach((el) => (el.textContent = el.dataset.timer === 'bare' ? bare : text));
+  if (!isPomo(t)) return (lastPhase = '');
+  const p = pomoState(t);
+  document.querySelectorAll('[data-ring]').forEach((el) => {
+    el.style.strokeDashoffset = (RING * (1 - p.ratio)).toFixed(1);
+    el.classList.toggle('rest', !p.focusing);
+  });
+  document.querySelectorAll('[data-phase]').forEach((el) => (el.textContent = phaseText(p)));
+  document.querySelectorAll('[data-focused]').forEach((el) => (el.textContent = `지금까지 집중 ${hoursMinutes(Math.floor(p.focusMs / 60000))}`));
+  if (lastPhase && lastPhase !== p.key) {
+    chime('level');
+    navigator.vibrate?.([200, 100, 200]);
+    toast(p.focusing ? `쉬는 시간 끝! ${p.round}번째 집중을 시작해요` : `집중 ${t.focus}분 완료! ${t.brk}분 쉬어요`);
+  }
+  lastPhase = p.key;
 }
 
 // 하루 별빛 상한을 넘는 만큼은 잘라서 기록한다.
@@ -68,17 +103,40 @@ export function view(state, ui) {
   const week = weekSummary(state);
   const started = timer && new Date(timer.start).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' });
   const timerSubject = timer?.subject && subjectOf(state.study.subjects, timer.subject);
+  const pomo = isPomo(timer) && pomoState(timer);
+  const mode = modeById(state.study.mode);
   return `
     <header class="page-head"><h1>공부</h1>${ddayBadge(state) || '<span class="tiny">집중한 만큼 별빛이 내려요</span>'}</header>
     <section class="card timer">
       <span class="eyebrow">STUDY TIMER</span>
-      <div class="timer-ring ${timer ? 'running' : ''}">
-        <svg viewBox="0 0 210 210" aria-hidden="true"><circle class="track" cx="105" cy="105" r="98"/><circle class="glow" cx="105" cy="105" r="98"/></svg>
-        <div><div class="timer-face ${timer ? 'running' : ''}" data-timer>${clock(elapsedMs(state))}</div>
+      <div class="timer-ring ${timer ? 'running' : ''} ${pomo ? 'pomo' : ''}">
+        <svg viewBox="0 0 210 210" aria-hidden="true"><circle class="track" cx="105" cy="105" r="98"/>${
+          pomo
+            ? `<circle class="glow pomo ${pomo.focusing ? '' : 'rest'}" cx="105" cy="105" r="98" data-ring style="stroke-dasharray:${RING.toFixed(1)};stroke-dashoffset:${(RING * (1 - pomo.ratio)).toFixed(1)}"/>`
+            : '<circle class="glow" cx="105" cy="105" r="98"/>'
+        }</svg>
+        <div>${pomo ? `<div class="timer-phase" data-phase>${phaseText(pomo)}</div>` : ''}
+        <div class="timer-face ${timer ? 'running' : ''}" data-timer="bare">${timer ? timerText(state, false) : mode.focus ? countdown(mode.focus * 60000) : clock(0)}</div>
         <div class="timer-sub">${timer ? `${timerSubject ? `${esc(timerSubject.emoji)} ${esc(timerSubject.label)} · ` : ''}${started} 시작` : '준비됐어요'}</div></div>
       </div>
-      ${timer ? '' : `<div class="label-like">지금 공부할 과목</div>${subjectChips(state, lastSubject(state), 'timerSubject')}`}
-      <p class="tiny">${timer ? '끝내면 집중도를 골라 별빛을 받아요' : '앱을 닫아도 시간은 계속 흘러가요'}</p>
+      ${
+        timer
+          ? pomo
+            ? `<p class="tiny" data-focused>지금까지 집중 ${hoursMinutes(Math.floor(pomo.focusMs / 60000))}</p>`
+            : ''
+          : `<div class="label-like">타이머</div>
+             <div class="chips mode-chips">${TIMER_MODES.map((m) => `<button class="chip-btn ${m.id === mode.id ? 'on' : ''}" data-act="study.mode" data-arg="${m.id}" aria-pressed="${m.id === mode.id}">${m.emoji} ${m.label}</button>`).join('')}</div>
+             <div class="label-like">지금 공부할 과목</div>${subjectChips(state, lastSubject(state), 'timerSubject')}`
+      }
+      <p class="tiny">${
+        timer
+          ? pomo
+            ? `${timer.focus}분 집중 · ${timer.brk}분 휴식을 되풀이해요. 끝내면 집중한 시간만 기록해요`
+            : '끝내면 집중도를 골라 별빛을 받아요'
+          : mode.focus
+            ? `${mode.focus}분 집중하고 ${mode.brk}분 쉬어요. 단계가 바뀌면 소리로 알려줘요`
+            : '앱을 닫아도 시간은 계속 흘러가요'
+      }</p>
       ${
         timer
           ? `<div class="row two"><button class="btn ghost" data-act="study.discard">${icon('close')} 취소</button><button class="btn" data-act="study.stop">${icon('stop')} 끝내기</button></div>`
@@ -86,6 +144,7 @@ export function view(state, ui) {
              <button class="btn small ghost" data-act="study.manualOpen">${icon('edit')} 타이머 없이 직접 기록하기</button>`
       }
     </section>
+    <button class="card garden-link" data-act="nav.sub" data-arg="games"><span class="em">🎌</span><span class="grow"><b>가나 퀴즈</b><span class="tiny">쉬는 시간에 히라가나·가타카나 외우기 · 맞히면 별빛</span></span>${icon('right')}</button>
     <section class="row three">
       ${stat(hoursMinutes(studyMinOn(state, day)), '오늘 공부', 'timer')}
       ${stat(money('star', starsOn(state, day)), `오늘 별빛 / ${DAILY_STAR_CAP}`, 'sparkle')}
@@ -309,14 +368,23 @@ export const actions = {
   'study.start': (el) => {
     if (ctx.state.study.timer) return;
     const picked = el.closest('section')?.querySelector('input[name="timerSubject"]:checked');
-    ctx.state.study.timer = { start: Date.now(), subject: picked?.value || lastSubject(ctx.state) };
+    const mode = modeById(ctx.state.study.mode);
+    ctx.state.study.timer = { start: Date.now(), subject: picked?.value || lastSubject(ctx.state), ...(mode.focus ? { focus: mode.focus, brk: mode.brk } : {}) };
+    lastPhase = '';
     commit();
     chime('ok');
     rerender();
   },
 
+  // 타이머 종류 고르기 (자유 / 포모도로)
+  'study.mode': (el) => {
+    ctx.state.study.mode = modeById(el.dataset.arg).id;
+    commit();
+    rerender();
+  },
+
   'study.stop': () => {
-    const raw = Math.round(elapsedMs(ctx.state) / 60000);
+    const raw = Math.round(studiedMs(ctx.state) / 60000);
     if (raw < MIN_MIN && !confirm('아직 1분이 안 됐어요. 그래도 끝낼까요?')) return;
     ctx.ui.modal = 'study-finish';
     ctx.ui.modalData = { min: Math.min(MAX_MIN, Math.max(MIN_MIN, raw)), capped: raw > MAX_MIN };

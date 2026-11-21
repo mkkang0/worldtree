@@ -10,7 +10,11 @@ export const ctx = {
     sub: '', // 더보기 안의 화면
     modal: '', // 열린 모달 이름
     modalData: null,
-    shopSlot: 'hat',
+    shopSlot: '', // 상점에서 보고 있는 종류 (''이면 처음 화면)
+    shopQuery: '', // 상점 찾기 글자
+    gardenTab: 'items', // 정원: items(창고) | outfits(코디)
+    gardenSlot: '', // 정원 창고에서 보고 있는 종류
+    quiz: null, // 진행 중인 가나 퀴즈 (features/games.js)
     preview: {}, // 상점 미리보기 { slot: itemId }
     calMonth: '', // 통계 달력 'YYYY-MM'
     bubble: '', // 홈 말풍선

@@ -3,10 +3,17 @@ import { WEEK_GOAL_MIN, CUP_GOAL } from './config.js';
 import { streakOf, totalStudyMin, studyBySubject } from './records.js';
 import { DEFAULT_MISSIONS } from '../data/lists.js';
 import { TREES } from '../data/trees.js';
+import { KANA_GROUPS, toKatakana } from '../data/kana.js';
 
 const totalMin = (s) => s.log.reduce((a, e) => a + e.min, 0);
 const maxZone = (s) => s.log.reduce((a, e) => Math.max(a, e.zone), 0);
 const kinds = (s) => new Set(s.dex.map((d) => d.species)).size;
+// 기본 46자를 모두 익혔는지 (3번 이상 · 80% 이상 정답)
+const kanaDone = (s, p) =>
+  KANA_GROUPS[0].rows.every(([h]) => {
+    const [ok = 0, ng = 0] = s.kana.stats[`${p}:${p === 'k' ? toKatakana(h) : h}`] || [];
+    return ok + ng >= 3 && ok / (ok + ng) >= 0.8;
+  });
 // 10시간 이상 공부한 과목 수 (전체 기간)
 const deepSubjects = (s) => studyBySubject(s, 100000).filter(([, min]) => min >= 600).length;
 // 과목 하루 목표를 채운 날 수 (날짜 × 과목)
@@ -35,6 +42,11 @@ export const ACHIEVEMENTS = [
   { id: 'study100h', emoji: '🏛️', name: '백 시간의 탑', desc: '누적 공부 100시간', check: (s) => totalStudyMin(s) >= 6000 },
   { id: 'subjects2', emoji: '🌏', name: '두 과목 탐험가', desc: '두 과목을 각각 10시간 이상', check: (s) => deepSubjects(s) >= 2 },
   { id: 'goal7', emoji: '🎯', name: '목표 지킴이', desc: '과목 하루 목표를 7번 채우기', check: (s) => goalDays(s) >= 7 },
+  // 미니게임
+  { id: 'kana1', emoji: '🎌', name: '가나 첫걸음', desc: '가나 퀴즈 한 판', check: (s) => s.kana.plays >= 1 },
+  { id: 'kana-perfect', emoji: '💮', name: '꽃동그라미', desc: '가나 퀴즈 만점', check: (s) => s.kana.perfect >= 1 },
+  { id: 'hira-master', emoji: '🌸', name: '히라가나 익힘', desc: '히라가나 46자 모두 익힘', check: (s) => kanaDone(s, 'h') },
+  { id: 'kata-master', emoji: '🗻', name: '가타카나 익힘', desc: '가타카나 46자 모두 익힘', check: (s) => kanaDone(s, 'k') },
   // 습관
   { id: 'streak7', emoji: '📅', name: '일주일 연속', desc: '7일 연속 활동', check: (s) => streakOf(s) >= 7 },
   { id: 'streak14', emoji: '🗓️', name: '보름 연속', desc: '14일 연속 활동', check: (s) => streakOf(s) >= 14 },

@@ -16,6 +16,8 @@ import * as friends from '../features/friends.js';
 import * as settings from '../features/settings.js';
 import * as onboarding from '../features/onboarding.js';
 import * as photo from '../features/photo.js';
+import * as garden from '../features/garden.js';
+import * as games from '../features/games.js';
 
 // 아래 탭. icon은 ui/icons.js의 이름. show가 있으면 조건이 맞을 때만 보인다.
 const TABS = [
@@ -28,7 +30,7 @@ const TABS = [
 ];
 
 // 더보기 안의 화면
-const SUB_PAGES = { forest, goals, stats, friends, settings };
+const SUB_PAGES = { forest, goals, stats, friends, settings, games };
 
 // 모달(아래에서 올라오는 창)
 const MODALS = {
@@ -48,6 +50,7 @@ const visibleTabs = (state) => TABS.filter((t) => !t.show || t.show(state));
 
 function currentPage() {
   const { state, ui } = ctx;
+  if (ui.tab === 'garden') return garden; // 나의 정원 (아래 탭 없는 전체 화면)
   if (ui.tab === 'more' && SUB_PAGES[ui.sub]) return SUB_PAGES[ui.sub];
   const tab = visibleTabs(state).find((t) => t.id === ui.tab);
   if (!tab) ui.tab = 'home';
@@ -66,8 +69,8 @@ function applyPrefs(state) {
 
 // 공부 중일 때 다른 탭 위에 떠 있는 띠
 function timerBar(state, ui) {
-  if (!state.study.timer || ui.tab === 'study') return '';
-  return `<button class="timerbar" data-act="nav.tab" data-arg="study">${icon('timer')} 공부 중 <b data-timer>${clock(Date.now() - state.study.timer.start)}</b>${icon('right')}</button>`;
+  if (!state.study.timer || ui.tab === 'study' || ui.tab === 'garden') return '';
+  return `<button class="timerbar" data-act="nav.tab" data-arg="study">${icon('timer')} 공부 중 <b data-timer>${study.timerText(state)}</b>${icon('right')}</button>`;
 }
 
 let lastRoute = '';
@@ -90,6 +93,7 @@ export function render() {
   showCelebration(ui);
   const page = currentPage();
   const main = document.getElementById('view');
+  document.body.classList.toggle('immersive', ui.tab === 'garden');
 
   // 화면을 옮길 때만 등장 애니메이션 (css/motion.css main.entering)
   const route = `${ui.tab}/${ui.sub}`;
@@ -110,7 +114,7 @@ export function render() {
 }
 
 export function go(tab, sub = '') {
-  Object.assign(ctx.ui, { tab, sub, bubble: '', mealDay: '', calDay: '', more: {} });
+  Object.assign(ctx.ui, { tab, sub, bubble: '', mealDay: '', calDay: '', more: {}, quiz: null });
   if (tab !== 'shop') ctx.ui.preview = {};
   rerender();
   window.scrollTo(0, 0);
@@ -139,5 +143,5 @@ export const actions = {
 export const ALL_ACTIONS = Object.assign(
   {},
   actions,
-  ...[home, workout, study, meal, shop, more, goals, stats, forest, friends, settings, onboarding, photo].map((m) => m.actions)
+  ...[home, workout, study, meal, shop, more, goals, stats, forest, friends, settings, onboarding, photo, garden, games].map((m) => m.actions)
 );

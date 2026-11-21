@@ -5,7 +5,7 @@ import { DAILY_SUN_CAP, WORKOUT_MIN_RANGE, HR_RANGE, BACKDATE_DAYS } from '../co
 import { todayKey, addDays, dateLabel } from '../core/dates.js';
 import { ZONES, maxHr, zoneFromHr, workoutPoints, capEarn } from '../core/scoring.js';
 import { earnedOn } from '../core/records.js';
-import { ACTIVITIES, MOODS, INTENSITIES, byId } from '../data/lists.js';
+import { ACTIVITIES, MOODS, INTENSITIES, activityOf } from '../data/lists.js';
 import { newId } from '../data/store.js';
 import { esc, radioChips, money, title, fold, moreList } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
@@ -43,7 +43,9 @@ export function parseLogText(text) {
   const min = Math.round(Number(q.get('min')));
   const hr = Math.round(Number(q.get('hr'))) || 0;
   if (!inRange(min, WORKOUT_MIN_RANGE) || (hr && !inRange(hr, HR_RANGE))) return null;
-  const type = ACTIVITIES.some((a) => a.id === q.get('type')) ? q.get('type') : 'etc';
+  // 예전 단축어의 walk 등도 받아 준다 (모르는 값은 러닝)
+  const t = q.get('type') === 'stretch' ? 'yoga' : q.get('type');
+  const type = activityOf(t).id === t ? t : 'run';
   return { min, hr, type };
 }
 
@@ -73,7 +75,7 @@ export function view(state, ui) {
       ${title('운동 기록', { iconName: 'heart' })}
       <form data-form="workout.save" data-input="workout.preview" autocomplete="off">
         ${state.log.length ? `<button type="button" class="btn small soft repeat" data-act="workout.repeat">${icon('swap')} 지난번처럼 채우기</button>` : ''}
-        ${workoutFields({ date: day, type: 'walk', intensity: 2, mood: 'good' })}
+        ${workoutFields({ date: day, type: 'run', intensity: 2, mood: 'good' })}
         <p class="tiny" data-preview>최대심박 ${maxHr(age)} bpm 기준${restHr ? ` · 안정시 ${restHr}bpm 반영(카르보넨)` : ''} · 나이는 설정에서 바꿔요</p>
         <button class="btn" type="submit">${icon('sun')} 기록하고 햇살 받기</button>
       </form>
@@ -102,7 +104,9 @@ function workoutFields(v, { minDate } = {}) {
   const day = todayKey();
   const lo = minDate && minDate < addDays(day, -BACKDATE_DAYS) ? minDate : addDays(day, -BACKDATE_DAYS);
   return `
-    ${radioChips('type', ACTIVITIES.map((a) => ({ value: a.id, label: `${a.emoji} ${a.label}` })), v.type)}
+    <div class="activity-tiles" role="radiogroup" aria-label="운동 종류">${[...ACTIVITIES, ...(ACTIVITIES.some((a) => a.id === v.type) ? [] : [activityOf(v.type)])]
+      .map((a) => `<label class="tile"><input type="radio" name="type" value="${a.id}" ${a.id === v.type ? 'checked' : ''}><span><em>${a.emoji}</em>${a.label}</span></label>`)
+      .join('')}</div>
     <div class="row two fields">
       <label>날짜<input name="date" type="date" value="${v.date}" min="${lo}" max="${day}" required></label>
       <label>시간 (분)<input name="min" type="number" inputmode="numeric" min="${WORKOUT_MIN_RANGE[0]}" max="${WORKOUT_MIN_RANGE[1]}" required placeholder="예: 30" value="${v.min || ''}"></label>
@@ -123,7 +127,7 @@ function workoutFields(v, { minDate } = {}) {
 // 운동 기록 한 줄. 누르면 고치기 창이 열린다. (기록·달력 화면도 같이 쓴다)
 export function workoutRow(e) {
   const mood = MOODS.find((m) => m.id === e.mood);
-  const act = byId(ACTIVITIES, e.type);
+  const act = activityOf(e.type);
   return `<li>
     <button class="log-body" data-act="workout.edit" data-arg="${esc(e.id)}" aria-label="운동 기록 고치기">
       <span><b>${dateLabel(e.date)}</b> · ${act.emoji} ${act.label} ${e.min}분${e.hr ? ` · ${e.hr}bpm` : ''} ${mood ? mood.emoji : ''}</span>

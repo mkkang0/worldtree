@@ -1,15 +1,22 @@
 // 화면에 나오는 선택지 목록. 항목을 추가·수정하면 바로 반영된다.
 
+// 운동 종류 (기록할 때 고르는 4가지). 스트레칭의 id 'yoga'는 예전 기록과 퀘스트를 이어 쓰려고 그대로 둔다.
 export const ACTIVITIES = [
-  { id: 'walk', emoji: '🚶', label: '걷기' },
   { id: 'run', emoji: '🏃', label: '러닝' },
   { id: 'bike', emoji: '🚴', label: '자전거' },
   { id: 'strength', emoji: '🏋️', label: '근력' },
-  { id: 'yoga', emoji: '🧘', label: '요가·스트레칭' },
+  { id: 'yoga', emoji: '🧘', label: '스트레칭' },
+];
+
+// 예전에 고를 수 있던 종류 (지난 기록을 보여줄 때만)
+const PAST_ACTIVITIES = [
+  { id: 'walk', emoji: '🚶', label: '걷기' },
   { id: 'swim', emoji: '🏊', label: '수영' },
   { id: 'dance', emoji: '💃', label: '댄스' },
   { id: 'etc', emoji: '✨', label: '기타' },
 ];
+
+export const activityOf = (id) => ACTIVITIES.find((a) => a.id === id) || PAST_ACTIVITIES.find((a) => a.id === id) || PAST_ACTIVITIES[3];
 
 export const MOODS = [
   { id: 'great', emoji: '😆', label: '최고' },
@@ -64,4 +71,3 @@ export const FOCUS_LEVELS = [
   { value: 5, emoji: '🔥', label: '완전 몰입했어요' },
 ];
 
-export const byId = (list, id) => list.find((x) => x.id === id) || list[list.length - 1];

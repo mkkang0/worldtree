@@ -62,7 +62,7 @@ export function defaultState() {
     outfits: [null, null, null], // 저장한 코디 { equipped, custom, date }
     // 기록
     log: [], // 운동 { id, date, type, min, hr, zone, points, earned, mood, note }
-    study: { timer: null, sessions: [], subjects: DEFAULT_SUBJECTS.map((x) => ({ ...x })) },
+    study: { timer: null, sessions: [], subjects: DEFAULT_SUBJECTS.map((x) => ({ ...x })), mode: 'free' }, // mode: 타이머 종류 (core/pomodoro.js)
     // timer: { start: 시작 시각(ms), subject } / sessions: { id, date, subject, min, focus, stars, note }
     // subjects: { id, emoji, label, goal, examName, examDate, hidden } — hidden은 지운 과목 (지난 기록의 이름을 남기려고 둔다)
     meals: {}, // { 'YYYY-MM-DD': { missionId: true } }
@@ -73,6 +73,8 @@ export function defaultState() {
     quests: {}, // { 'YYYY-MM-DD': { claimed: [questId] } }
     weekClaims: [], // 보상 받은 주 시작일
     achievements: {}, // { id: 'YYYY-MM-DD' }
+    // 미니게임: 가나 퀴즈 (features/games.js)
+    kana: { stats: {}, plays: 0, best: 0, perfect: 0, day: null, prefs: { script: 'hira', groups: ['basic'], dir: 'both', count: 10 } },
     // 함께하기
     friends: [], // { id, name, species, stage, weekMin, weekSun, studyMin, streak, cheer, updated }
     redeemed: [], // 받은 선물 코드 id
@@ -163,7 +165,14 @@ function sanitize(raw) {
     }));
   s.study = {
     subjects: subjects.some((x) => !x.hidden) ? subjects : [...subjects, ...base.study.subjects.filter((d) => !subjects.some((x) => x.id === d.id))],
-    timer: Number.isFinite(study.timer?.start) ? { start: study.timer.start, subject: str(study.timer.subject, '', 30) } : null,
+    timer: Number.isFinite(study.timer?.start)
+      ? {
+          start: study.timer.start,
+          subject: str(study.timer.subject, '', 30),
+          ...(study.timer.focus > 0 ? { focus: clampNum(study.timer.focus, 25, 5, 120), brk: clampNum(study.timer.brk, 5, 1, 60) } : {}),
+        }
+      : null,
+    mode: ['free', '25-5', '50-10'].includes(study.mode) ? study.mode : 'free',
     sessions: arr(study.sessions)
       .filter((x) => x && typeof x.date === 'string')
       .map((x) => ({
@@ -204,6 +213,26 @@ function sanitize(raw) {
       cheer: str(f.cheer, '', 30),
       updated: str(f.updated, '', 10),
     }));
+  const kana = obj(raw.kana);
+  const prefs = obj(kana.prefs);
+  const groups = strs(prefs.groups, 5).filter((g) => ['basic', 'voiced', 'combo'].includes(g));
+  s.kana = {
+    stats: Object.fromEntries(
+      Object.entries(obj(kana.stats))
+        .filter(([k, v]) => /^[hk]:/.test(k) && Array.isArray(v))
+        .map(([k, v]) => [k.slice(0, 6), [Math.max(0, num(v[0], 0)), Math.max(0, num(v[1], 0))]])
+    ),
+    plays: Math.max(0, num(kana.plays, 0)),
+    best: Math.max(0, num(kana.best, 0)),
+    perfect: Math.max(0, num(kana.perfect, 0)),
+    day: kana.day && isDate(kana.day.date) ? { date: kana.day.date, stars: Math.max(0, num(kana.day.stars, 0)) } : null,
+    prefs: {
+      script: ['hira', 'kata', 'mix'].includes(prefs.script) ? prefs.script : 'hira',
+      groups: groups.length ? groups : ['basic'],
+      dir: ['read', 'write', 'both'].includes(prefs.dir) ? prefs.dir : 'both',
+      count: prefs.count === 20 ? 20 : 10,
+    },
+  };
   s.redeemed = strs(raw.redeemed);
   s.sentGifts = strs(raw.sentGifts);
   return s;

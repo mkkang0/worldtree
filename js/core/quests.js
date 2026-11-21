@@ -10,7 +10,7 @@ const POOL = [
   { id: 'move40', emoji: '🏃', label: '오늘 40분 움직이기', goal: 40, reward: { sun: 18 }, cur: (s, d) => minutesOn(s, d) },
   { id: 'zone3', emoji: '💓', label: 'Zone 3 이상으로 10분', goal: 10, reward: { sun: 15 }, cur: (s, d) => minWhere(logsOn(s, d), (e) => e.zone >= 3) },
   { id: 'types2', emoji: '🎯', label: '운동 2종류 해보기', goal: 2, reward: { sun: 12 }, cur: (s, d) => new Set(logsOn(s, d).map((e) => e.type)).size },
-  { id: 'stretch', emoji: '🧘', label: '요가·스트레칭 10분', goal: 10, reward: { sun: 8 }, cur: (s, d) => minWhere(logsOn(s, d), (e) => e.type === 'yoga') },
+  { id: 'stretch', emoji: '🧘', label: '스트레칭 10분', goal: 10, reward: { sun: 8 }, cur: (s, d) => minWhere(logsOn(s, d), (e) => e.type === 'yoga') },
   { id: 'meals3', emoji: '🥗', label: '식단 미션 3개 하기', goal: 3, reward: { water: 10 }, cur: (s, d) => missionsDone(s, d) },
   { id: 'cups6', emoji: '🥤', label: '물 6잔 마시기', goal: 6, reward: { water: 8 }, cur: (s, d) => s.cups[d] || 0 },
   { id: 'care', emoji: '💚', label: '세계수 돌보기 (이슬 + 햇살)', goal: 2, reward: { sun: 4, water: 4 }, cur: (s, d) => Object.values(s.care[d] || {}).filter(Boolean).length },
