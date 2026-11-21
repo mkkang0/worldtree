@@ -47,4 +47,14 @@ export const WARDROBE = [
   { id: 'neck-id', slot: 'neck', name: '사원증', cost: c(0, 0, 50) },
   { id: 'neck-bandana', slot: 'neck', name: '반다나', cost: c(30, 10) },
   { id: 'neck-wordcard', slot: 'neck', name: '단어 카드', cost: c(0, 0, 35) },
+
+  /* ---------- 정령 손 (hand) — 오른손에 든다 ---------- */
+  { id: 'hand-book', slot: 'hand', name: '작은 책', cost: c(0, 0, 25) },
+  { id: 'hand-pencil', slot: 'hand', name: '큰 연필', cost: c(0, 0, 20) },
+  { id: 'hand-tea', slot: 'hand', name: '따뜻한 차', cost: c(0, 35) },
+  { id: 'hand-bouquet', slot: 'hand', name: '꽃다발', cost: c(30, 15) },
+  { id: 'hand-balloon', slot: 'hand', name: '풍선', cost: c(40, 10) },
+  { id: 'hand-lantern', slot: 'hand', name: '초롱', cost: c(60, 20) },
+  { id: 'hand-wand', slot: 'hand', name: '별 요술봉', cost: c(90, 30) },
+  { id: 'hand-dumbbell', slot: 'hand', name: '아령', cost: c(50) },
 ];

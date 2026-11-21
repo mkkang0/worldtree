@@ -126,9 +126,6 @@
 .day-chips { margin-bottom: -4px; }
 
 /* ---------- 상점 ---------- */
-.preview-scene { width: 72%; margin: 0 auto; border-radius: 22px; overflow: hidden; box-shadow: 0 12px 30px rgba(30, 40, 30, .16); border: 1px solid var(--line); }
-.preview-scene svg { display: block; width: 100%; height: auto; }
-.preview-note { text-align: center; }
 .slot-group { flex: none; white-space: nowrap; font-size: .7rem; letter-spacing: .08em; color: var(--accent); padding: 0 2px 0 8px; }
 .slot-group:first-child { padding-left: 2px; }
 .chips.scroll { align-items: center; }
@@ -140,6 +137,47 @@
 .item.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
 .item.seen { border-color: var(--primary); border-style: dashed; }
 .item.study-item .item-name::after { content: ' · 공부'; color: var(--star); font-size: .74rem; }
+/* 상점 무대: 위에 붙어 있어서 목록을 내려도 미리보기가 보인다 (왼쪽 장면, 오른쪽 정령 확대) */
+.stage {
+  position: sticky; top: calc(env(safe-area-inset-top) + 6px); z-index: 6;
+  display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; padding: 8px;
+  background: color-mix(in srgb, var(--surface-solid) 88%, transparent);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow);
+}
+.stage-scene { position: relative; border-radius: 18px; overflow: hidden; }
+.stage-scene svg { display: block; width: 100%; height: auto; }
+.stage-reset { position: absolute; left: 6px; bottom: 6px; display: inline-flex; align-items: center; gap: 3px; font: inherit; font-size: .72rem; padding: 4px 9px; border-radius: 99px; border: 0; background: rgba(20, 24, 22, .62); color: #fff; cursor: pointer; }
+.stage-reset .ic { width: 12px; height: 12px; }
+.stage-side { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.stage-portrait { flex: 1; border-radius: 18px; background: radial-gradient(circle at 50% 40%, var(--accent-soft), var(--primary-soft)); display: grid; place-items: center; overflow: hidden; }
+.stage-portrait svg { width: 100%; height: 100%; max-height: 160px; display: block; }
+.stage-wallet { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 10px; font-size: .74rem; padding: 0 2px; }
+.stage-wallet .cur { font-family: var(--font-serif); font-weight: 700; }
+.filter-chips { margin: -6px 0 -4px; }
+.filter-chips .chip-btn { padding: 5px 12px; font-size: .8rem; }
+.grid.three.items { gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+.items .item { padding: 6px; gap: 6px; font-size: .78rem; border-radius: 16px; }
+.items .btn.small { min-height: 34px; padding: 6px 4px; font-size: .74rem; gap: 3px; }
+.items .btn.small .cur { gap: 1px; }
+.items .item-name { line-height: 1.25; min-height: 2.5em; display: flex; align-items: center; justify-content: center; }
+.items .swatch { width: 44px; height: 44px; }
+.item-tools { display: flex; gap: 4px; }
+.tool { flex: 1; min-width: 0; min-height: 32px; display: inline-flex; align-items: center; justify-content: center; gap: 2px; font: inherit; font-size: .8rem; color: var(--ink); background: var(--primary-soft); border: 0; border-radius: 10px; cursor: pointer; padding: 2px 4px; }
+.tool small { font-size: .68rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tool:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.item.study-item .item-name::after { content: ''; }
+.item.study-item .thumb { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--star) 45%, transparent); }
+/* 코디 저장 */
+.outfits { gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.outfit { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px; border-radius: 16px; background: var(--surface-solid); border: 1px solid var(--line); }
+.outfit-art { width: 100%; border-radius: 12px; overflow: hidden; }
+.outfit-art svg { display: block; width: 100%; height: auto; }
+.outfit-btns { display: flex; align-items: center; gap: 2px; width: 100%; }
+.outfit-btns .btn { flex: 1; min-width: 0; white-space: nowrap; padding: 6px 4px; }
+.outfit-btns .x { min-width: 32px; padding: 6px 2px; }
+.outfit.empty { justify-content: center; min-height: 150px; font: inherit; font-size: .8rem; color: var(--muted); border-style: dashed; cursor: pointer; text-align: center; }
+.outfit.empty .ic { width: 22px; height: 22px; color: var(--accent); }
 
 /* ---------- 통계 ---------- */
 .stack { display: flex; height: 10px; border-radius: 99px; overflow: hidden; margin: 6px 0 12px; }

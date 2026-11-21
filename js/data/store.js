@@ -1,6 +1,6 @@
 // 저장·불러오기. 저장 형식을 바꾸면 defaultState와 sanitize를 함께 고친다.
 // sanitize는 예전 버전 데이터나 손상된 백업도 안전한 값으로 바꿔준다.
-import { SLOTS, itemById } from './items/index.js';
+import { SLOTS, HUES, itemById } from './items/index.js';
 import { TREES } from './trees.js';
 import { DEFAULT_SUBJECTS } from './lists.js';
 import { todayKey } from '../core/dates.js';
@@ -12,12 +12,39 @@ export function newId() {
 }
 
 export const SLOT_IDS = SLOTS.map((s) => s.id);
+export const emptyEquipped = () => Object.fromEntries(SLOTS.map((s) => [s.id, s.multi ? [] : null]));
+
+// 장착 상태를 정리한다: 가진 아이템만, 슬롯에 맞는 아이템만, 여러 개 놓는 슬롯은 배열로 (예전 데이터는 문자열 하나)
+export function cleanEquipped(raw, owned) {
+  const out = emptyEquipped();
+  for (const slot of SLOTS) {
+    const v = raw?.[slot.id];
+    const ids = (Array.isArray(v) ? v : [v]).filter((id) => typeof id === 'string' && owned.includes(id) && itemById(id)?.slot === slot.id);
+    out[slot.id] = slot.multi ? [...new Set(ids)].slice(0, slot.multi) : ids[0] || null;
+  }
+  return out;
+}
+
+// 아이템별 꾸미기(위치 · 색)를 정리한다
+export function cleanCustom(raw, owned) {
+  const out = {};
+  for (const [id, v] of Object.entries(raw && typeof raw === 'object' ? raw : {})) {
+    const item = itemById(id);
+    if (!item || !owned.includes(id) || !v || typeof v !== 'object') continue;
+    const slot = SLOTS.find((s) => s.id === item.slot);
+    const c = {};
+    if (slot.positions?.some(([p]) => p === v.pos)) c.pos = v.pos;
+    if (slot.tint && Number.isInteger(v.hue) && v.hue > 0 && v.hue < HUES.length) c.hue = v.hue;
+    if (Object.keys(c).length) out[id] = c;
+  }
+  return out;
+}
 export const DEFAULT_SPIRIT_NAME = '루미';
 const isTree = (id) => TREES.some((t) => t.id === id);
 
 export function defaultState() {
   return {
-    version: 5,
+    version: 6,
     me: newId(),
     onboarded: false,
     settings: { age: 30, name: DEFAULT_SPIRIT_NAME, restHr: 0, sound: true, bigText: false, cheer: '', studyEnabled: false, examDate: '', appearance: 'auto' }, // examDate: 'YYYY-MM-DD' 또는 '' / appearance: auto·light·dark
@@ -30,7 +57,9 @@ export function defaultState() {
     dex: [], // 숲에 심은(완성한) 세계수 { species, name, date }
     // 꾸미기
     owned: [],
-    equipped: Object.fromEntries(SLOT_IDS.map((s) => [s, null])),
+    equipped: emptyEquipped(), // 슬롯마다 아이템 id (여러 개 놓는 슬롯은 id 배열)
+    custom: {}, // 아이템마다 꾸미기 { itemId: { pos: 'left'|'tree'|'right', hue: 0~3 } }
+    outfits: [null, null, null], // 저장한 코디 { equipped, custom, date }
     // 기록
     log: [], // 운동 { id, date, type, min, hr, zone, points, earned, mood, note }
     study: { timer: null, sessions: [], subjects: DEFAULT_SUBJECTS.map((x) => ({ ...x })) },
@@ -96,11 +125,12 @@ function sanitize(raw) {
 
   // 지금 목록에 없는 아이템(예전 화분·모자 등)은 정리한다
   s.owned = strs(raw.owned, 500).filter((id) => itemById(id));
-  s.equipped = { ...base.equipped };
-  for (const slot of SLOT_IDS) {
-    const id = raw.equipped?.[slot];
-    if (typeof id === 'string' && s.owned.includes(id)) s.equipped[slot] = id;
-  }
+  s.equipped = cleanEquipped(raw.equipped, s.owned);
+  s.custom = cleanCustom(raw.custom, s.owned);
+  s.outfits = [0, 1, 2].map((i) => {
+    const o = arr(raw.outfits)[i];
+    return o && typeof o === 'object' ? { equipped: cleanEquipped(o.equipped, s.owned), custom: cleanCustom(o.custom, s.owned), date: str(o.date, '', 10) } : null;
+  });
 
   s.log = arr(raw.log)
     .filter((e) => e && typeof e.date === 'string')

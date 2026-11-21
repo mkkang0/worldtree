@@ -71,8 +71,8 @@ function taper(x0, y0, x1, y1, w, sag) {
 
 export function treeArt({ growth, stage, tree, uid }) {
   const pal = tree.palette;
-  if (stage === 0) return { svg: seed(pal, uid), anchors: [], top: BASE.y - 30 };
-  if (stage === 1) return { svg: sprout(pal, uid, clamp01(growth / 0.07)), anchors: [], top: BASE.y - 50 };
+  if (stage === 0) return { svg: seed(pal, uid), anchors: [], clusters: [], top: BASE.y - 30 };
+  if (stage === 1) return { svg: sprout(pal, uid, clamp01(growth / 0.07)), anchors: [], clusters: [], top: BASE.y - 50 };
 
   const { x, y } = BASE;
   const t = clamp01((growth - 0.07) / 0.93); // 묘목~세계수 사이 진행도
@@ -173,8 +173,8 @@ export function treeArt({ growth, stage, tree, uid }) {
 
   // 아래쪽 가장자리 잎 덩어리 (장식·열매를 매다는 자리)
   const lower = clusters.filter((c) => c.y > cy).sort((a, b) => a.x - b.x);
-  const step = Math.max(1, Math.floor(lower.length / 8));
-  const hangs = lower.filter((_, i) => i % step === 0).slice(0, 8);
+  const step = Math.max(1, Math.floor(lower.length / 10));
+  const hangs = lower.filter((_, i) => i % step === 0).slice(0, 10);
 
   // 빛나는 열매
   if (stage >= FRUIT_FROM) {
@@ -192,5 +192,6 @@ export function treeArt({ growth, stage, tree, uid }) {
   }
 
   const anchors = hangs.map((c) => ({ x: n(c.x), y: n(c.y + c.r * 0.75) }));
-  return { svg: `<defs>${defs}</defs>${back}${front}`, anchors, top: cy - ry, canopy: { x: cx, y: cy, rx, ry } };
+  // clusters: 꽃·열매(art/blooms.js)를 피울 자리
+  return { svg: `<defs>${defs}</defs>${back}${front}`, anchors, top: cy - ry, canopy: { x: cx, y: cy, rx, ry }, clusters: clusters.map((c) => ({ x: n(c.x), y: n(c.y), r: n(c.r) })) };
 }

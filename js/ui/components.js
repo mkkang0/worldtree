@@ -1,5 +1,6 @@
 // 여러 화면에서 같이 쓰는 큰 조각 (장면 그림, 지갑, 퀘스트 카드, 세계수 선택, 그래프).
 import { renderScene } from '../art/scene.js';
+import { withPreview } from '../data/items/index.js';
 import { TREES, treeById } from '../data/trees.js';
 import { stageOf, plantXp, progress, STAGES, LAST_STAGE } from '../core/scoring.js';
 import { moodOf } from '../core/records.js';
@@ -11,14 +12,16 @@ import { icon } from './icons.js';
 
 const nowHour = () => new Date().getHours();
 
-// 지금 키우는 세계수 장면. equipped로 미리보기 아이템을 덮어쓸 수 있다.
-export function sceneSvg(state, { equipped = {}, ...rest } = {}) {
+// 지금 키우는 세계수 장면. equipped에 미리보기 아이템 { slot: id }를 넘기면 겹쳐 그린다.
+// base·custom을 넘기면 저장한 코디처럼 다른 꾸미기로 그린다.
+export function sceneSvg(state, { equipped = {}, base = state.equipped, custom = state.custom, ...rest } = {}) {
   const xp = plantXp(state);
   return renderScene({
     growth: Math.min(1, xp / STAGES[LAST_STAGE].at),
     stage: stageOf(xp),
     tree: treeById(state.plant.species),
-    equipped: { ...state.equipped, ...equipped },
+    equipped: withPreview(base, equipped),
+    custom,
     mood: moodOf(state),
     hour: nowHour(),
     label: `${treeById(state.plant.species).label}과 정령 ${state.settings.name}`,

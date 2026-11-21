@@ -40,6 +40,15 @@ export function glow(id, x, y, r, color, opacity = 0.6) {
   return `<defs>${radial(id, [[0, color, opacity], [0.45, color, opacity * 0.35], [1, color, 0]])}</defs><circle cx="${n(x)}" cy="${n(y)}" r="${n(r)}" fill="url(#${id})"/>`;
 }
 
+// 색 바꾸기 (상점에서 산 아이템의 색). data/items/index.js의 HUES 각도로 색상을 돌린다.
+// 장면마다 hueDefs를 한 번 넣고, 아이템 그림을 tint로 감싼다. idx 0은 원래 색.
+export const hueDefs = (uid, hues) =>
+  `<defs>${hues
+    .slice(1)
+    .map((h, i) => `<filter id="hue${i + 1}-${uid}" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feColorMatrix type="hueRotate" values="${h}"/></filter>`)
+    .join('')}</defs>`;
+export const tint = (body, uid, idx) => (idx > 0 && body ? `<g filter="url(#hue${idx}-${uid})">${body}</g>` : body);
+
 // 0~count-1 반복해서 문자열을 잇는다
 export const times = (count, f) => Array.from({ length: count }, (_, i) => f(i)).join('');
 

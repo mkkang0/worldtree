@@ -269,3 +269,61 @@ export function neckArt(id, cx, cy, r) {
       return '';
   }
 }
+
+// 오른손에 드는 것. (ax, ay) = 오른팔 위치. 마지막에 손을 다시 그려 쥐고 있는 것처럼 보이게 한다.
+export function handArt(id, ax, ay) {
+  const paw = `<ellipse cx="${ax}" cy="${ay}" rx="5" ry="5.6" fill="#fbf7ea"/>`;
+  const at = (body) => `<g transform="translate(${ax} ${ay})">${body}</g>` + paw;
+  switch (id) {
+    case 'hand-book':
+      return at(
+        `<g transform="translate(7 -6) rotate(-12)"><rect x="-8" y="-10" width="16" height="20" rx="2" fill="#3f5f8a"/><rect x="-5.5" y="-8" width="12" height="16" rx="1" fill="#fffaf0"/><rect x="-8" y="-10" width="3" height="20" rx="1" fill="#2f4a6e"/>` +
+          `<path d="M-2.5 -4 h7 M-2.5 0 h7 M-2.5 4 h5" stroke="#9bb0cf" stroke-width="1"/></g>`
+      );
+    case 'hand-pencil':
+      return at(
+        `<g transform="translate(5 -8) rotate(28)"><rect x="-2.6" y="-16" width="5.2" height="28" fill="#ffd34d"/><rect x="-2.6" y="10" width="5.2" height="4" rx="1" fill="#ff9fb4"/><rect x="-2.6" y="8" width="5.2" height="2" fill="#c9c9c9"/>` +
+          `<path d="M-2.6 -16 L0 -23 L2.6 -16Z" fill="#f2d2a0"/><path d="M-.9 -20.5 L0 -23 L.9 -20.5Z" fill="#3b2f2f"/></g>`
+      );
+    case 'hand-tea':
+      return at(
+        `<path d="M-1 -6 h14 v6 a7 7 0 0 1 -14 0Z" fill="#fff" stroke="#d9c79a"/><path d="M13 -4 a3 3 0 0 1 0 6" fill="none" stroke="#d9c79a" stroke-width="1.6"/>` +
+          `<ellipse cx="6" cy="-6" rx="7" ry="1.8" fill="#b8783a"/><path d="M4 -10 q-2 -4 0 -7 M8 -10 q2 -4 0 -7" stroke="#fff" stroke-width="1.2" fill="none" opacity=".75" class="twinkle"/>`
+      );
+    case 'hand-bouquet':
+      return at(
+        `<path d="M2 -10 l-2 -6 M6 -10 l3 -7 M4 -10 v-9" stroke="#5f8a52" stroke-width="1"/>` +
+          `<circle cx="0" cy="-17" r="3.6" fill="#ff8fb1"/><circle cx="9" cy="-18" r="3.6" fill="#ffe066"/><circle cx="4" cy="-21" r="3.6" fill="#c3a6ff"/><circle cx="4" cy="-21" r="1.2" fill="#fff"/>` +
+          `<path d="M-4 -10 L12 -10 L5 4Z" fill="#fff0c2" stroke="#e8d29a" stroke-width=".8"/>`
+      );
+    case 'hand-balloon':
+      return at(
+        `<path d="M0 0 q6 -12 4 -26" stroke="#9a9a9a" stroke-width=".8" fill="none"/>` +
+          `<g class="float"><ellipse cx="5" cy="-36" rx="9" ry="11" fill="#ff6b7a"/><ellipse cx="2" cy="-40" rx="2.4" ry="3.6" fill="#fff" opacity=".5"/><path d="M3.5 -25 l1.5 2 l1.5 -2Z" fill="#e5505f"/></g>`
+      );
+    case 'hand-lantern':
+      return at(
+        `<path d="M0 0 L12 -18" stroke="#7a5a3a" stroke-width="1.6" stroke-linecap="round"/><line x1="12" y1="-18" x2="12" y2="-12" stroke="#7a5a3a" stroke-width=".8"/>` +
+          glowDot(12, -4, 12, '#ffb35a') +
+          `<rect x="6.5" y="-12" width="11" height="14" rx="5" fill="#e5484d"/><rect x="8" y="-13" width="8" height="2" fill="#c9a24a"/><rect x="8" y="1" width="8" height="2" fill="#c9a24a"/>` +
+          `<path d="M9 -8 h6 M9 -4 h6" stroke="#ffcf7a" stroke-width=".7" opacity=".8"/>`
+      );
+    case 'hand-wand':
+      return at(
+        `<path d="M0 0 L10 -20" stroke="#fff" stroke-width="2" stroke-linecap="round"/>` +
+          glowDot(11, -23, 10, '#fff59a') +
+          `<path class="twinkle" transform="translate(11 -23)" d="M0 -6 L1.8 -1.8 L6 0 L1.8 1.8 L0 6 L-1.8 1.8 L-6 0 L-1.8 -1.8Z" fill="#ffe066" stroke="#e0a800" stroke-width=".6"/>`
+      );
+    case 'hand-dumbbell':
+      return at(
+        `<rect x="-3" y="-1.5" width="18" height="3" rx="1.5" fill="#8a8f98"/>` +
+          `<rect x="-6" y="-6" width="5" height="12" rx="1.5" fill="#4f5560"/><rect x="11" y="-6" width="5" height="12" rx="1.5" fill="#4f5560"/>`
+      );
+    default:
+      return '';
+  }
+}
+
+// 은은한 빛 (그라디언트 없이 반투명 원 세 겹)
+const glowDot = (x, y, r, c) =>
+  `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" opacity=".12"/><circle cx="${x}" cy="${y}" r="${r * 0.6}" fill="${c}" opacity=".18"/><circle cx="${x}" cy="${y}" r="${r * 0.3}" fill="${c}" opacity=".25"/>`;

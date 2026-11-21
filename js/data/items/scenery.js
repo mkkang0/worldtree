@@ -30,6 +30,24 @@ export const SCENERY = [
   { id: 'sky-kites', slot: 'sky', name: '연날리기', cost: c(45, 15) },
   { id: 'sky-fireworks', slot: 'sky', name: '불꽃놀이', cost: c(120, 40) },
 
+  /* ---------- 잎 색 (leaf) — 세계수 잎의 색을 바꾼다. 색은 art/leaves.js ---------- */
+  { id: 'leaf-spring', slot: 'leaf', name: '연둣빛 새잎', cost: c(40, 20) },
+  { id: 'leaf-sakura', slot: 'leaf', name: '벚꽃잎', cost: c(0, 60) },
+  { id: 'leaf-maple', slot: 'leaf', name: '붉은 단풍', cost: c(70, 20) },
+  { id: 'leaf-ginkgo', slot: 'leaf', name: '노란 은행잎', cost: c(70, 20) },
+  { id: 'leaf-frost', slot: 'leaf', name: '서리잎', cost: c(80, 30) },
+  { id: 'leaf-violet', slot: 'leaf', name: '보랏빛 잎', cost: c(0, 0, 60) },
+  { id: 'leaf-night', slot: 'leaf', name: '밤하늘 잎', cost: c(120, 40) },
+
+  /* ---------- 꽃·열매 (bloom) — 잎 사이에 촘촘히 핀다. 그림은 art/blooms.js. 묘목부터 보인다 ---------- */
+  { id: 'bloom-white', slot: 'bloom', name: '하얀 꽃', cost: c(0, 30) },
+  { id: 'bloom-pink', slot: 'bloom', name: '분홍 꽃', cost: c(0, 40) },
+  { id: 'bloom-cherry', slot: 'bloom', name: '빨간 버찌', cost: c(40, 15) },
+  { id: 'bloom-orange', slot: 'bloom', name: '작은 귤', cost: c(60, 20) },
+  { id: 'bloom-star', slot: 'bloom', name: '별 열매', cost: c(0, 0, 50) },
+  { id: 'bloom-dew', slot: 'bloom', name: '이슬방울', cost: c(0, 50) },
+  { id: 'bloom-bird', slot: 'bloom', name: '쉬어 가는 새', cost: c(80, 30) },
+
   /* ---------- 가지 장식 (ornament) — 묘목부터 보인다 ---------- */
   { id: 'orn-blossom', slot: 'ornament', name: '하얀 꽃송이', cost: c(0, 30) },
   { id: 'orn-ribbons', slot: 'ornament', name: '소원 리본', cost: c(30, 10) },

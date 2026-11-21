@@ -84,6 +84,9 @@ export const COMPANIONS = {
     }),
 };
 
+// 장면 전체에 흩어지는 친구 (위치 고르기 없음)
+export const WIDE_COMPANIONS = ['comp-butterflies'];
+
 export function companionArt(id, uid) {
   return COMPANIONS[id] ? COMPANIONS[id](uid) : '';
 }
