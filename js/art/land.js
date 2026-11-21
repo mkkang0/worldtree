@@ -79,6 +79,30 @@ export const LAND = {
     `<path d="M24 280 q5 -6 2 -14" stroke="#7fa86e" stroke-width="1.6" fill="none"/>` +
     `<rect x="252" y="296" width="16" height="9" rx="2" fill="url(#ru-${uid})"/>`,
 
+  'land-bamboo': () => {
+    const stalk = (x, h, lean) => {
+      let nodes = '';
+      for (let y = 18; y < h; y += 18) nodes += `<rect x="-3.2" y="${-y}" width="6.4" height="1.6" rx=".8" fill="#5e8f4a"/>`;
+      const leaf = (dy, side) => `<ellipse cx="${side * 9}" cy="${-h + dy}" rx="9" ry="2.2" fill="#7fbf6a" transform="rotate(${side * -28} ${side * 2} ${-h + dy})"/>`;
+      return `<g transform="translate(${x} 336) rotate(${lean})"><rect x="-2.6" y="${-h}" width="5.2" height="${h}" rx="2.6" fill="#8cc07a"/>${nodes}${leaf(6, 1)}${leaf(16, -1)}${leaf(30, 1)}</g>`;
+    };
+    return stalk(16, 150, -3) + stalk(34, 110, 2) + stalk(54, 70, -1) + stalk(286, 130, 3) + stalk(270, 86, -2);
+  },
+
+  'land-pond': (uid) => {
+    const koi = (x, y, color, flip) =>
+      `<g transform="translate(${x} ${y}) scale(${flip ? -1 : 1} 1)"><g class="drift"><path d="M0 0 q7 -4.5 13 0 q-6 4.5 -13 0Z" fill="${color}"/><path d="M0 0 l-4 -3 v6Z" fill="${color}"/><circle cx="9.5" cy="-.6" r=".7" fill="#3b2f2f"/></g></g>`;
+    return (
+      `<defs>${radial(`pd-${uid}`, [[0, '#cfeef7'], [0.6, '#79b9d4'], [1, '#3f7f9c']], { cx: 0.45, cy: 0.4 })}</defs>` +
+      `<ellipse cx="86" cy="326" rx="52" ry="12.5" fill="#5d7d55" opacity=".6"/>` +
+      `<ellipse cx="86" cy="324" rx="48" ry="10.5" fill="url(#pd-${uid})"/>` +
+      koi(62, 324, '#ff8a3d', false) +
+      koi(110, 326, '#fff4e6', true) +
+      `<ellipse cx="96" cy="320" rx="7" ry="2.4" fill="#6fae5c"/><circle cx="98" cy="319.4" r="1.8" fill="#ffc6d9"/>` +
+      `<ellipse cx="70" cy="321" rx="12" ry="1.6" fill="#fff" opacity=".5" class="shimmer"/>`
+    );
+  },
+
   // 공부(별빛) 소품
   'land-books': () =>
     `<g transform="translate(62 322)">` +

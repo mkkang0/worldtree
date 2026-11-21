@@ -51,6 +51,30 @@ export const COMPANIONS = {
     // 공부 부엉이의 작은 안경테
     `<circle cx="-4" cy="-4" r="4.6" fill="none" stroke="#c9a24a" stroke-width=".8"/><circle cx="4" cy="-4" r="4.6" fill="none" stroke="#c9a24a" stroke-width=".8"/></g>`,
 
+  'comp-panda': () =>
+    `<g transform="translate(76 302)">` +
+    `<ellipse cx="0" cy="3" rx="11" ry="9" fill="#fff"/>` +
+    `<ellipse cx="-7" cy="10" rx="4" ry="3.3" fill="#2b2b2b"/><ellipse cx="7" cy="10" rx="4" ry="3.3" fill="#2b2b2b"/>` +
+    `<ellipse cx="-10" cy="2" rx="3" ry="5" fill="#2b2b2b" transform="rotate(20 -10 2)"/>` +
+    `<circle cx="-6" cy="-14" r="3.2" fill="#2b2b2b"/><circle cx="6" cy="-14" r="3.2" fill="#2b2b2b"/>` +
+    `<circle cx="0" cy="-8" r="8" fill="#fff"/>` +
+    `<ellipse cx="-3.2" cy="-8.5" rx="2.2" ry="2.9" fill="#2b2b2b" transform="rotate(20 -3.2 -8.5)"/><ellipse cx="3.2" cy="-8.5" rx="2.2" ry="2.9" fill="#2b2b2b" transform="rotate(-20 3.2 -8.5)"/>` +
+    `<circle cx="-3" cy="-9" r=".8" fill="#fff"/><circle cx="3.4" cy="-9" r=".8" fill="#fff"/>` +
+    `<ellipse cx="0" cy="-4.6" rx="1.3" ry=".9" fill="#2b2b2b"/>` +
+    // 대나무 잎을 쥐고 있다
+    `<path d="M9 1 l6 -13" stroke="#6aa84f" stroke-width="1.8" stroke-linecap="round"/><ellipse cx="15" cy="-13" rx="4.5" ry="1.6" fill="#7fc36a" transform="rotate(-55 15 -13)"/>` +
+    `<ellipse cx="10" cy="2" rx="3" ry="4.5" fill="#2b2b2b" transform="rotate(-25 10 2)"/></g>`,
+
+  'comp-fox': () =>
+    `<g transform="translate(74 304)">` +
+    `<path d="M7 7 q15 -1 13 -15 q-6 6 -13 7Z" fill="#e8893a"/><path d="M20 -8 q0 3 -4 4 q2 -2 1 -5Z" fill="#fff4e6"/>` +
+    `<ellipse cx="0" cy="3" rx="9" ry="8.5" fill="#e8893a"/><ellipse cx="0" cy="6" rx="5" ry="5.5" fill="#fff4e6"/>` +
+    `<path d="M-8 -11 l1 -10 l6 6Z M8 -11 l-1 -10 l-6 6Z" fill="#e8893a"/><path d="M-6.5 -13 l.6 -5 l3 3Z M6.5 -13 l-.6 -5 l-3 3Z" fill="#5a3a2a"/>` +
+    `<path d="M-9.5 -9 Q0 -21 9.5 -9 Q4 0 0 0 Q-4 0 -9.5 -9Z" fill="#e8893a"/>` +
+    `<path d="M-6.5 -6.5 Q0 -2.5 6.5 -6.5 Q3 0 0 0 Q-3 0 -6.5 -6.5Z" fill="#fff4e6"/>` +
+    face(0, -9.5, 0.8) +
+    `<ellipse cx="0" cy="-1.6" rx="1.2" ry=".9" fill="#3b2f2f"/></g>`,
+
   'comp-butterflies': () =>
     times(3, (i) => {
       const x = [64, 96, 250][i];

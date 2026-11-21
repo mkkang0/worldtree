@@ -2,6 +2,7 @@
 // sanitize는 예전 버전 데이터나 손상된 백업도 안전한 값으로 바꿔준다.
 import { SLOTS, itemById } from './items/index.js';
 import { TREES } from './trees.js';
+import { DEFAULT_SUBJECTS } from './lists.js';
 import { todayKey } from '../core/dates.js';
 
 const KEY = 'sprout-diary-v1'; // 이름이 바뀌어도 예전 데이터를 이어 쓰기 위해 그대로 둔다
@@ -16,10 +17,10 @@ const isTree = (id) => TREES.some((t) => t.id === id);
 
 export function defaultState() {
   return {
-    version: 4,
+    version: 5,
     me: newId(),
     onboarded: false,
-    settings: { age: 30, name: DEFAULT_SPIRIT_NAME, restHr: 0, sound: true, bigText: false, cheer: '', studyEnabled: false, examDate: '' }, // examDate: 'YYYY-MM-DD' 또는 ''
+    settings: { age: 30, name: DEFAULT_SPIRIT_NAME, restHr: 0, sound: true, bigText: false, cheer: '', studyEnabled: false, examDate: '', appearance: 'auto' }, // examDate: 'YYYY-MM-DD' 또는 '' / appearance: auto·light·dark
     // 지갑과 성장
     xp: 0,
     sun: 0, // 햇살 (운동)
@@ -32,7 +33,9 @@ export function defaultState() {
     equipped: Object.fromEntries(SLOT_IDS.map((s) => [s, null])),
     // 기록
     log: [], // 운동 { id, date, type, min, hr, zone, points, earned, mood, note }
-    study: { timer: null, sessions: [] }, // timer: { start: 시작 시각(ms) } / sessions: { id, date, subject, min, focus, stars, note }
+    study: { timer: null, sessions: [], subjects: DEFAULT_SUBJECTS.map((x) => ({ ...x })) },
+    // timer: { start: 시작 시각(ms), subject } / sessions: { id, date, subject, min, focus, stars, note }
+    // subjects: { id, emoji, label, goal, examName, examDate, hidden } — hidden은 지운 과목 (지난 기록의 이름을 남기려고 둔다)
     meals: {}, // { 'YYYY-MM-DD': { missionId: true } }
     cups: {}, // { 'YYYY-MM-DD': 물 잔 수 }
     care: {}, // { 'YYYY-MM-DD': { water, sun } }
@@ -53,6 +56,7 @@ const num = (v, d) => (Number.isFinite(v) ? v : d);
 const clampNum = (v, d, lo, hi) => Math.min(hi, Math.max(lo, num(v, d)));
 const obj = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
 const arr = (v) => (Array.isArray(v) ? v : []);
+const isDate = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
 const strs = (v, max = 200) => arr(v).filter((x) => typeof x === 'string').slice(-max);
 
 function sanitize(raw) {
@@ -71,7 +75,8 @@ function sanitize(raw) {
     bigText: st.bigText === true,
     cheer: str(st.cheer, '', 30),
     studyEnabled: st.studyEnabled === true,
-    examDate: /^\d{4}-\d{2}-\d{2}$/.test(st.examDate) ? st.examDate : '',
+    examDate: isDate(st.examDate) ? st.examDate : '',
+    appearance: ['light', 'dark'].includes(st.appearance) ? st.appearance : 'auto',
   };
 
   s.xp = Math.max(0, num(raw.xp, 0));
@@ -83,7 +88,7 @@ function sanitize(raw) {
   s.plant = {
     species: isTree(plantId) ? plantId : TREES[0].id,
     startXp: clampNum(raw.plant?.startXp, 0, 0, s.xp),
-    startDate: /^\d{4}-\d{2}-\d{2}$/.test(raw.plant?.startDate) ? raw.plant.startDate : todayKey(),
+    startDate: isDate(raw.plant?.startDate) ? raw.plant.startDate : todayKey(),
   };
   s.dex = arr(raw.dex)
     .filter((d) => d && isTree(d.species))
@@ -113,14 +118,28 @@ function sanitize(raw) {
     }));
 
   const study = obj(raw.study);
+  // 과목 목록이 없던 예전 데이터(회계 과목 고정)는 기본 과목으로 시작한다. 예전 기록은 '지난 과목'으로 남는다.
+  const subjects = arr(study.subjects)
+    .filter((x) => x && typeof x.id === 'string' && typeof x.label === 'string' && x.label.trim())
+    .slice(0, 40)
+    .map((x) => ({
+      id: str(x.id, newId(), 30),
+      emoji: str(x.emoji, '📘', 8) || '📘',
+      label: str(x.label, '', 12).trim(),
+      goal: clampNum(x.goal, 0, 0, 600),
+      examName: str(x.examName, '', 12),
+      examDate: isDate(x.examDate) ? x.examDate : '',
+      hidden: x.hidden === true,
+    }));
   s.study = {
-    timer: Number.isFinite(study.timer?.start) ? { start: study.timer.start } : null,
+    subjects: subjects.some((x) => !x.hidden) ? subjects : [...subjects, ...base.study.subjects.filter((d) => !subjects.some((x) => x.id === d.id))],
+    timer: Number.isFinite(study.timer?.start) ? { start: study.timer.start, subject: str(study.timer.subject, '', 30) } : null,
     sessions: arr(study.sessions)
       .filter((x) => x && typeof x.date === 'string')
       .map((x) => ({
         id: str(x.id, newId(), 30),
         date: x.date,
-        subject: str(x.subject, 'etc', 20),
+        subject: str(x.subject, 'etc', 30),
         min: num(x.min, 0),
         focus: clampNum(x.focus, 3, 1, 5),
         stars: num(x.stars, 0),
@@ -132,7 +151,7 @@ function sanitize(raw) {
   s.cups = obj(raw.cups);
   s.care = obj(raw.care);
   s.customMissions = arr(raw.customMissions)
-    .filter((m) => m && typeof m.id === 'string' && typeof m.label === 'string')
+    .filter((m) => m && typeof m.id === 'string' && typeof m.label === 'string' && m.label.trim()) // 이름이 빈 미션(예전 버그)은 정리한다
     .slice(0, 8)
     .map((m) => ({ id: str(m.id, newId(), 30), emoji: str(m.emoji, '✅', 4), label: str(m.label, '', 20) }));
 

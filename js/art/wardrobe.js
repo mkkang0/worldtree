@@ -121,6 +121,19 @@ export function hatArt(id, cx, top, r) {
         `<path d="M${cx - 20} ${top + 4} L${cx - 22} ${top - 20} L${cx - 10} ${top - 8} L${cx} ${top - 24} L${cx + 10} ${top - 8} L${cx + 22} ${top - 20} L${cx + 20} ${top + 4} Z" fill="#ffd34d" stroke="#e0a800" stroke-width="1.5" stroke-linejoin="round"/>` +
         `<circle cx="${cx}" cy="${top - 4}" r="3.5" fill="#ff5d73"/>`
       );
+    case 'hat-beret':
+      return (
+        `<ellipse cx="${cx - 3}" cy="${top + 3}" rx="${r * 0.98}" ry="10" fill="#b5493e" transform="rotate(-8 ${cx} ${top})"/>` +
+        `<ellipse cx="${cx - 3}" cy="${top + 8}" rx="${r * 0.82}" ry="3.5" fill="#8f342b" transform="rotate(-8 ${cx} ${top})"/>` +
+        `<path d="M${cx - 2} ${top - 6} q1 -5 4 -6" stroke="#8f342b" stroke-width="2.2" fill="none" stroke-linecap="round"/>`
+      );
+    case 'hat-sakura-pin': {
+      const flower = (x, y, s) =>
+        `<g transform="translate(${x} ${y}) scale(${s})">${[0, 72, 144, 216, 288]
+          .map((d) => `<ellipse cx="0" cy="-4.4" rx="3.3" ry="4.6" fill="#ffc6d9" stroke="#ff9fbf" stroke-width=".6" transform="rotate(${d})"/>`)
+          .join('')}<circle r="2" fill="#ffd34d"/></g>`;
+      return flower(cx + r * 0.58, top + 10, 1) + flower(cx + r * 0.2, top + 4, 0.65);
+    }
     default:
       return '';
   }
@@ -244,6 +257,14 @@ export function neckArt(id, cx, cy, r) {
         })
         .join('');
     }
+    case 'neck-wordcard':
+      return (
+        `<path d="M${cx - r * 0.6} ${y - 4} L${cx - 4} ${y + 9} M${cx + r * 0.6} ${y - 4} L${cx + 4} ${y + 9}" stroke="#c9a24a" stroke-width="2.2" stroke-linecap="round"/>` +
+        `<circle cx="${cx}" cy="${y + 10}" r="3" fill="none" stroke="#c9a24a" stroke-width="1.6"/>` +
+        `<rect x="${cx - 11}" y="${y + 12}" width="18" height="13" rx="2" fill="#fffaf0" stroke="#d9c79a" transform="rotate(-10 ${cx} ${y + 12})"/>` +
+        `<rect x="${cx - 7}" y="${y + 12}" width="18" height="13" rx="2" fill="#fff" stroke="#d9c79a" transform="rotate(8 ${cx} ${y + 12})"/>` +
+        `<text x="${cx + 2}" y="${y + 23}" font-size="9" text-anchor="middle" fill="#3f5f8a" transform="rotate(8 ${cx} ${y + 12})">あ</text>`
+      );
     default:
       return '';
   }

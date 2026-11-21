@@ -72,6 +72,7 @@ textarea { resize: vertical; font-family: ui-monospace, Menlo, monospace; font-s
 .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
 .btn.gold { background: linear-gradient(180deg, #d9bd7a, #b48c43); color: #1d1a10; }
 .btn.danger { background: var(--danger); color: #fff; }
+.btn.danger-text { background: none; color: var(--danger); box-shadow: none; }
 .btn.small { min-height: 38px; padding: 8px 12px; font-size: .84rem; border-radius: 12px; }
 .btn.fit { width: auto; flex: none; white-space: nowrap; }
 .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
@@ -83,7 +84,7 @@ textarea { resize: vertical; font-family: ui-monospace, Menlo, monospace; font-s
 .x { border: 0; background: none; color: var(--muted); padding: 8px; cursor: pointer; min-width: 40px; min-height: 40px; border-radius: 12px; }
 .x .ic { width: 18px; height: 18px; }
 
-:is(.btn, nav button, .mission, .menu-item, .chip-btn, .item-body, .cup, .timerbar, .back, .x, #scene):focus-visible {
+:is(.btn, nav button, .mission, .menu-item, .chip-btn, .item-body, .cup, .timerbar, .back, .x, #scene, .log-body, .subject-row, .cal .day):focus-visible {
   outline: 2px solid var(--accent); outline-offset: 3px;
 }
 
@@ -101,12 +102,17 @@ textarea { resize: vertical; font-family: ui-monospace, Menlo, monospace; font-s
 }
 .chip input:checked + span, .chip-btn.on { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); font-weight: 700; }
 .chip input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chip.wide { display: block; }
+.chip.wide span { display: block; white-space: normal; border-radius: 14px; padding: 10px 14px; }
+.emoji-chips .chip span { font-size: 1.2rem; padding: 4px 10px; }
 
 /* ---------- 목록 ---------- */
-.zones, .log, .missions, .quests, .menu, .legend, .steps, .subjects, .focus-help { list-style: none; margin: 0; padding: 0; }
+.zones, .log, .missions, .quests, .menu, .legend, .steps, .subjects { list-style: none; margin: 0; padding: 0; }
 .zones li, .log li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: .9rem; }
 .zones li:last-child, .log li:last-child { border-bottom: 0; }
 .log .right { display: flex; align-items: center; gap: 2px; white-space: nowrap; }
+/* 기록 한 줄 전체가 '고치기' 버튼 (features/workout.js workoutRow, study.js sessionRow) */
+.log-body { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; flex: 1; min-width: 0; min-height: 44px; justify-content: center; background: none; border: 0; padding: 0; font: inherit; font-size: .9rem; color: var(--ink); text-align: left; cursor: pointer; border-radius: 10px; }
 
 .steps { counter-reset: s; font-size: .9rem; }
 .steps li { counter-increment: s; padding: 5px 0 5px 32px; position: relative; }

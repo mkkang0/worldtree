@@ -1,10 +1,10 @@
 // 포인트를 주고받는 곳. 포인트·성장 점수는 반드시 이 함수들로만 바꾼다.
 import { ctx, commit } from './context.js';
-import { xpOf, stageOf, plantXp, STAGES } from '../core/scoring.js';
+import { xpOf, stageOf, plantXp } from '../core/scoring.js';
 import { checkAchievements } from '../core/achievements.js';
 import { ACHIEVEMENT_REWARD, EXCHANGE_RATE } from '../core/config.js';
 import { todayKey } from '../core/dates.js';
-import { toast, chime, confetti } from '../ui/effects.js';
+import { toast, chime } from '../ui/effects.js';
 
 const KEYS = ['sun', 'water', 'star'];
 
@@ -15,13 +15,8 @@ export function gain(r = {}) {
   KEYS.forEach((k) => (s[k] += r[k] || 0));
   s.xp += xpOf(r);
   const after = stageOf(plantXp(s));
-  if (after > before) {
-    setTimeout(() => {
-      toast(`세계수가 '${STAGES[after].name}'(으)로 자랐어요`);
-      chime('level');
-      confetti(['✦', '🌿', '✨', '💛']);
-    }, 400);
-  }
+  // 자랐으면 화면이 다시 그려질 때 축하 창을 띄운다 (app/render.js showCelebration)
+  if (after > before) ctx.ui.celebrate = Math.max(ctx.ui.celebrate ?? -1, after);
 }
 
 // 기록 삭제·체크 해제로 받은 포인트를 되돌린다.

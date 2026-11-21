@@ -15,6 +15,10 @@ export const ctx = {
     calMonth: '', // 통계 달력 'YYYY-MM'
     bubble: '', // 홈 말풍선
     giftCode: '',
+    mealDay: '', // 식단 화면에서 기록하는 날짜 (비어 있으면 오늘)
+    calDay: '', // 달력에서 누른 날짜
+    reportWeek: 0, // 주간 리포트: 0 = 이번 주, -1 = 지난주 …
+    celebrate: null, // 세계수가 자란 단계 (축하 창을 띄우기 전까지)
   },
 };
 

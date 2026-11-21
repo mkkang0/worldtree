@@ -1,8 +1,8 @@
 // 식단 미션 · 물 마시기 (이슬)
 import { ctx, rerender, commit } from '../app/context.js';
 import { gain, lose, settle } from '../app/wallet.js';
-import { MISSION_WATER, MISSION_REWARD_LIMIT, MAX_CUSTOM_MISSIONS, CUP_GOAL, CUP_BONUS } from '../core/config.js';
-import { todayKey } from '../core/dates.js';
+import { MISSION_WATER, MISSION_REWARD_LIMIT, MAX_CUSTOM_MISSIONS, CUP_GOAL, CUP_BONUS, BACKDATE_DAYS } from '../core/config.js';
+import { todayKey, addDays, dateLabel, weekdayLabel } from '../core/dates.js';
 import { cupsWater } from '../core/scoring.js';
 import { allMissions } from '../core/records.js';
 import { newId } from '../data/store.js';
@@ -21,25 +21,48 @@ function draftOf(state, day) {
   return d && d.day === day ? d.done : null;
 }
 const sameSet = (a, b) => Object.keys(a).length === Object.keys(b).length && Object.keys(a).every((k) => b[k]);
+const isDirty = (state, day) => {
+  const draft = draftOf(state, day);
+  return !!draft && !sameSet(draft, saved(state, day));
+};
+
+// 기록할 날짜. 깜빡한 날을 채울 수 있게 최근 BACKDATE_DAYS일까지 고를 수 있다. (ctx.ui.mealDay, 비어 있으면 오늘)
+function mealDay() {
+  const today = todayKey();
+  const d = ctx.ui.mealDay;
+  return d && d <= today && d >= addDays(today, -BACKDATE_DAYS) ? d : today;
+}
+
+function dayPicker(day) {
+  const today = todayKey();
+  const days = Array.from({ length: BACKDATE_DAYS + 1 }, (_, i) => addDays(today, -i));
+  return `<div class="chips scroll day-chips" role="tablist" aria-label="기록할 날짜">${days
+    .map((d) => `<button class="chip-btn ${d === day ? 'on' : ''}" data-act="meal.day" data-arg="${d}" role="tab" aria-selected="${d === day}">${dateLabel(d)}${d === today || d === addDays(today, -1) ? '' : ` ${weekdayLabel(d)}`}</button>`)
+    .join('')}</div>`;
+}
 
 export function view(state) {
-  const day = todayKey();
+  const day = mealDay();
+  const isToday = day === todayKey();
+  const dayName = isToday ? '오늘' : dateLabel(day);
   const draft = draftOf(state, day);
   const done = draft || saved(state, day);
   const doneCount = Object.keys(done).length;
-  const dirty = draft && !sameSet(draft, saved(state, day));
+  const dirty = isDirty(state, day);
   const diff = missionWater(doneCount) - missionWater(Object.keys(saved(state, day)).length);
   const cups = state.cups[day] || 0;
   const custom = new Set(state.customMissions.map((m) => m.id));
   return `
     <header class="page-head"><h1>식단</h1><span class="tiny">잘 먹을수록 이슬이 맺혀요</span></header>
+    ${dayPicker(day)}
+    ${isToday ? '' : `<section class="card note">${icon('calendar')} ${dayName} 기록을 채우는 중이에요. 보상도 그날 기준으로 계산해요.</section>`}
     <section class="card">
-      ${title('물 마시기', { iconName: 'drop', aside: `오늘 ${cups} / ${CUP_GOAL}잔` })}
+      ${title('물 마시기', { iconName: 'drop', aside: `${dayName} ${cups} / ${CUP_GOAL}잔` })}
       <div class="cups">${Array.from({ length: CUP_GOAL }, (_, i) => `<button class="cup ${i < cups ? 'on' : ''}" data-act="meal.cup" data-arg="${i + 1}" aria-label="${i + 1}잔" aria-pressed="${i < cups}">${icon('drop')}</button>`).join('')}</div>
       <p class="tiny">한 잔(약 250ml)마다 ${money('water', 1, true)}, ${CUP_GOAL}잔을 채우면 보너스 ${money('water', CUP_BONUS, true)}</p>
     </section>
     <section class="card">
-      ${title('오늘의 식단 미션', { iconName: 'leaf', aside: `보상 ${Math.min(doneCount, MISSION_REWARD_LIMIT)} / ${MISSION_REWARD_LIMIT}` })}
+      ${title(`${dayName}의 식단 미션`, { iconName: 'leaf', aside: `보상 ${Math.min(doneCount, MISSION_REWARD_LIMIT)} / ${MISSION_REWARD_LIMIT}` })}
       <ul class="missions">
         ${allMissions(state)
           .map(
@@ -67,9 +90,19 @@ export function view(state) {
 }
 
 export const actions = {
+  // 날짜 바꾸기. 고르다 만 미션이 있으면 먼저 물어본다.
+  'meal.day': (el) => {
+    const cur = mealDay();
+    if (el.dataset.arg === cur) return;
+    if (isDirty(ctx.state, cur) && !confirm('저장하지 않은 미션이 있어요. 날짜를 바꿀까요?')) return;
+    ctx.ui.mealDay = el.dataset.arg;
+    ctx.ui.mealDraft = null;
+    rerender();
+  },
+
   // 같은 잔을 다시 누르면 한 잔 줄어든다. 보상은 잔 수로 다시 계산해 차이만 반영한다.
   'meal.cup': (el) => {
-    const day = todayKey();
+    const day = mealDay();
     const n = Number(el.dataset.arg);
     const old = ctx.state.cups[day] || 0;
     const next = old === n ? n - 1 : n;
@@ -87,7 +120,7 @@ export const actions = {
 
   // 미션 고르기: 화면에만 표시하고 아직 저장하지 않는다
   'meal.pick': (el) => {
-    const day = todayKey();
+    const day = mealDay();
     const id = el.dataset.arg;
     const draft = draftOf(ctx.state, day) || { ...saved(ctx.state, day) };
     if (draft[id]) delete draft[id];
@@ -103,7 +136,7 @@ export const actions = {
 
   // 저장: 고른 결과를 기록하고, 보상은 저장 전후 개수 차이만큼 주고받는다
   'meal.save': () => {
-    const day = todayKey();
+    const day = mealDay();
     const draft = draftOf(ctx.state, day);
     if (!draft) return;
     const before = missionWater(Object.keys(saved(ctx.state, day)).length);
@@ -124,7 +157,13 @@ export const actions = {
 
   'meal.addMission': (form) => {
     if (ctx.state.customMissions.length >= MAX_CUSTOM_MISSIONS) return toast(`나만의 미션은 ${MAX_CUSTOM_MISSIONS}개까지예요`);
-    ctx.state.customMissions.push({ id: 'c-' + newId(), emoji: form.emoji.value.trim() || '✅', label: form.label.value.trim().slice(0, 20) });
+    const label = form.label.value.trim().slice(0, 20);
+    if (!label) {
+      form.label.value = '';
+      form.label.focus();
+      return toast('미션 이름을 적어 주세요');
+    }
+    ctx.state.customMissions.push({ id: 'c-' + newId(), emoji: form.emoji.value.trim() || '✅', label });
     commit();
     rerender();
   },

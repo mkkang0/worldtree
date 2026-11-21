@@ -1,6 +1,6 @@
 // 오프라인용 캐시. 파일을 고쳐서 다시 배포할 때는 CACHE 숫자를 올린다.
 // 새 파일을 만들면 FILES에도 추가한다.
-const CACHE = 'worldtree-v4';
+const CACHE = 'worldtree-v5';
 const FILES = [
   './',
   'index.html',
@@ -42,6 +42,7 @@ const FILES = [
   'js/data/items/scenery.js',
   'js/data/items/themes.js',
   'js/data/items/wardrobe.js',
+  'js/data/lines.js',
   'js/data/lists.js',
   'js/data/store.js',
   'js/data/trees.js',

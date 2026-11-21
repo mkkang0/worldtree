@@ -3,12 +3,14 @@ import { ctx, rerender } from '../app/context.js';
 import { gain, settle } from '../app/wallet.js';
 import { CARE_REWARD, DAILY_SUN_CAP, DAILY_STAR_CAP, JOURNEY_DAYS } from '../core/config.js';
 import { todayKey } from '../core/dates.js';
-import { LAST_STAGE, plantXp, stageOf } from '../core/scoring.js';
-import { earnedOn, minutesOn, missionsDone, allMissions, needsRest, studyMinOn, starsOn, streakOf } from '../core/records.js';
+import { LAST_STAGE, STAGES, plantXp, stageOf } from '../core/scoring.js';
+import { earnedOn, minutesOn, missionsDone, allMissions, needsRest, studyMinOn, starsOn, streakOf, studyMinBySubjectOn } from '../core/records.js';
+import { LINES, STAGE_LINES, fill } from '../data/lines.js';
+import { activeSubjects } from '../data/lists.js';
 import { TREES, treeById } from '../data/trees.js';
 import { esc, bar, money, title } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
-import { sceneSvg, journey, greeting, wallet, questsCard, weekCard, treePicker, ddayBadge } from '../ui/components.js';
+import { sceneSvg, journey, greeting, wallet, questsCard, weekCard, treePicker, ddayBadge, examDday } from '../ui/components.js';
 import { toast, chime, confetti } from '../ui/effects.js';
 
 export function view(state, ui) {
@@ -49,7 +51,7 @@ function todayCard(state) {
     ${title('오늘', { iconName: 'sun', aside: `연속 ${streakOf(state)}일` })}
     <ul class="today">
       ${row('heart', `운동 ${minutesOn(state, day)}분`, `${money('sun', earned)} / ${DAILY_SUN_CAP}`, earned / DAILY_SUN_CAP, '')}
-      ${study ? row('book', `공부 ${studyMinOn(state, day)}분`, `${money('star', starsOn(state, day))} / ${DAILY_STAR_CAP}`, starsOn(state, day) / DAILY_STAR_CAP, '', 'star') : ''}
+      ${study ? row('book', `공부 ${studyMinOn(state, day)}분`, `${money('star', starsOn(state, day))} / ${DAILY_STAR_CAP}`, starsOn(state, day) / DAILY_STAR_CAP, subjectGoals(state, day), 'star') : ''}
       ${row('leaf', `식단 미션 ${missionsDone(state, day)} / ${allMissions(state).length}`, `물 ${state.cups[day] || 0}잔`, null, '')}
     </ul>
     <div class="row ${study ? 'three' : 'two'}">
@@ -58,6 +60,35 @@ function todayCard(state) {
       <button class="btn small soft" data-act="nav.tab" data-arg="meal">식단 체크</button>
     </div>
   </section>`;
+}
+
+// 하루 목표를 정한 과목들 (예: 🇯🇵 30/60분 · 🇨🇳 60/60분 ✓)
+function subjectGoals(state, day) {
+  const by = studyMinBySubjectOn(state, day);
+  const list = activeSubjects(state).filter((s) => s.goal > 0);
+  if (!list.length) return '';
+  return `<div class="goal-chips">${list
+    .map((s) => {
+      const min = by[s.id] || 0;
+      return `<span class="goal-chip ${min >= s.goal ? 'done' : ''}">${esc(s.emoji)} ${min}/${s.goal}분${min >= s.goal ? ' ✓' : ''}</span>`;
+    })
+    .join('')}</div>`;
+}
+
+// 세계수가 한 단계 자랐을 때 뜨는 축하 창
+export function stageUpModal(state, ui) {
+  const stage = ui.modalData?.stage ?? stageOf(plantXp(state));
+  const done = stage >= LAST_STAGE;
+  return `<div class="sheet celebrate" role="dialog" aria-labelledby="stageup-title">
+    <div class="intro"><span class="eyebrow">GROWING UP</span>
+    <h1 id="stageup-title">'${STAGES[stage].name}'(으)로 자랐어요</h1>
+    <p class="muted">${STAGE_LINES[stage] || ''}</p></div>
+    <div class="celebrate-art">${sceneSvg(state, { mood: 'joy' })}</div>
+    <p class="tiny center">정령 ${esc(state.settings.name)}: “${done ? '함께해 줘서 고마워요!' : '다음 단계도 같이 가요!'}”</p>
+    ${done
+      ? `<div class="row two"><button class="btn ghost" data-act="modal.close">나중에</button><button class="btn gold" data-act="home.completeOpen">${icon('forest')} 숲에 심기</button></div>`
+      : `<button class="btn gold" data-act="modal.close">좋아요</button>`}
+  </div>`;
 }
 
 // 세계수를 완성했을 때: 숲에 심고 다음 세계수 고르기
@@ -77,7 +108,28 @@ export function completeModal(state) {
   </form>`;
 }
 
-const LINES = ['히히, 간지러워요!', '오늘도 같이 있어서 좋아요', '이슬 한 모금 어때요?', '조금만 움직여 볼까요?', '세계수가 조금 자랐어요', '바람이 기분 좋아요', '공부도 운동도 같이 해요!'];
+// 정령이 할 말: 지금 시간, 오늘 한 일, 연속 기록, 시험을 보고 어울리는 묶음을 모은 뒤 하나를 고른다.
+// 같은 말이 연달아 나오지 않게 바로 전 대사는 뺀다.
+let lastLine = '';
+export function spiritLine(state) {
+  const day = todayKey();
+  const h = new Date().getHours();
+  const pools = [LINES.any];
+  pools.push(h < 5 || h >= 22 ? LINES.night : h < 11 ? LINES.morning : h >= 17 ? LINES.evening : []);
+  const moved = minutesOn(state, day) > 0;
+  const studied = studyMinOn(state, day) > 0;
+  if (moved) pools.push(LINES.workout);
+  if (studied) pools.push(LINES.study);
+  if (missionsDone(state, day) >= 2) pools.push(LINES.meal);
+  if (!moved && !studied && !missionsDone(state, day)) pools.push(LINES.idle);
+  const streak = streakOf(state);
+  if (streak >= 3) pools.push(LINES.streak.map((t) => fill(t, { n: streak })));
+  const exam = examDday(state);
+  if (exam && exam.left > 1 && exam.left <= 30) pools.push(LINES.exam.map((t) => fill(t, { n: exam.left })));
+  const all = pools.flat().map((t) => fill(t, { name: state.settings.name })).filter((t) => t !== lastLine);
+  lastLine = all[Math.floor(Math.random() * all.length)] || '';
+  return lastLine;
+}
 
 export const actions = {
   // 장면을 누르면 정령이 반응한다. 전체를 다시 그리지 않는다.
@@ -85,7 +137,7 @@ export const actions = {
     el.classList.remove('bounce');
     void el.offsetWidth;
     el.classList.add('bounce');
-    ctx.ui.bubble = LINES[Math.floor(Math.random() * LINES.length)];
+    ctx.ui.bubble = spiritLine(ctx.state);
     const bubble = el.parentElement.querySelector('.bubble');
     if (bubble) bubble.textContent = ctx.ui.bubble;
     chime('soft');
@@ -111,6 +163,7 @@ export const actions = {
 
   'home.completeOpen': () => {
     ctx.ui.modal = 'complete';
+    ctx.ui.modalData = null;
     rerender();
   },
 

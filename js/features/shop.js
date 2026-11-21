@@ -75,11 +75,14 @@ export const actions = {
     rerender();
   },
 
-  // 같은 아이템을 다시 누르면 미리보기를 끈다.
+  // 여러 슬롯을 함께 입혀볼 수 있다. 같은 아이템을 다시 누르면 그 슬롯의 미리보기만 끈다.
   'shop.preview': (el) => {
     const item = itemById(el.dataset.arg);
     if (!item || item.slot === 'theme') return;
-    ctx.ui.preview = ctx.ui.preview[item.slot] === item.id ? {} : { [item.slot]: item.id };
+    const next = { ...ctx.ui.preview };
+    if (next[item.slot] === item.id) delete next[item.slot];
+    else next[item.slot] = item.id;
+    ctx.ui.preview = next;
     rerender();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   },

@@ -35,6 +35,9 @@ export const CUP_BONUS = 4;
 export const FOCUS_WEIGHTS = [0, 0.2, 0.4, 0.6, 0.8, 1];
 export const DAILY_STAR_CAP = 150;
 export const STUDY_MIN_RANGE = [1, 360];
+export const MAX_SUBJECTS = 10; // 공부 탭에 둘 수 있는 과목 수
+export const SUBJECT_GOAL_MAX = 600; // 과목별 하루 목표(분) 상한
+export const STUDY_QUICK_MIN = [25, 50, 90]; // 직접 기록할 때 누르는 시간 버튼
 
 /* ---------- 돌보기 · 목표 · 업적 ---------- */
 

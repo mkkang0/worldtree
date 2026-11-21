@@ -1,10 +1,10 @@
 // 일일 퀘스트와 주간 목표. 보상 지급은 app/wallet.js가 한다.
 import { WEEK_GOAL_MIN, WEEK_REWARD } from './config.js';
-import { logsOn, minutesOn, missionsDone, sessionsOn, studyMinOn, weekSummary } from './records.js';
+import { logsOn, minutesOn, missionsDone, sessionsOn, studyMinOn, weekSummary, subjectGoalsMet } from './records.js';
 
 const minWhere = (list, f) => list.filter(f).reduce((a, e) => a + e.min, 0);
 
-// study: true 인 퀘스트는 공부 기능을 켠 사람에게만 나온다.
+// study: true 인 퀘스트는 공부 기능을 켠 사람에게만 나온다. when이 있으면 조건이 맞을 때만 나온다.
 const POOL = [
   { id: 'move20', emoji: '🚶', label: '오늘 20분 움직이기', goal: 20, reward: { sun: 10 }, cur: (s, d) => minutesOn(s, d) },
   { id: 'move40', emoji: '🏃', label: '오늘 40분 움직이기', goal: 40, reward: { sun: 18 }, cur: (s, d) => minutesOn(s, d) },
@@ -17,6 +17,26 @@ const POOL = [
   { id: 'study30', emoji: '📚', label: '공부 30분 하기', goal: 30, reward: { star: 10 }, study: true, cur: (s, d) => studyMinOn(s, d) },
   { id: 'focus4', emoji: '🧠', label: '집중도 4 이상으로 25분', goal: 25, reward: { star: 12 }, study: true, cur: (s, d) => minWhere(sessionsOn(s, d), (e) => e.focus >= 4) },
   { id: 'study2', emoji: '✍️', label: '공부 2번 나눠서 하기', goal: 2, reward: { star: 8 }, study: true, cur: (s, d) => sessionsOn(s, d).length },
+  {
+    id: 'subjects2',
+    emoji: '🌏',
+    label: '두 과목 이상 공부하기',
+    goal: 2,
+    reward: { star: 10 },
+    study: true,
+    when: (s) => s.study.subjects.filter((x) => !x.hidden).length >= 2,
+    cur: (s, d) => new Set(sessionsOn(s, d).map((x) => x.subject)).size,
+  },
+  {
+    id: 'goalmet',
+    emoji: '🎯',
+    label: '과목 하루 목표 채우기',
+    goal: 1,
+    reward: { star: 12 },
+    study: true,
+    when: (s) => s.study.subjects.some((x) => !x.hidden && x.goal > 0),
+    cur: (s, d) => subjectGoalsMet(s, d),
+  },
 ];
 
 function seeded(str) {
@@ -35,7 +55,7 @@ function seeded(str) {
 // 날짜마다 같은 3개가 나온다.
 export function questsFor(state, day) {
   const rand = seeded('quest-' + day);
-  const pool = POOL.filter((q) => !q.study || state.settings.studyEnabled);
+  const pool = POOL.filter((q) => (!q.study || state.settings.studyEnabled) && (!q.when || q.when(state)));
   const picks = [];
   while (picks.length < 3) picks.push(pool.splice(Math.floor(rand() * pool.length), 1)[0]);
   const claimed = state.quests[day]?.claimed || [];

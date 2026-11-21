@@ -17,6 +17,11 @@ export const WARDROBE = [
   { id: 'hat-witch', slot: 'hat', name: '마법사 모자', cost: c(90, 30) },
   { id: 'hat-halo', slot: 'hat', name: '천사 링', cost: c(90, 30) },
   { id: 'hat-crown', slot: 'hat', name: '왕관', cost: c(120, 40) },
+  { id: 'hat-party', slot: 'hat', name: '파티 고깔', cost: c(35, 10) },
+  { id: 'hat-chef', slot: 'hat', name: '요리사 모자', cost: c(0, 50) },
+  { id: 'hat-antenna', slot: 'hat', name: '더듬이', cost: c(45, 15) },
+  { id: 'hat-beret', slot: 'hat', name: '베레모', cost: c(55, 20) },
+  { id: 'hat-sakura-pin', slot: 'hat', name: '벚꽃 머리핀', cost: c(0, 0, 40) },
   { id: 'hat-pencil', slot: 'hat', name: '귀에 꽂은 연필', cost: c(0, 0, 30) },
   { id: 'hat-grad', slot: 'hat', name: '학사모', cost: c(0, 0, 90) },
 
@@ -28,6 +33,9 @@ export const WARDROBE = [
   { id: 'face-star', slot: 'face', name: '반짝 볼터치', cost: c(0, 30) },
   { id: 'face-heart', slot: 'face', name: '하트 볼터치', cost: c(0, 30) },
   { id: 'face-reading', slot: 'face', name: '반달 독서안경', cost: c(0, 0, 25) },
+  { id: 'face-bandaid', slot: 'face', name: '반창고', cost: c(20) },
+  { id: 'face-goggles', slot: 'face', name: '수영 고글', cost: c(45, 10) },
+  { id: 'face-mustache', slot: 'face', name: '콧수염', cost: c(35) },
 
   /* ---------- 정령 목걸이 (neck) ---------- */
   { id: 'neck-bow', slot: 'neck', name: '나비넥타이', cost: c(30) },
@@ -37,4 +45,6 @@ export const WARDROBE = [
   { id: 'neck-beads', slot: 'neck', name: '구슬 목걸이', cost: c(0, 40) },
   { id: 'neck-medal', slot: 'neck', name: '금메달', cost: c(110, 30) },
   { id: 'neck-id', slot: 'neck', name: '사원증', cost: c(0, 0, 50) },
+  { id: 'neck-bandana', slot: 'neck', name: '반다나', cost: c(30, 10) },
+  { id: 'neck-wordcard', slot: 'neck', name: '단어 카드', cost: c(0, 0, 35) },
 ];

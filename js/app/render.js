@@ -2,6 +2,7 @@
 import { ctx, rerender } from './context.js';
 import { clock } from '../core/dates.js';
 import { icon } from '../ui/icons.js';
+import { confetti, chime } from '../ui/effects.js';
 import * as home from '../features/home.js';
 import * as workout from '../features/workout.js';
 import * as study from '../features/study.js';
@@ -32,7 +33,11 @@ const SUB_PAGES = { forest, goals, stats, friends, settings };
 const MODALS = {
   onboarding: onboarding.modal,
   complete: home.completeModal,
+  stageup: home.stageUpModal,
   'study-finish': study.finishModal,
+  'study-edit': study.editModal,
+  subject: study.subjectModal,
+  'workout-edit': workout.editModal,
 };
 
 const visibleTabs = (state) => TABS.filter((t) => !t.show || t.show(state));
@@ -49,6 +54,10 @@ function applyPrefs(state) {
   const theme = state.equipped.theme;
   document.documentElement.dataset.theme = theme ? theme.replace('theme-', '') : '';
   document.documentElement.classList.toggle('big', state.settings.bigText);
+  // 밝게 · 어둡게 · 기기 설정 따르기 (css/tokens.css의 html[data-scheme])
+  const scheme = state.settings.appearance;
+  if (scheme === 'light' || scheme === 'dark') document.documentElement.dataset.scheme = scheme;
+  else delete document.documentElement.dataset.scheme;
 }
 
 // 공부 중일 때 다른 탭 위에 떠 있는 띠
@@ -59,9 +68,22 @@ function timerBar(state, ui) {
 
 let lastRoute = '';
 
+// 세계수가 자랐으면(wallet.gain이 ui.celebrate에 단계를 남긴다) 다른 창이 없을 때 축하 창을 띄운다.
+function showCelebration(ui) {
+  if (ui.modal || ui.celebrate == null) return;
+  ui.modal = 'stageup';
+  ui.modalData = { stage: ui.celebrate };
+  ui.celebrate = null;
+  setTimeout(() => {
+    confetti(['✦', '🌿', '✨', '💛']);
+    chime('level');
+  }, 150);
+}
+
 export function render() {
   const { state, ui } = ctx;
   applyPrefs(state);
+  showCelebration(ui);
   const page = currentPage();
   const main = document.getElementById('view');
 
@@ -74,7 +96,7 @@ export function render() {
   }
 
   document.getElementById('tabs').innerHTML = visibleTabs(state)
-    .map((t) => `<button data-act="nav.tab" data-arg="${t.id}" class="${t.id === ui.tab ? 'on' : ''}" aria-current="${t.id === ui.tab}">${icon(t.icon)}<small>${t.label}</small></button>`)
+    .map((t) => `<button data-act="nav.tab" data-arg="${t.id}" class="${t.id === ui.tab ? 'on' : ''}" aria-label="${t.label}" ${t.id === ui.tab ? 'aria-current="page"' : ''}>${icon(t.icon)}<small>${t.label}</small></button>`)
     .join('');
   main.innerHTML = page.view(state, ui);
   document.getElementById('timer-slot').innerHTML = timerBar(state, ui);
@@ -84,7 +106,7 @@ export function render() {
 }
 
 export function go(tab, sub = '') {
-  Object.assign(ctx.ui, { tab, sub, bubble: '' });
+  Object.assign(ctx.ui, { tab, sub, bubble: '', mealDay: '', calDay: '' });
   if (tab !== 'shop') ctx.ui.preview = {};
   rerender();
   window.scrollTo(0, 0);
@@ -95,6 +117,7 @@ export const actions = {
   'nav.sub': (el) => go('more', el.dataset.arg || ''),
   'modal.close': () => {
     ctx.ui.modal = '';
+    ctx.ui.modalData = null;
     rerender();
   },
 };

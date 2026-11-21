@@ -18,6 +18,9 @@ function zoneOf(hr, intensity) {
   return hr ? zoneFromHr(hr, age, restHr) : INTENSITIES.find((i) => i.value === intensity)?.zone ?? 2;
 }
 
+// 기록에는 체감 강도 대신 Zone이 남아 있어서, 다시 채울 때는 Zone에 맞는 강도를 고른다
+const intensityOfZone = (zone) => (INTENSITIES.find((i) => i.zone === zone) || INTENSITIES[1]).value;
+
 export function addWorkout({ type, date, min, hr, intensity, mood = '', note = '' }) {
   const zone = zoneOf(hr, intensity);
   const points = workoutPoints(min, zone);
@@ -72,24 +75,8 @@ export function view(state) {
         <input data-input="workout.paste" placeholder="min=30&hr=135&type=run" autocomplete="off" autocapitalize="off">
       </label>
       <form data-form="workout.save" data-input="workout.preview" autocomplete="off">
-        ${radioChips('type', ACTIVITIES.map((a) => ({ value: a.id, label: `${a.emoji} ${a.label}` })), 'walk')}
-        <label>날짜
-          <input name="date" type="date" value="${day}" min="${addDays(day, -BACKDATE_DAYS)}" max="${day}" required>
-        </label>
-        <label>운동 시간 (분)
-          <input name="min" type="number" inputmode="numeric" min="${WORKOUT_MIN_RANGE[0]}" max="${WORKOUT_MIN_RANGE[1]}" required placeholder="예: 30">
-        </label>
-        <label>평균 심박수 (bpm, 워치에서 확인)
-          <input name="hr" type="number" inputmode="numeric" min="${HR_RANGE[0]}" max="${HR_RANGE[1]}" placeholder="모르면 비워두세요">
-        </label>
-        <label>심박수를 모를 때 체감 강도
-          <select name="intensity">${INTENSITIES.map((i) => `<option value="${i.value}" ${i.value === 2 ? 'selected' : ''}>${i.label}</option>`).join('')}</select>
-        </label>
-        <div class="label-like">오늘 기분</div>
-        ${radioChips('mood', MOODS.map((m) => ({ value: m.id, label: `${m.emoji} ${m.label}` })), 'good')}
-        <label>한 줄 메모 (선택)
-          <input name="note" maxlength="80" placeholder="예: 한강에서 노을 보며 걸었어요">
-        </label>
+        ${state.log.length ? `<button type="button" class="btn small soft repeat" data-act="workout.repeat">${icon('swap')} 지난번처럼 채우기</button>` : ''}
+        ${workoutFields({ date: day, type: 'walk', intensity: 2, mood: 'good' })}
         <p class="tiny" data-preview>최대심박 ${maxHr(age)} bpm 기준${restHr ? ` · 안정시 ${restHr}bpm 반영(카르보넨)` : ''} · 나이는 설정에서 바꿔요</p>
         <button class="btn" type="submit">${icon('sun')} 기록하고 햇살 받기</button>
       </form>
@@ -100,37 +87,121 @@ export function view(state) {
       <p class="tiny">하루 햇살은 최대 ${DAILY_SUN_CAP}까지예요. 무리하지 말고, 쉬는 날은 식단으로 이슬을 모아요.</p>
     </section>
     <section class="card">
-      ${title('최근 기록', { iconName: 'scroll' })}
+      ${title('최근 기록', { iconName: 'scroll', aside: '눌러서 고치기' })}
       ${recentList(state)}
     </section>`;
 }
 
+// 운동 기록 입력칸 (새 기록 · 기록 고치기에서 같이 쓴다)
+function workoutFields(v, { minDate } = {}) {
+  const day = todayKey();
+  const lo = minDate && minDate < addDays(day, -BACKDATE_DAYS) ? minDate : addDays(day, -BACKDATE_DAYS);
+  return `
+    ${radioChips('type', ACTIVITIES.map((a) => ({ value: a.id, label: `${a.emoji} ${a.label}` })), v.type)}
+    <label>날짜
+      <input name="date" type="date" value="${v.date}" min="${lo}" max="${day}" required>
+    </label>
+    <label>운동 시간 (분)
+      <input name="min" type="number" inputmode="numeric" min="${WORKOUT_MIN_RANGE[0]}" max="${WORKOUT_MIN_RANGE[1]}" required placeholder="예: 30" value="${v.min || ''}">
+    </label>
+    <label>평균 심박수 (bpm, 워치에서 확인)
+      <input name="hr" type="number" inputmode="numeric" min="${HR_RANGE[0]}" max="${HR_RANGE[1]}" placeholder="모르면 비워두세요" value="${v.hr || ''}">
+    </label>
+    <label>심박수를 모를 때 체감 강도
+      <select name="intensity">${INTENSITIES.map((i) => `<option value="${i.value}" ${i.value === v.intensity ? 'selected' : ''}>${i.label}</option>`).join('')}</select>
+    </label>
+    <div class="label-like">기분</div>
+    ${radioChips('mood', MOODS.map((m) => ({ value: m.id, label: `${m.emoji} ${m.label}` })), v.mood)}
+    <label>한 줄 메모 (선택)
+      <input name="note" maxlength="80" placeholder="예: 한강에서 노을 보며 걸었어요" value="${esc(v.note || '')}">
+    </label>`;
+}
+
+// 운동 기록 한 줄. 누르면 고치기 창이 열린다. (기록·달력 화면도 같이 쓴다)
+export function workoutRow(e) {
+  const mood = MOODS.find((m) => m.id === e.mood);
+  const act = byId(ACTIVITIES, e.type);
+  return `<li>
+    <button class="log-body" data-act="workout.edit" data-arg="${esc(e.id)}" aria-label="운동 기록 고치기">
+      <span><b>${dateLabel(e.date)}</b> · ${act.emoji} ${act.label} ${e.min}분${e.hr ? ` · ${e.hr}bpm` : ''} ${mood ? mood.emoji : ''}</span>
+      <span class="tiny">${ZONES[e.zone].label}${e.note ? ` · ${esc(e.note)}` : ''}</span>
+    </button>
+    <div class="right"><b>${money('sun', e.earned, true)}</b>
+    <button class="x" data-act="workout.delete" data-arg="${esc(e.id)}" aria-label="기록 삭제">${icon('close')}</button></div>
+  </li>`;
+}
+
+// 날짜가 최근인 순서로 (같은 날은 나중에 넣은 것이 위)
+export const byDateDesc = (list) =>
+  list
+    .map((x, i) => [x, i])
+    .sort((a, b) => (a[0].date === b[0].date ? a[1] - b[1] : a[0].date < b[0].date ? 1 : -1))
+    .map((p) => p[0]);
+
 function recentList(state) {
-  const recent = state.log.slice(0, 14);
+  const recent = byDateDesc(state.log).slice(0, 14);
   if (!recent.length) return '<p class="muted">아직 기록이 없어요.</p>';
-  return `<ul class="log">${recent
-    .map((e) => {
-      const mood = MOODS.find((m) => m.id === e.mood);
-      return `<li>
-        <div><b>${dateLabel(e.date)}</b> · ${byId(ACTIVITIES, e.type).emoji} ${e.min}분${e.hr ? ` · ${e.hr}bpm` : ''} ${mood ? mood.emoji : ''}
-        <div class="tiny">${ZONES[e.zone].label}${e.note ? ` · ${esc(e.note)}` : ''}</div></div>
-        <div class="right"><b>${money('sun', e.earned, true)}</b>
-        <button class="x" data-act="workout.delete" data-arg="${esc(e.id)}" aria-label="기록 삭제">${icon('close')}</button></div>
-      </li>`;
-    })
-    .join('')}</ul>`;
+  return `<ul class="log">${recent.map(workoutRow).join('')}</ul>`;
+}
+
+// 운동 기록 고치기 창
+export function editModal(state, ui) {
+  const e = state.log.find((x) => x.id === ui.modalData?.id);
+  if (!e) return '';
+  return `<form class="sheet" data-form="workout.update" data-input="workout.preview" autocomplete="off">
+    <div class="intro"><span class="eyebrow">EDIT</span><h1>운동 기록 고치기</h1>
+    <p class="muted">고치면 받은 햇살도 다시 계산해요.</p></div>
+    ${workoutFields({ ...e, intensity: intensityOfZone(e.zone) }, { minDate: e.date })}
+    <p class="tiny" data-preview></p>
+    <div class="row two">
+      <button class="btn ghost" type="button" data-act="modal.close">닫기</button>
+      <button class="btn" type="submit">${icon('check')} 저장</button>
+    </div>
+    <button class="btn small danger-text" type="button" data-act="workout.delete" data-arg="${esc(e.id)}">이 기록 지우기</button>
+  </form>`;
 }
 
 /* ---------- 동작 ---------- */
 
+function readForm(form) {
+  return {
+    type: form.type.value || 'etc',
+    date: form.date.value || todayKey(),
+    min: Math.round(Number(form.min.value)),
+    hr: form.hr.value ? Math.round(Number(form.hr.value)) : 0,
+    intensity: Number(form.intensity.value),
+    mood: form.mood.value,
+    note: form.note.value.trim(),
+  };
+}
+
+// 입력값 확인. 고칠 때는 원래 날짜가 오래됐어도 그대로 둘 수 있다.
+function checkInput(v, keepDate = '') {
+  if (!inRange(v.min, WORKOUT_MIN_RANGE)) return toast('운동 시간을 확인해 주세요'), false;
+  if (v.hr && !inRange(v.hr, HR_RANGE)) return toast('심박수를 확인해 주세요'), false;
+  if (v.date > todayKey() || (v.date < addDays(todayKey(), -BACKDATE_DAYS) && v.date !== keepDate)) {
+    return toast(`날짜는 최근 ${BACKDATE_DAYS}일 안에서 골라 주세요`), false;
+  }
+  return true;
+}
+
+const closeModal = () => {
+  ctx.ui.modal = '';
+  ctx.ui.modalData = null;
+};
+
 export const actions = {
   'workout.preview': (form) => {
     const min = Number(form.min.value);
-    if (!min) return;
+    const out = form.querySelector('[data-preview]');
+    if (!min || !out) return;
     const zone = zoneOf(Number(form.hr.value), Number(form.intensity.value));
     const pts = workoutPoints(min, zone);
-    const left = capEarn(pts, earnedOn(ctx.state, form.date.value || todayKey()), DAILY_SUN_CAP);
-    form.querySelector('[data-preview]').textContent = `${ZONES[zone].label} · 예상 햇살 +${left}${left < pts ? ' (하루 상한 적용)' : ''}`;
+    const date = form.date.value || todayKey();
+    // 고치는 중이면 원래 기록의 햇살은 빼고 계산한다
+    const old = form.dataset.form === 'workout.update' ? ctx.state.log.find((x) => x.id === ctx.ui.modalData?.id) : null;
+    const left = capEarn(pts, earnedOn(ctx.state, date) - (old && old.date === date ? old.earned : 0), DAILY_SUN_CAP);
+    out.textContent = `${ZONES[zone].label} · 예상 햇살 +${left}${left < pts ? ' (하루 상한 적용)' : ''}`;
   },
 
   'workout.paste': (input) => {
@@ -145,25 +216,57 @@ export const actions = {
     toast('값을 불러왔어요. 확인하고 기록 버튼을 눌러 주세요');
   },
 
+  // 가장 최근 기록의 종류·시간·심박을 그대로 채운다 (날짜는 오늘)
+  'workout.repeat': (el) => {
+    const last = byDateDesc(ctx.state.log)[0];
+    const form = el.closest('form');
+    if (!last || !form) return;
+    const radio = form.querySelector(`input[name="type"][value="${last.type}"]`);
+    if (radio) radio.checked = true;
+    form.min.value = last.min;
+    form.hr.value = last.hr || '';
+    form.intensity.value = intensityOfZone(last.zone);
+    actions['workout.preview'](form);
+    toast('지난 기록으로 채웠어요. 확인하고 기록 버튼을 눌러 주세요');
+  },
+
   'workout.save': (form) => {
-    const min = Math.round(Number(form.min.value));
-    const hr = form.hr.value ? Math.round(Number(form.hr.value)) : 0;
-    const date = form.date.value || todayKey();
-    if (!inRange(min, WORKOUT_MIN_RANGE)) return toast('운동 시간을 확인해 주세요');
-    if (hr && !inRange(hr, HR_RANGE)) return toast('심박수를 확인해 주세요');
-    if (date > todayKey() || date < addDays(todayKey(), -BACKDATE_DAYS)) return toast(`날짜는 최근 ${BACKDATE_DAYS}일 안에서 골라 주세요`);
-    const r = addWorkout({
-      type: form.type.value,
-      date,
-      min,
-      hr,
-      intensity: Number(form.intensity.value),
-      mood: form.mood.value,
-      note: form.note.value.trim(),
-    });
+    const v = readForm(form);
+    if (!checkInput(v)) return;
+    const r = addWorkout(v);
     chime('ok');
     toast(r.earned < r.points ? `햇살 +${r.earned} · 오늘 상한에 닿았어요. 쉬는 것도 운동이에요` : `햇살 +${r.earned}을 받았어요`);
     rerender();
+  },
+
+  'workout.edit': (el) => {
+    ctx.ui.modal = 'workout-edit';
+    ctx.ui.modalData = { id: el.dataset.arg };
+    rerender();
+    const form = document.querySelector('[data-form="workout.update"]');
+    if (form) actions['workout.preview'](form);
+  },
+
+  // 기록 고치기: 햇살은 다시 계산해서 차이만큼 주고받는다
+  'workout.update': (form) => {
+    const e = ctx.state.log.find((x) => x.id === ctx.ui.modalData?.id);
+    if (!e) {
+      closeModal();
+      return rerender();
+    }
+    const v = readForm(form);
+    if (!checkInput(v, e.date)) return;
+    const zone = zoneOf(v.hr, v.intensity);
+    const points = workoutPoints(v.min, zone);
+    const earned = capEarn(points, earnedOn(ctx.state, v.date) - (e.date === v.date ? e.earned : 0), DAILY_SUN_CAP);
+    const diff = earned - e.earned;
+    Object.assign(e, { date: v.date, type: v.type, min: v.min, hr: v.hr || null, zone, points, earned, mood: v.mood, note: v.note.slice(0, 80) });
+    if (diff > 0) gain({ sun: diff });
+    else if (diff < 0) lose({ sun: -diff });
+    settle();
+    closeModal();
+    rerender();
+    toast(diff ? `고쳤어요 · 햇살 ${diff > 0 ? '+' : ''}${diff}` : '고쳤어요');
   },
 
   'workout.delete': (el) => {
@@ -172,6 +275,7 @@ export const actions = {
     ctx.state.log = ctx.state.log.filter((x) => x.id !== entry.id);
     lose({ sun: entry.earned });
     settle();
+    if (ctx.ui.modal === 'workout-edit') closeModal();
     rerender();
   },
 };

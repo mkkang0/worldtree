@@ -17,8 +17,8 @@ export function modal() {
     ${treePicker('tree', TREES[0].id)}
     <label>세계수를 돌볼 정령의 이름 (10자까지)<input name="name" maxlength="10" placeholder="예: ${DEFAULT_SPIRIT_NAME}" required></label>
     <label>나이 (운동 강도 계산용)<input name="age" type="number" inputmode="numeric" min="10" max="90" value="30" required></label>
-    <label class="check"><input type="checkbox" name="studyEnabled"> 공부 기록도 할래요 (회계 공부 등 · 나중에 설정에서 바꿀 수 있어요)</label>
-    <label>시험일 (선택 · 넣으면 홈에 D-day가 보여요)<input name="examDate" type="date"></label>
+    <label class="check"><input type="checkbox" name="studyEnabled"> 공부 기록도 할래요 (일본어·중국어 등 · 과목은 공부 탭에서 바꿀 수 있어요)</label>
+    <label>시험일 (선택 · 넣으면 홈에 D-day가 보여요. 과목별 시험일은 공부 탭에서 따로 정할 수 있어요)<input name="examDate" type="date"></label>
     <button class="btn gold" type="submit">씨앗 심기</button>
   </form>`;
 }

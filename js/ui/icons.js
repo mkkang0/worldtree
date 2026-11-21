@@ -29,6 +29,10 @@ const PATHS = {
   swap: '<path d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>',
   sparkle: '<path d="M12 4l1.4 4.6L18 10l-4.6 1.4L12 16l-1.4-4.6L6 10l4.6-1.4z"/>',
   drop: '<path d="M12 4s5 5.4 5 9.2a5 5 0 0 1-10 0C7 9.4 12 4 12 4z"/>',
+  edit: '<path d="M4.5 19.5l1-4L15.8 5.2a2 2 0 0 1 2.9 0l.1.1a2 2 0 0 1 0 2.9L8.5 18.5z"/><path d="M13.5 7.5l3 3"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  moon: '<path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/>',
 };
 
 export function icon(name, cls = '') {

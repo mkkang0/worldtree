@@ -52,6 +52,34 @@ export const SKY = {
       return `<path class="flap" d="M${x - 5} ${y} q5 -4 5 0 q0 -4 5 0" fill="none" stroke="#3f4a52" stroke-width="1.3" stroke-linecap="round" ${delay(i, 6, 1.2)}/>`;
     }),
 
+  'sky-kites': () =>
+    [[70, 84, '#e5605b', '#ffd34d'], [228, 58, '#4f93b8', '#ffffff']]
+      .map(
+        ([x, y, c1, c2], i) =>
+          `<g transform="translate(${x} ${y})"><g class="float" ${delay(i, 2, 3.4)}>` +
+          `<path d="M0 -12 L9 0 L0 14 L-9 0Z" fill="${c1}"/><path d="M0 -12 V14 M-9 0 H9" stroke="${c2}" stroke-width="1"/>` +
+          `<path d="M0 14 q-4 8 2 14 q5 6 0 14" stroke="${c2}" stroke-width="1.2" fill="none"/>` +
+          `<circle cx="-1" cy="22" r="1.5" fill="${c2}"/><circle cx="1" cy="34" r="1.5" fill="${c2}"/></g></g>`
+      )
+      .join(''),
+
+  'sky-fireworks': () =>
+    [[70, 70, '#ffd34d', 20], [222, 48, '#ff8fb8', 24], [168, 104, '#9fd4ff', 15]]
+      .map(
+        ([x, y, c, r], i) =>
+          `<g transform="translate(${x} ${y})" class="twinkle" ${delay(i, 3, 3)}>` +
+          times(12, (k) => {
+            const a = (k * 30 * Math.PI) / 180;
+            return `<line x1="${n(Math.cos(a) * r * 0.35)}" y1="${n(Math.sin(a) * r * 0.35)}" x2="${n(Math.cos(a) * r)}" y2="${n(Math.sin(a) * r)}" stroke="${c}" stroke-width="1.6" stroke-linecap="round"/>`;
+          }) +
+          times(12, (k) => {
+            const a = ((k * 30 + 15) * Math.PI) / 180;
+            return `<circle cx="${n(Math.cos(a) * r * 1.12)}" cy="${n(Math.sin(a) * r * 1.12)}" r="1.1" fill="${c}"/>`;
+          }) +
+          `<circle r="2.2" fill="#fff"/></g>`
+      )
+      .join(''),
+
   'sky-planet': (uid) =>
     `<defs>${radial(`pl-${uid}`, [[0, '#ffe2f0'], [0.6, '#d69ad6'], [1, '#7c5aa8']], { cx: 0.35, cy: 0.3 })}</defs>` +
     glow(`pg-${uid}`, 232, 70, 44, '#e2b8ff', 0.4) +

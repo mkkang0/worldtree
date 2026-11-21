@@ -27,6 +27,8 @@ export const SCENERY = [
   { id: 'sky-islands', slot: 'sky', name: '떠 있는 섬', cost: c(100, 30) },
   { id: 'sky-lanterns', slot: 'sky', name: '풍등', cost: c(90, 40) },
   { id: 'sky-aurora', slot: 'sky', name: '오로라', cost: c(140, 50) },
+  { id: 'sky-kites', slot: 'sky', name: '연날리기', cost: c(45, 15) },
+  { id: 'sky-fireworks', slot: 'sky', name: '불꽃놀이', cost: c(120, 40) },
 
   /* ---------- 가지 장식 (ornament) — 묘목부터 보인다 ---------- */
   { id: 'orn-blossom', slot: 'ornament', name: '하얀 꽃송이', cost: c(0, 30) },
@@ -50,6 +52,8 @@ export const SCENERY = [
   { id: 'land-ruins', slot: 'land', name: '고대 유적', cost: c(90, 30) },
   { id: 'land-crystals', slot: 'land', name: '수정 군락', cost: c(110, 40) },
   { id: 'land-books', slot: 'land', name: '책 더미', cost: c(0, 0, 30) },
+  { id: 'land-bamboo', slot: 'land', name: '대나무 숲', cost: c(0, 0, 45) },
+  { id: 'land-pond', slot: 'land', name: '잉어 연못', cost: c(80, 30) },
 
   /* ---------- 친구 (companion) ---------- */
   { id: 'comp-wisp-gold', slot: 'companion', name: '금빛 정령불', cost: c(30, 10) },
@@ -60,6 +64,8 @@ export const SCENERY = [
   { id: 'comp-moth', slot: 'companion', name: '빛나방', cost: c(60, 20) },
   { id: 'comp-bunny', slot: 'companion', name: '달토끼', cost: c(80, 30) },
   { id: 'comp-owl', slot: 'companion', name: '공부 부엉이', cost: c(0, 0, 60) },
+  { id: 'comp-panda', slot: 'companion', name: '아기 판다', cost: c(0, 0, 70) },
+  { id: 'comp-fox', slot: 'companion', name: '꼬마 여우', cost: c(70, 30) },
 
   /* ---------- 빛 효과 (fx) ---------- */
   { id: 'fx-motes', slot: 'fx', name: '빛 알갱이', cost: c(40, 20) },

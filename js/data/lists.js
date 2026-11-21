@@ -35,17 +35,26 @@ export const DEFAULT_MISSIONS = [
   { id: 'sleep', emoji: '🌙', label: '7시간 이상 자기' },
 ];
 
-export const SUBJECTS = [
-  { id: 'principles', emoji: '📘', label: '회계원리' },
-  { id: 'intermediate', emoji: '📗', label: '중급회계' },
-  { id: 'advanced', emoji: '📕', label: '고급회계' },
-  { id: 'cost', emoji: '🧮', label: '원가관리회계' },
-  { id: 'tax', emoji: '🧾', label: '세법' },
-  { id: 'finance', emoji: '💹', label: '재무관리' },
-  { id: 'audit', emoji: '🔍', label: '회계감사' },
-  { id: 'past', emoji: '📝', label: '기출문제' },
-  { id: 'etc', emoji: '✏️', label: '기타' },
+// 공부 과목 기본값. 실제 과목 목록은 저장 데이터(state.study.subjects)에 있고, 공부 탭에서 추가·수정·삭제한다.
+// goal: 하루 목표(분, 0이면 없음) / examName·examDate: 과목별 시험 (D-day)
+export const DEFAULT_SUBJECTS = [
+  { id: 'japanese', emoji: '🇯🇵', label: '일본어', goal: 0, examName: '', examDate: '' },
+  { id: 'chinese', emoji: '🇨🇳', label: '중국어', goal: 0, examName: '', examDate: '' },
 ];
+
+// 과목을 고를 때 쓰는 이모지 보기
+export const SUBJECT_EMOJIS = ['🇯🇵', '🇨🇳', '🇺🇸', '🇬🇧', '🇪🇸', '🇫🇷', '🇩🇪', '🇰🇷', '📘', '📗', '📕', '📙', '🧮', '💻', '🎹', '✏️'];
+
+// 지운 과목이나 예전 과목으로 남은 기록을 보여줄 때
+const PAST_SUBJECT = { emoji: '📦', label: '지난 과목' };
+
+// 기록에 적힌 과목 id → 과목 정보 (숨긴 과목도 이름은 그대로 보여준다)
+export function subjectOf(subjects, id) {
+  return subjects.find((s) => s.id === id) || { id, ...PAST_SUBJECT };
+}
+
+// 공부 탭에서 고를 수 있는 과목 (지운 과목 제외)
+export const activeSubjects = (state) => state.study.subjects.filter((s) => !s.hidden);
 
 export const FOCUS_LEVELS = [
   { value: 1, emoji: '😵', label: '딴짓이 많았어요' },

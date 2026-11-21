@@ -45,6 +45,16 @@
 .today .head .ic { color: var(--accent); }
 .today .head span:last-child { margin-left: auto; color: var(--muted); font-size: .84rem; }
 .today .bar { margin: 8px 0 0; }
+.card.note .ic { color: var(--accent); }
+/* 홈 '오늘' 카드의 과목별 하루 목표 */
+.goal-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.goal-chip { font-size: .76rem; padding: 3px 9px; border-radius: 99px; background: var(--surface-solid); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.goal-chip.done { background: color-mix(in srgb, var(--star) 14%, var(--surface-solid)); color: var(--star); border-color: transparent; font-weight: 600; }
+/* 세계수가 자랐을 때 축하 창 */
+.celebrate .celebrate-art { width: 68%; margin: 10px auto 4px; border-radius: 22px; overflow: hidden; box-shadow: 0 12px 30px rgba(30, 40, 30, .2); border: 1px solid var(--line); animation: pop .6s cubic-bezier(.2, .9, .3, 1.3); }
+.celebrate .celebrate-art svg { display: block; width: 100%; height: auto; }
+.celebrate > .btn, .celebrate > .row { margin-top: 12px; }
+.center { text-align: center; }
 
 /* ---------- 퀘스트 · 업적 ---------- */
 .quests { display: flex; flex-direction: column; gap: 14px; }
@@ -82,7 +92,21 @@
 .timerbar b { font-family: var(--font-serif); font-variant-numeric: tabular-nums; }
 .subjects li { display: grid; grid-template-columns: 1fr auto; gap: 0 8px; font-size: .9rem; padding: 5px 0; }
 .subjects .bar { grid-column: 1 / -1; height: 4px; margin: 4px 0 2px; }
-.focus-help { font-size: .78rem; color: var(--muted); margin: -6px 0 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; }
+.focus-pick { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.quick { display: flex; gap: 8px; margin: -6px 0 14px; }
+.quick .chip-btn { padding: 6px 12px; font-size: .8rem; }
+/* 공부 탭 '내 과목': 과목마다 오늘 공부 시간 · 하루 목표 · 시험 */
+.subject-goals { list-style: none; margin: 0 0 10px; padding: 0; }
+.subject-goals li { border-bottom: 1px solid var(--line); }
+.subject-goals li:last-child { border-bottom: 0; }
+.subject-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; font: inherit; color: var(--ink); background: none; border: 0; padding: 6px 2px; text-align: left; cursor: pointer; border-radius: 10px; }
+.subject-row .em { font-size: 1.35rem; width: 30px; text-align: center; }
+.subject-row b { display: block; font-weight: 600; }
+.subject-row .exam { color: var(--accent); }
+.subject-goals .bar { height: 4px; margin: 0 0 8px; }
+.muted-ic { color: var(--muted); width: 16px; height: 16px; }
+.timer .chips { justify-content: center; }
+.repeat { margin-bottom: 12px; }
 
 /* ---------- 식단 ---------- */
 .cups { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
@@ -99,6 +123,7 @@
 .mission.on .chk { background: var(--primary); border-color: var(--primary); }
 .missions + .tiny + .save-note, .save-note { color: var(--accent); font-weight: 600; }
 .missions ~ .row { margin-top: 12px; }
+.day-chips { margin-bottom: -4px; }
 
 /* ---------- 상점 ---------- */
 .preview-scene { width: 72%; margin: 0 auto; border-radius: 22px; overflow: hidden; box-shadow: 0 12px 30px rgba(30, 40, 30, .16); border: 1px solid var(--line); }
@@ -130,6 +155,26 @@
 .cal .day.today { box-shadow: inset 0 0 0 1px var(--accent); }
 .cal .marks { display: flex; gap: 2px; }
 .cal .marks i { width: 5px; height: 5px; border-radius: 50%; }
+.cal button.day { font: inherit; color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; }
+.cal button.day.has { background: var(--primary-soft); }
+.cal .day.sel { box-shadow: inset 0 0 0 2px var(--primary); }
+.day-detail { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.day-detail h3 { font-family: var(--font-serif); font-size: .95rem; margin: 0 0 6px; }
+.day-detail .sub { font-size: .78rem; color: var(--accent); margin: 10px 0 2px; font-weight: 600; }
+/* 주간 리포트 */
+.report-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.report-head b { font-family: var(--font-serif); }
+.report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.report-cell { background: var(--surface-solid); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; }
+.report-cell .tiny { display: block; }
+.report-cell b { font-family: var(--font-serif); font-size: 1.05rem; }
+.delta { font-size: .74rem; margin-left: 4px; }
+.delta.up { color: #3f8f5a; }
+.delta.down { color: var(--danger); }
+.report-subjects { list-style: none; margin: 10px 0 0; padding: 0; font-size: .86rem; }
+.report-subjects li { display: flex; justify-content: space-between; padding: 3px 0; }
+.report-note { margin-top: 10px; background: var(--accent-soft); border-radius: 12px; padding: 8px 12px; font-size: .86rem; }
+.scheme-pick { margin-bottom: 14px; }
 
 /* ---------- 숲 (완성한 세계수) · 함께하기 · 시작 화면 ---------- */
 .forest-card { display: flex; flex-direction: column; gap: 4px; text-align: center; padding: 8px 8px 12px; border-radius: 18px; background: var(--surface-solid); border: 1px solid var(--line); }

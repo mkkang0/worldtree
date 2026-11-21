@@ -32,6 +32,19 @@ export const studyMinOn = (state, day) => sum(sessionsOn(state, day), (s) => s.m
 export const starsOn = (state, day) => sum(sessionsOn(state, day), (s) => s.stars);
 export const totalStudyMin = (state) => sum(state.study.sessions, (s) => s.min);
 
+// 오늘 과목별 공부 시간 { subjectId: 분 }
+export function studyMinBySubjectOn(state, day) {
+  const out = {};
+  sessionsOn(state, day).forEach((s) => (out[s.subject] = (out[s.subject] || 0) + s.min));
+  return out;
+}
+
+// 하루 목표를 정한 과목 중 목표를 채운 과목 수
+export function subjectGoalsMet(state, day) {
+  const by = studyMinBySubjectOn(state, day);
+  return state.study.subjects.filter((s) => !s.hidden && s.goal > 0 && (by[s.id] || 0) >= s.goal).length;
+}
+
 export function studyBySubject(state, days = 30, end = todayKey()) {
   const from = addDays(end, -(days - 1));
   const out = {};
@@ -116,4 +129,28 @@ export function moodOf(state, day = todayKey()) {
   if (earned >= 60 || starsOn(state, day) >= 60) return 'joy';
   if (earned > 0 || studyMinOn(state, day) > 0 || missionsDone(state, day) >= 3) return 'happy';
   return 'calm';
+}
+
+/* ---------- 주간 리포트 ---------- */
+
+// start(월요일)부터 7일 동안의 합계. 이번 주는 오늘까지만 센다.
+export function weekReport(state, start, today = todayKey()) {
+  const active = activeDaySet(state);
+  const out = { start, days: 0, workoutMin: 0, workoutDays: 0, sun: 0, studyMin: 0, stars: 0, missions: 0, cups: 0, activeDays: 0, bySubject: {} };
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(start, i);
+    if (d > today) break;
+    out.days++;
+    const m = minutesOn(state, d);
+    out.workoutMin += m;
+    out.workoutDays += m > 0 ? 1 : 0;
+    out.sun += earnedOn(state, d);
+    out.studyMin += studyMinOn(state, d);
+    out.stars += starsOn(state, d);
+    out.missions += missionsDone(state, d);
+    out.cups += state.cups[d] || 0;
+    out.activeDays += active.has(d) ? 1 : 0;
+    sessionsOn(state, d).forEach((s) => (out.bySubject[s.subject] = (out.bySubject[s.subject] || 0) + s.min));
+  }
+  return out;
 }

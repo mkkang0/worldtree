@@ -28,8 +28,11 @@
   color-scheme: light;
 }
 
+/* 어두운 색: 기기가 다크 모드일 때 (설정에서 '밝게'를 고르지 않았으면), 또는 설정에서 '어둡게'를 골랐을 때.
+   html[data-scheme]은 js/app/render.js가 설정값(settings.appearance)으로 붙인다.
+   아래 상점 테마와 우선순위가 같아서, 파일에서 뒤에 오는 상점 테마가 이긴다. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  html:not([data-scheme="light"]) {
     --bg: #0e1512;
     --bg-glow: #1d2b22;
     --surface: rgba(27, 37, 32, .74);
@@ -50,6 +53,26 @@
     color-scheme: dark;
   }
 }
+html[data-scheme="dark"] {
+  --bg: #0e1512;
+  --bg-glow: #1d2b22;
+  --surface: rgba(27, 37, 32, .74);
+  --surface-solid: #18221d;
+  --ink: #ede6d3;
+  --muted: #9fa694;
+  --line: rgba(214, 180, 106, .16);
+  --primary: #cdb06a;
+  --primary-strong: #b39552;
+  --primary-soft: rgba(205, 176, 106, .14);
+  --on-primary: #17150f;
+  --accent: #d6b46a;
+  --accent-soft: rgba(214, 180, 106, .14);
+  --sun: #e6b450;
+  --dew: #7fbde0;
+  --star: #b9a2f0;
+  --shadow: 0 14px 34px rgba(0, 0, 0, .35);
+  color-scheme: dark;
+}
 
 /* ---------- 상점 테마 ---------- */
 html[data-theme="dawn"] { --bg: #f7eee8; --bg-glow: #fbd9c9; --surface: rgba(255, 250, 246, .8); --surface-solid: #fffaf6; --ink: #3a2a28; --muted: #85716c; --line: rgba(160, 100, 80, .18); --primary: #b9786a; --primary-strong: #9a5e52; --primary-soft: #f5e1da; --on-primary: #fff8f4; --accent: #c49a5a; --accent-soft: #f6e6cf; color-scheme: light; }
@@ -58,3 +81,5 @@ html[data-theme="frost"] { --bg: #edf3f6; --bg-glow: #d6e9f2; --surface: rgba(25
 html[data-theme="jade"] { --bg: #edf5f1; --bg-glow: #cdeadf; --surface: rgba(250, 255, 252, .8); --surface-solid: #fafffc; --ink: #1d3530; --muted: #5f7b73; --line: rgba(47, 138, 118, .18); --primary: #2f8a76; --primary-strong: #226b5b; --primary-soft: #d9ede6; --on-primary: #f4fffb; --accent: #b39a5a; --accent-soft: #efe8d2; color-scheme: light; }
 html[data-theme="ledger"] { --bg: #fbf6e6; --bg-glow: #f3e6c0; --surface: rgba(255, 253, 246, .82); --surface-solid: #fffdf6; --ink: #24324d; --muted: #6b7690; --line: rgba(47, 74, 122, .16); --primary: #2f4a7a; --primary-strong: #1f3460; --primary-soft: #e6ecf7; --on-primary: #fbf6e6; --accent: #b48c43; --accent-soft: #f2e5c4; color-scheme: light; }
 html[data-theme="starlight"] { --bg: #0f1428; --bg-glow: #242b52; --surface: rgba(26, 32, 62, .74); --surface-solid: #1a2040; --ink: #ece8fb; --muted: #a3a7c9; --line: rgba(201, 169, 106, .18); --primary: #c9a96a; --primary-strong: #ad8e52; --primary-soft: rgba(201, 169, 106, .14); --on-primary: #15172a; --accent: #d8bb7a; --accent-soft: rgba(216, 187, 122, .14); --shadow: 0 14px 34px rgba(0, 0, 0, .4); color-scheme: dark; }
+html[data-theme="matcha"] { --bg: #f3f1e2; --bg-glow: #dfe8c4; --surface: rgba(253, 252, 244, .8); --surface-solid: #fdfcf4; --ink: #26301c; --muted: #6c7560; --line: rgba(95, 127, 58, .18); --primary: #5f7f3a; --primary-strong: #4a652b; --primary-soft: #e5ebd3; --on-primary: #fbfaf0; --accent: #a8874a; --accent-soft: #efe6cf; color-scheme: light; }
+html[data-theme="ink"] { --bg: #141517; --bg-glow: #26282c; --surface: rgba(32, 34, 38, .76); --surface-solid: #1e2024; --ink: #ece6da; --muted: #a29d92; --line: rgba(217, 205, 180, .14); --primary: #d9cdb4; --primary-strong: #bfb398; --primary-soft: rgba(217, 205, 180, .12); --on-primary: #17181a; --accent: #c9a56a; --accent-soft: rgba(201, 165, 106, .14); --sun: #e6b450; --dew: #7fbde0; --star: #b9a2f0; --shadow: 0 14px 34px rgba(0, 0, 0, .4); color-scheme: dark; }
