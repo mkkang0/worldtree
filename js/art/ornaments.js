@@ -14,6 +14,23 @@ const hang = (a, len, body, i, count) =>
 const every = (anchors, f) => anchors.map((a, i) => f(a, i, anchors.length)).join('');
 
 export const ORNAMENTS = {
+  // ✨ 전설: 무지개빛으로 반짝이는 프리즘 수정
+  'orn-prism': (anchors, uid) => {
+    const colors = ['#ff8fa3', '#ffd36b', '#8ff0b0', '#8fd0ff', '#c3a6ff'];
+    return every(anchors, (a, i, c) => {
+      const col = colors[i % colors.length];
+      return hang(
+        a,
+        8 + (i % 3) * 3,
+        glow(`pr-${uid}-${i}`, 0, 4, 9, col, 0.6) +
+          `<path d="M0 -1 L3 3 L0 10 L-3 3Z" fill="${col}" stroke="#fff" stroke-width=".5"/><path d="M0 -1 L1 3 L0 10Z" fill="#fff" opacity=".45"/>` +
+          `<circle class="twinkle" cx="2" cy="1" r=".8" fill="#fff" style="animation-delay:-${(i * 0.5).toFixed(1)}s"/>`,
+        i,
+        c
+      );
+    });
+  },
+
   'orn-lanterns': (anchors, uid) =>
     `<defs>${linear(`ln-${uid}`, [[0, '#fff1c4'], [1, '#f0a24c']])}</defs>` +
     every(anchors, (a, i, c) =>

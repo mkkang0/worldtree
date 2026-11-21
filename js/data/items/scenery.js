@@ -16,6 +16,9 @@ export const SCENERY = [
   { id: 'world-golden', slot: 'world', name: '황금 들판', cost: c(110, 30) },
   { id: 'world-cosmos', slot: 'world', name: '우주', cost: c(150, 50) },
   { id: 'world-library', slot: 'world', name: '지혜의 도서관', cost: c(0, 0, 100) },
+  // ✨ 전설
+  { id: 'world-celestial', slot: 'world', name: '천상의 정원', cost: c(240, 80, 60), rare: true },
+  { id: 'world-galaxy', slot: 'world', name: '은하수', cost: c(200, 60, 80), rare: true },
   // 움직이는 배경
   { id: 'world-clouds', slot: 'world', name: '흐르는 구름', cost: c(40, 10) },
   { id: 'world-rain', slot: 'world', name: '비 오는 숲', cost: c(0, 60) },
@@ -33,6 +36,7 @@ export const SCENERY = [
   { id: 'sky-lanterns', slot: 'sky', name: '풍등', cost: c(90, 40) },
   { id: 'sky-aurora', slot: 'sky', name: '오로라', cost: c(140, 50) },
   { id: 'sky-kites', slot: 'sky', name: '연날리기', cost: c(45, 15) },
+  { id: 'sky-rainbow', slot: 'sky', name: '무지개', cost: c(160, 60, 40), rare: true },
   { id: 'sky-fireworks', slot: 'sky', name: '불꽃놀이', cost: c(120, 40) },
 
   /* ---------- 잎 색 (leaf) — 세계수 잎의 색을 바꾼다. 색은 art/leaves.js ---------- */
@@ -46,6 +50,7 @@ export const SCENERY = [
 
   /* ---------- 꽃·열매 (bloom) — 잎 사이에 촘촘히 핀다. 그림은 art/blooms.js. 묘목부터 보인다 ---------- */
   { id: 'bloom-white', slot: 'bloom', name: '하얀 꽃', cost: c(0, 30) },
+  { id: 'bloom-gold', slot: 'bloom', name: '황금 꽃', cost: c(150, 50, 50), rare: true },
   { id: 'bloom-pink', slot: 'bloom', name: '분홍 꽃', cost: c(0, 40) },
   { id: 'bloom-cherry', slot: 'bloom', name: '빨간 버찌', cost: c(40, 15) },
   { id: 'bloom-orange', slot: 'bloom', name: '작은 귤', cost: c(60, 20) },
@@ -64,6 +69,7 @@ export const SCENERY = [
   { id: 'orn-apples', slot: 'ornament', name: '황금 사과', cost: c(120, 40) },
   { id: 'orn-runes', slot: 'ornament', name: '룬 문양', cost: c(100, 40) },
   { id: 'orn-pages', slot: 'ornament', name: '지혜의 책장', cost: c(0, 0, 60) },
+  { id: 'orn-prism', slot: 'ornament', name: '프리즘 수정', cost: c(160, 60, 40), rare: true },
 
   /* ---------- 대지 (land) ---------- */
   { id: 'land-flowers', slot: 'land', name: '꽃밭', cost: c(0, 30) },
@@ -75,6 +81,7 @@ export const SCENERY = [
   { id: 'land-ruins', slot: 'land', name: '고대 유적', cost: c(90, 30) },
   { id: 'land-crystals', slot: 'land', name: '수정 군락', cost: c(110, 40) },
   { id: 'land-books', slot: 'land', name: '책 더미', cost: c(0, 0, 30) },
+  { id: 'land-magic', slot: 'land', name: '빛의 마법진', cost: c(180, 60, 60), rare: true },
   { id: 'land-bamboo', slot: 'land', name: '대나무 숲', cost: c(0, 0, 45) },
   { id: 'land-pond', slot: 'land', name: '잉어 연못', cost: c(80, 30) },
 
@@ -88,6 +95,8 @@ export const SCENERY = [
   { id: 'comp-bunny', slot: 'companion', name: '달토끼', cost: c(80, 30) },
   { id: 'comp-owl', slot: 'companion', name: '공부 부엉이', cost: c(0, 0, 60) },
   { id: 'comp-panda', slot: 'companion', name: '아기 판다', cost: c(0, 0, 70) },
+  { id: 'comp-dragon', slot: 'companion', name: '아기 용', cost: c(220, 80, 60), rare: true },
+  { id: 'comp-phoenix', slot: 'companion', name: '불사조', cost: c(260, 80, 80), rare: true },
   { id: 'comp-fox', slot: 'companion', name: '꼬마 여우', cost: c(70, 30) },
 
   /* ---------- 빛 효과 (fx) ---------- */
@@ -99,4 +108,6 @@ export const SCENERY = [
   { id: 'fx-rays', slot: 'fx', name: '빛줄기', cost: c(90, 30) },
   { id: 'fx-runes', slot: 'fx', name: '룬 고리', cost: c(120, 40) },
   { id: 'fx-numbers', slot: 'fx', name: '떠오르는 숫자', cost: c(0, 0, 70) },
+  { id: 'fx-aura', slot: 'fx', name: '황금 오라', cost: c(240, 80, 80), rare: true },
+  { id: 'fx-starfall', slot: 'fx', name: '별비', cost: c(200, 60, 60), rare: true },
 ];

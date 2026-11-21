@@ -38,6 +38,10 @@
 .motion-sleep { animation: nod 3.2s ease-in-out infinite; }
 .zzz { animation: zzz 3s ease-out infinite; opacity: 0; }
 
+/* ✨ 전설 아이템 */
+.spin-slow { transform-box: fill-box; transform-origin: center; animation: spin 26s linear infinite; }
+.starfall { animation: starfall 3.4s linear infinite; }
+
 /* 빛 효과 */
 .rise { animation: rise 9s ease-in infinite; }
 .fall { animation: fall 8s linear infinite; }
@@ -84,6 +88,8 @@ main.entering > *:nth-child(4) { animation-delay: .12s; }
 @keyframes nod { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(9deg) translateY(2px); } }
 @keyframes zzz { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: .9; } 100% { transform: translate(10px, -22px); opacity: 0; } }
 @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+@keyframes starfall { 0% { transform: translate(75px, -100px); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(-75px, 100px); opacity: 0; } }
+@keyframes legend { from { background-position: 0 0, 0% 50%; } to { background-position: 0 0, 300% 50%; } }
 @keyframes enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {

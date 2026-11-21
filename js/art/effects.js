@@ -1,9 +1,41 @@
 // 빛 효과. 장면 맨 위에 겹쳐 그린다. tree = art/tree.js의 결과(수관 위치 등).
 // 새 효과: data/items/scenery.js의 fx 아이템과 같은 id로 EFFECTS에 함수를 추가하고, 움직임은 css/motion.css에.
-import { rng, n, linear, glow, times, delay } from './svg.js';
+import { rng, n, linear, radial, glow, times, delay } from './svg.js';
 import { BASE } from './tree.js';
 
 export const EFFECTS = {
+  // ✨ 전설: 세계수를 감싸는 황금 오라 (천천히 도는 빛살 + 고리 + 떠오르는 금가루)
+  'fx-aura': (uid, tree) => {
+    const c = tree?.canopy || { x: 150, y: 170, rx: 90, ry: 55 };
+    const rays = times(12, (i) => {
+      const a = (i * 30 * Math.PI) / 180;
+      const L = c.rx * 1.9;
+      return `<path d="M0 0 L${n(Math.cos(a - 0.06) * L)} ${n(Math.sin(a - 0.06) * L)} L${n(Math.cos(a + 0.06) * L)} ${n(Math.sin(a + 0.06) * L)}Z"/>`;
+    });
+    const r = rng('aura');
+    return (
+      `<defs>${radial(`au-${uid}`, [[0, '#ffe9a0', 0.3], [1, '#ffcf5a', 0]])}</defs>` +
+      `<g transform="translate(${n(c.x)} ${n(c.y)})"><g class="spin-slow" fill="url(#au-${uid})">${rays}</g></g>` +
+      `<ellipse class="shimmer" cx="${n(c.x)}" cy="${n(c.y)}" rx="${n(c.rx * 1.15)}" ry="${n(c.ry * 1.25)}" fill="none" stroke="#ffe38a" stroke-width="1.6" opacity=".7"/>` +
+      times(16, (i) => `<circle class="rise" cx="${n(c.x - c.rx + r() * c.rx * 2)}" cy="${n(BASE.y - r() * 30)}" r="${n(1 + r() * 1.5)}" fill="#ffe27a" style="animation-delay:-${n(r() * 9)}s"/>`)
+    );
+  },
+
+  // ✨ 전설: 꼬리를 끌며 쏟아지는 별
+  'fx-starfall': (uid) => {
+    const r = rng('starfall');
+    return (
+      `<defs>${linear(`sf-${uid}`, [[0, '#ffffff', 0], [1, '#fff6c8', 0.9]], [1, 0, 0, 1])}</defs>` +
+      times(14, (i) => {
+        const x = n(20 + r() * 280);
+        const y = n(30 + r() * 170);
+        return `<g class="starfall" style="animation-delay:-${n(r() * 4)}s;animation-duration:${n(2.6 + r() * 2)}s"><g transform="translate(${x} ${y})">` +
+          `<path d="M0 0 L22 -30" stroke="url(#sf-${uid})" stroke-width="1.6" stroke-linecap="round"/>` +
+          `<path d="M0 -3.2 L.9 -.9 L3.2 0 L.9 .9 L0 3.2 L-.9 .9 L-3.2 0 L-.9 -.9Z" fill="#fff6c8"/></g></g>`;
+      })
+    );
+  },
+
   'fx-fireflies': (uid) => {
     const r = rng('fireflies');
     return times(12, (i) => {

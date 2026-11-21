@@ -101,8 +101,23 @@ export function treeArt({ growth, stage, tree, uid }) {
   let back = '';
   let front = '';
 
+  // 신목·세계수: 뒤쪽으로 솟는 빛기둥
+  if (stage >= CROWN_AT - 1) {
+    defs += linear(`pl-${uid}`, [[0, pal.glow, 0], [0.55, pal.glow, stage >= CROWN_AT ? 0.32 : 0.18], [1, pal.glow, 0]], [0, 0, 1, 0]);
+    back += `<rect class="ray" x="${n(cx - rx * 0.45)}" y="0" width="${n(rx * 0.9)}" height="${n(cy)}" fill="url(#pl-${uid})"/>`;
+  }
+
   // 뒤쪽 후광
   if (t > 0.3) back += glow(`tg-${uid}`, cx, cy, rx * 1.35, pal.glow, lerp(0.12, 0.45, t));
+
+  // 수관이 땅에 드리운 그림자
+  back += `<ellipse cx="${n(cx)}" cy="${y + 4}" rx="${n(rx * 0.85)}" ry="${n(lerp(3, 9, e))}" fill="#000" opacity="${n(lerp(0.06, 0.16, e))}"/>`;
+
+  // 뒤쪽 잎 덩어리: 어둡게 한 겹 더 깔아 수관이 둥글고 깊어 보이게
+  back += clusters
+    .filter((_, i) => i % 3 === 0)
+    .map((c) => `<ellipse cx="${n(c.x - c.r * 0.15)}" cy="${n(c.y - c.r * 0.4)}" rx="${n(c.r * 1.15)}" ry="${n(c.r * 0.9)}" fill="${pal.canopy[0]}" opacity=".9"/>`)
+    .join('');
 
   // 뿌리: 땅 위로 드러나 굽이친다
   if (stage >= ROOTS_FROM) {
@@ -123,6 +138,21 @@ export function treeArt({ growth, stage, tree, uid }) {
 
   // 줄기와 껍질 무늬
   back += `<path d="${trunkPath(x, y, h, wb, wt, bend)}" fill="url(#tk-${uid})"/>`;
+  // 빛 받는 왼쪽 면
+  back += `<path d="${trunkPath(x - wb * 0.18, y, h * 0.96, wb * 0.28, wt * 0.3, bend)}" fill="#fff" opacity=".08"/>`;
+  // 옹이
+  if (e > 0.35) {
+    const kx = x + (r() - 0.5) * wb * 0.3;
+    const ky = y - h * (0.35 + r() * 0.2);
+    back += `<ellipse cx="${n(kx)}" cy="${n(ky)}" rx="${n(wt * 0.2)}" ry="${n(wt * 0.3)}" fill="${pal.trunk[0]}"/><ellipse cx="${n(kx)}" cy="${n(ky)}" rx="${n(wt * 0.3)}" ry="${n(wt * 0.42)}" fill="none" stroke="${pal.trunk[2]}" stroke-width=".8" opacity=".5"/>`;
+  }
+  // 밑동의 이끼
+  if (stage >= ROOTS_FROM) {
+    for (let i = 0; i < 5; i++) {
+      const mx = x + (i - 2) * wb * 0.22;
+      back += `<ellipse cx="${n(mx)}" cy="${n(y - 2 - (i % 2) * 3)}" rx="${n(wb * 0.12 + 1)}" ry="${n(2 + (i % 3))}" fill="${i % 2 ? pal.canopy[0] : pal.canopy[1]}" opacity=".75"/>`;
+    }
+  }
   for (let i = 0; i < 4; i++) {
     const ox = (i - 1.5) * wb * 0.16;
     back += `<path d="M${n(x + ox * 1.3)} ${y - 3} C${n(x + ox)} ${n(y - h * 0.4)} ${n(cx + ox * 0.5)} ${n(top + h * 0.3)} ${n(cx + ox * 0.35)} ${n(top + 4)}" fill="none" stroke="${i % 2 ? pal.trunk[0] : pal.trunk[2]}" stroke-width="${n(lerp(0.5, 1.6, e))}" opacity=".35"/>`;
@@ -138,6 +168,21 @@ export function treeArt({ growth, stage, tree, uid }) {
         (c.k > 0.7 ? `<ellipse cx="${n(c.x - c.r * 0.3)}" cy="${n(c.y - c.r * 0.3)}" rx="${n(c.r * 0.5)}" ry="${n(c.r * 0.36)}" fill="url(#ch-${uid})"/>` : '')
     )
     .join('');
+
+  // 잎 결: 빛 받는 왼쪽 위에 작은 잎 모양을 겹친다
+  const perCluster = Math.round(lerp(1, 4, e));
+  clusters.forEach((c) => {
+    for (let k = 0; k < perCluster; k++) {
+      const a = -Math.PI * (0.35 + r() * 0.55);
+      const d = c.r * (0.25 + r() * 0.55);
+      const s = c.r * (0.22 + r() * 0.12);
+      const lx = c.x + Math.cos(a) * d * 1.05;
+      const ly = c.y + Math.sin(a) * d * 0.8;
+      front += `<path d="M0 ${n(-s)} Q${n(s * 0.55)} 0 0 ${n(s)} Q${n(-s * 0.55)} 0 0 ${n(-s)}Z" transform="translate(${n(lx)} ${n(ly)}) rotate(${Math.round(r() * 180 - 90)})" fill="${r() > 0.4 ? pal.canopy[2] : pal.canopy[1]}" opacity="${n(0.45 + r() * 0.35)}"/>`;
+    }
+    // 위쪽 가장자리에 얇은 빛
+    if (c.k > 0.45) front += `<path d="M${n(c.x - c.r * 0.75)} ${n(c.y - c.r * 0.3)} Q${n(c.x - c.r * 0.1)} ${n(c.y - c.r * 1.02)} ${n(c.x + c.r * 0.55)} ${n(c.y - c.r * 0.55)}" fill="none" stroke="${pal.canopy[2]}" stroke-width="1.1" stroke-linecap="round" opacity=".45"/>`;
+  });
 
   // 가장자리의 작은 잎들 (윤곽을 부드럽게)
   const fringe = Math.round(lerp(10, 70, e));
@@ -184,6 +229,21 @@ export function treeArt({ growth, stage, tree, uid }) {
       const fy = c.y + c.r * 0.5;
       front += glow(`fg-${uid}-${i}`, fx, fy, 9, pal.fruit, 0.5) + `<circle cx="${n(fx)}" cy="${n(fy)}" r="3.4" fill="url(#fr-${uid})"/>`;
     });
+  }
+
+  // 신목부터: 수관 둘레에 반짝이는 빛 알갱이
+  if (stage >= CROWN_AT - 1) {
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2 + r() * 0.4;
+      const ox = cx + Math.cos(a) * rx * (1.02 + r() * 0.15);
+      const oy = cy + Math.sin(a) * ry * (1.0 + r() * 0.2);
+      front += `<g class="twinkle" style="animation-delay:-${(i * 0.37).toFixed(2)}s">${glow(`om-${uid}-${i}`, ox, oy, 6, pal.glow, 0.7)}<circle cx="${n(ox)}" cy="${n(oy)}" r="1.3" fill="#fff"/></g>`;
+    }
+  }
+
+  // 세계수: 밑동을 두르는 빛의 고리
+  if (stage >= CROWN_AT) {
+    back += `<ellipse class="rune-glow" cx="${x}" cy="${y + 3}" rx="${n(wb * 1.9)}" ry="${n(wb * 0.32)}" fill="none" stroke="${pal.glow}" stroke-width="1.2" stroke-dasharray="3 4" opacity=".8"/>`;
   }
 
   // 세계수 완성: 수관 위에 떠 있는 빛 고리

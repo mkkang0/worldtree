@@ -103,6 +103,23 @@ export const LAND = {
     );
   },
 
+  // ✨ 전설: 세계수 밑동에서 천천히 도는 빛의 마법진
+  'land-magic': (uid) => {
+    const runes = times(12, (i) => {
+      const a = (i * 30 * Math.PI) / 180;
+      return `<text x="${n(Math.cos(a) * 58)}" y="${n(Math.sin(a) * 58 + 3)}" font-size="9" text-anchor="middle" fill="#cfe8ff">${'ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃ'[i]}</text>`;
+    });
+    return (
+      glow(`mg-${uid}`, 150, 304, 80, '#8fd0ff', 0.4) +
+      `<g transform="translate(150 304) scale(1 .3)"><g class="spin-slow">` +
+      `<circle r="70" fill="none" stroke="#bfe3ff" stroke-width="2.4" opacity=".85"/><circle r="48" fill="none" stroke="#bfe3ff" stroke-width="1.6" stroke-dasharray="6 5" opacity=".8"/>` +
+      `<path d="M0 -46 L40 23 L-40 23Z M0 46 L-40 -23 L40 -23Z" fill="none" stroke="#e3f3ff" stroke-width="1.4" opacity=".75"/>` +
+      runes +
+      `</g></g>` +
+      times(8, (i) => `<circle class="rise" cx="${n(100 + i * 14)}" cy="${n(300 + (i % 3) * 3)}" r="1.3" fill="#cfe8ff" style="animation-delay:-${(i * 1.1).toFixed(1)}s"/>`)
+    );
+  },
+
   // 공부(별빛) 소품
   'land-books': () =>
     `<g transform="translate(62 322)">` +

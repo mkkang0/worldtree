@@ -45,6 +45,7 @@ const THUMBS = {
 function companionCrop(id) {
   if (WIDE_COMPANIONS.includes(id)) return '20 160 280 200';
   if (id.startsWith('comp-wisp')) return '40 200 76 57';
+  if (id === 'comp-dragon' || id === 'comp-phoenix') return '36 204 84 63';
   if (id === 'comp-moth') return '44 184 76 57';
   return '34 262 84 63';
 }

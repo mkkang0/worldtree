@@ -52,6 +52,24 @@ export const SKY = {
       return `<path class="flap" d="M${x - 5} ${y} q5 -4 5 0 q0 -4 5 0" fill="none" stroke="#3f4a52" stroke-width="1.3" stroke-linecap="round" ${delay(i, 6, 1.2)}/>`;
     }),
 
+  // ✨ 전설: 나무 뒤로 걸린 무지개
+  'sky-rainbow': (uid) => {
+    const colors = ['#ff6b6b', '#ffa94d', '#ffe066', '#69db7c', '#4dabf7', '#748ffc', '#b197fc'];
+    const arcs = colors
+      .map((c, i) => {
+        const rr = 150 - i * 6;
+        return `<path d="M${150 - rr} 300 A${rr} ${rr} 0 0 1 ${150 + rr} 300" fill="none" stroke="${c}" stroke-width="6.5" opacity=".42"/>`;
+      })
+      .join('');
+    const sparks = times(10, (i) => {
+      const a = Math.PI * (0.08 + i * 0.093);
+      const x = 150 - Math.cos(a) * 132;
+      const y = 300 - Math.sin(a) * 132;
+      return `<g class="twinkle" ${delay(i, 10, 3)}>${glow(`rb-${uid}-${i}`, x, y, 6, '#ffffff', 0.9)}</g>`;
+    });
+    return `<g class="shimmer" style="animation-duration:6s">${arcs}</g>${sparks}`;
+  },
+
   'sky-kites': () =>
     [[70, 84, '#e5605b', '#ffd34d'], [228, 58, '#4f93b8', '#ffffff']]
       .map(

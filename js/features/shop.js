@@ -16,7 +16,7 @@ import { rng } from '../art/svg.js';
 import { itemThumb } from '../art/thumbs.js';
 import { toast, chime } from '../ui/effects.js';
 
-const FILTERS = [['all', '전체'], ['afford', '살 수 있는 것'], ['owned', '가진 것']];
+const FILTERS = [['all', '전체'], ['afford', '살 수 있는 것'], ['owned', '가진 것'], ['rare', '✨ 전설']];
 const SORTS = [['base', '기본'], ['cheap', '싼 순']];
 const WEAR = ['hat', 'face', 'neck', 'hand'];
 const DEAL_OFF = 0.3; // 오늘의 특가 할인율
@@ -65,6 +65,11 @@ function home(state, ui) {
       ${title('오늘의 추천', { iconName: 'gift', aside: '매일 바뀌어요' })}
       <div class="grid items picks">${picks.map((i) => itemCard(state, ui, i, { showSlot: true })).join('')}</div>
     </section>
+    <section class="card legend-card">
+      ${title('✨ 전설 아이템', { aside: `${ITEMS.filter((i) => i.rare && state.owned.includes(i.id)).length} / ${ITEMS.filter((i) => i.rare).length}` })}
+      <p class="tiny">빛나고 움직이는 특별한 꾸미기예요. 포인트를 모아 하나씩 데려와요.</p>
+      <div class="grid three items">${ITEMS.filter((i) => i.rare).map((i) => itemCard(state, ui, i, { showSlot: true })).join('')}</div>
+    </section>
     <section class="card">
       ${title('종류', { iconName: 'gem' })}
       ${['세계수의 풍경', '정령 옷장', '앱']
@@ -88,7 +93,8 @@ function slotList(state, ui, slot) {
   const filter = ui.shopFilter || 'all';
   const sort = ui.shopSort || 'base';
   const all = ITEMS.filter((i) => i.slot === slot.id);
-  let items = all.filter((i) => filter === 'all' || (filter === 'owned' ? state.owned.includes(i.id) : !state.owned.includes(i.id) && canAfford(priceOf(i))));
+  const pass = { all: () => true, owned: (i) => state.owned.includes(i.id), rare: (i) => i.rare, afford: (i) => !state.owned.includes(i.id) && canAfford(priceOf(i)) };
+  let items = all.filter(pass[filter] || pass.all);
   if (sort === 'cheap') items = [...items].sort((a, b) => total(priceOf(a)) - total(priceOf(b)));
   const hints = [
     slot.id === 'ornament' || slot.id === 'bloom' ? `${slot.label}은 세계수가 묘목 이상일 때 보여요.` : '',
@@ -99,7 +105,7 @@ function slotList(state, ui, slot) {
       <button class="back" data-act="shop.slot" data-arg="">${icon('left')}종류</button>
       <b>${slot.emoji} ${slot.label}</b><span class="tiny">${all.filter((i) => state.owned.includes(i.id)).length} / ${all.length}</span>
     </div>
-    <div class="chips tight">${FILTERS.map(([id, label]) => `<button class="chip-btn ${id === filter ? 'on' : ''}" data-act="shop.filter" data-arg="${id}" aria-pressed="${id === filter}">${label}</button>`).join('')}
+    <div class="chips tight scroll">${FILTERS.map(([id, label]) => `<button class="chip-btn ${id === filter ? 'on' : ''}" data-act="shop.filter" data-arg="${id}" aria-pressed="${id === filter}">${label}</button>`).join('')}
       <span class="chip-sep"></span>${SORTS.map(([id, label]) => `<button class="chip-btn ${id === sort ? 'on' : ''}" data-act="shop.sort" data-arg="${id}" aria-pressed="${id === sort}">${label}</button>`).join('')}</div>
     ${hints.map((h) => `<p class="tiny">${h}</p>`).join('')}
     ${items.length ? `<div class="grid three items">${items.map((i) => itemCard(state, ui, i)).join('')}</div>` : '<p class="muted">여기에 맞는 아이템이 없어요.</p>'}
@@ -161,9 +167,9 @@ function itemCard(state, ui, item, { showSlot = false } = {}) {
       ].join('')
     : '';
   const art = item.swatch ? `<span class="swatch" style="background:linear-gradient(135deg,${item.swatch[0]} 50%,${item.swatch[1]} 50%)"></span>` : itemThumb(item, hue);
-  return `<div class="item ${on ? 'on' : ''} ${seen ? 'seen' : ''} ${item.cost.star ? 'study-item' : ''}">
+  return `<div class="item ${on ? 'on' : ''} ${seen ? 'seen' : ''} ${item.cost.star ? 'study-item' : ''} ${item.rare ? 'rare' : ''}">
     <button class="item-body" data-act="shop.preview" data-arg="${item.id}" aria-label="${item.name} 미리보기">
-      <span class="thumb">${art}${deal ? '<i class="deal">-30%</i>' : ''}${owned ? '<i class="owned">보유</i>' : ''}</span>
+      <span class="thumb">${art}${deal ? '<i class="deal">-30%</i>' : item.rare ? '<i class="legend">✨ 전설</i>' : ''}${owned ? '<i class="owned">보유</i>' : ''}</span>
       <span class="item-name">${item.name}</span>${showSlot ? `<span class="item-slot">${slot.emoji} ${slot.label}</span>` : ''}
     </button>
     ${tools ? `<div class="item-tools">${tools}</div>` : ''}${main}

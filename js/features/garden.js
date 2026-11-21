@@ -66,7 +66,7 @@ function storageTile(state, item, slot) {
     slot.positions && on ? `<button class="tool" data-act="garden.pos" data-arg="${item.id}" aria-label="${item.name} 자리 옮기기">📍<small>${posShort(slot, state.custom[item.id]?.pos)}</small></button>` : '',
   ].join('');
   const art = item.swatch ? `<span class="swatch" style="background:linear-gradient(135deg,${item.swatch[0]} 50%,${item.swatch[1]} 50%)"></span>` : itemThumb(item, hue);
-  return `<div class="stile ${on ? 'on' : ''}">
+  return `<div class="stile ${on ? 'on' : ''} ${item.rare ? 'rare' : ''}">
     <button class="stile-body" data-act="garden.toggle" data-arg="${item.id}" aria-pressed="${on}" aria-label="${item.name} ${on ? '빼기' : '놓기'}">
       <span class="thumb">${art}${on ? `<i class="check">${icon('check')}</i>` : ''}</span><span class="stile-name">${item.name}</span>
     </button>${tools ? `<div class="item-tools">${tools}</div>` : ''}

@@ -11,6 +11,10 @@ const flower = (petal, center) => (x, y, s) =>
 // 한 개를 그리는 함수: (x, y, 크기, 순번, uid)
 export const BLOOMS = {
   'bloom-white': flower('#ffffff', '#ffd34d'),
+  // ✨ 전설: 은은하게 빛나는 황금 꽃
+  'bloom-gold': (x, y, s, i, uid) =>
+    (i % 3 ? '' : `<g class="shimmer" style="animation-delay:-${(i % 5) * 0.5}s">${glow(`bg-${uid}-${i}`, x, y, 7 * s, '#ffe27a', 0.7)}</g>`) +
+    flower('#ffd34d', '#fff6c8')(x, y, s),
   'bloom-pink': flower('#ffb3cb', '#fff0a8'),
   'bloom-cherry': (x, y, s) =>
     `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 -6 q-1 3 -3 6 M0 -6 q2 3 3 6" stroke="#5f8a52" stroke-width=".7" fill="none"/>` +

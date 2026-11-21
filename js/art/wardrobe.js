@@ -134,6 +134,14 @@ export function hatArt(id, cx, top, r) {
           .join('')}<circle r="2" fill="#ffd34d"/></g>`;
       return flower(cx + r * 0.58, top + 10, 1) + flower(cx + r * 0.2, top + 4, 0.65);
     }
+    case 'hat-tiara':
+      return (
+        `<path d="M${cx - r * 0.72} ${top + 8} L${cx - r * 0.5} ${top - 6} L${cx - r * 0.25} ${top + 2} L${cx} ${top - 14} L${cx + r * 0.25} ${top + 2} L${cx + r * 0.5} ${top - 6} L${cx + r * 0.72} ${top + 8} Z" fill="#ffd34d" stroke="#e0a800" stroke-width="1.2" stroke-linejoin="round"/>` +
+        `<circle cx="${cx}" cy="${top - 3}" r="3.6" fill="#ff6fa8" stroke="#fff" stroke-width=".8"/>` +
+        `<circle cx="${cx - r * 0.5}" cy="${top + 1}" r="2.4" fill="#6fc3ff" stroke="#fff" stroke-width=".6"/><circle cx="${cx + r * 0.5}" cy="${top + 1}" r="2.4" fill="#6fc3ff" stroke="#fff" stroke-width=".6"/>` +
+        `<path class="twinkle" d="M${cx + 9} ${top - 18} l1.2 3 l3 1.2 l-3 1.2 l-1.2 3 l-1.2 -3 l-3 -1.2 l3 -1.2Z" fill="#fff"/>` +
+        `<path class="twinkle" style="animation-delay:-1.5s" d="M${cx - 13} ${top - 10} l.9 2.2 l2.2 .9 l-2.2 .9 l-.9 2.2 l-.9 -2.2 l-2.2 -.9 l2.2 -.9Z" fill="#fff"/>`
+      );
     default:
       return '';
   }
@@ -264,6 +272,14 @@ export function neckArt(id, cx, cy, r) {
         `<rect x="${cx - 11}" y="${y + 12}" width="18" height="13" rx="2" fill="#fffaf0" stroke="#d9c79a" transform="rotate(-10 ${cx} ${y + 12})"/>` +
         `<rect x="${cx - 7}" y="${y + 12}" width="18" height="13" rx="2" fill="#fff" stroke="#d9c79a" transform="rotate(8 ${cx} ${y + 12})"/>` +
         `<text x="${cx + 2}" y="${y + 23}" font-size="9" text-anchor="middle" fill="#3f5f8a" transform="rotate(8 ${cx} ${y + 12})">あ</text>`
+      );
+    case 'neck-jewel':
+      return (
+        `<path d="M${cx - r * 0.66} ${y - 3} Q${cx} ${y + 10} ${cx + r * 0.66} ${y - 3}" fill="none" stroke="#ffd34d" stroke-width="1.8" stroke-dasharray="2 1.5"/>` +
+        `<circle cx="${cx}" cy="${y + 12}" r="9" fill="#ff6fa8" opacity=".25" class="shimmer"/>` +
+        `<path d="M${cx} ${y + 5} L${cx + 5} ${y + 11} L${cx} ${y + 20} L${cx - 5} ${y + 11} Z" fill="#ff4f8b" stroke="#ffd34d" stroke-width="1.2"/>` +
+        `<path d="M${cx - 1.5} ${y + 9} l1.5 -2 l1.5 2Z" fill="#fff" opacity=".8"/>` +
+        `<path class="twinkle" d="M${cx + 7} ${y + 4} l.9 2.2 l2.2 .9 l-2.2 .9 l-.9 2.2 l-.9 -2.2 l-2.2 -.9 l2.2 -.9Z" fill="#fff"/>`
       );
     default:
       return '';

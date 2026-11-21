@@ -75,6 +75,36 @@ export const COMPANIONS = {
     face(0, -9.5, 0.8) +
     `<ellipse cx="0" cy="-1.6" rx="1.2" ry=".9" fill="#3b2f2f"/></g>`,
 
+  // ✨ 전설: 날개를 파닥이며 떠 있는 아기 용 (가끔 작은 불꽃)
+  'comp-dragon': (uid) =>
+    `<g transform="translate(78 246)"><g class="float">` +
+    glow(`dg-${uid}`, 0, 0, 24, '#9ff0c8', 0.35) +
+    `<path d="M8 6 q14 4 12 -8 q-2 6 -8 4" fill="#4fbf8f"/>` +
+    `<ellipse cx="-11" cy="-4" rx="10" ry="6" fill="#7fe0b8" transform="rotate(-30 -11 -4)" class="wing-l"/>` +
+    `<ellipse cx="11" cy="-4" rx="10" ry="6" fill="#7fe0b8" transform="rotate(30 11 -4)" class="wing-r"/>` +
+    `<ellipse cx="0" cy="4" rx="9" ry="10" fill="#5fcf9f"/><ellipse cx="0" cy="7" rx="5.5" ry="6.5" fill="#fff1c8"/>` +
+    `<circle cx="0" cy="-9" r="8" fill="#5fcf9f"/>` +
+    `<path d="M-5 -15 l-2 -6 l4 4Z M5 -15 l2 -6 l-4 4Z" fill="#ffe08a"/>` +
+    face(0, -9, 0.9) +
+    `<circle cx="-4.5" cy="-6" r="1.4" fill="#ff9fb4" opacity=".7"/><circle cx="4.5" cy="-6" r="1.4" fill="#ff9fb4" opacity=".7"/>` +
+    `<g class="twinkle" style="animation-duration:2.2s"><path d="M8 -8 q6 -2 8 2 q-4 -1 -5 3 q-1 -3 -3 -5Z" fill="#ffb35a"/><circle cx="14" cy="-7" r="1.2" fill="#ffe08a"/></g>` +
+    `</g></g>`,
+
+  // ✨ 전설: 빛나는 꼬리 깃털의 불사조
+  'comp-phoenix': (uid) =>
+    `<defs>${radial(`ph-${uid}`, [[0, '#fff3c4'], [0.5, '#ffb347'], [1, '#e8452e']], { cx: 0.4, cy: 0.35 })}</defs>` +
+    `<g transform="translate(80 236)"><g class="float">` +
+    glow(`pg-${uid}`, 0, 0, 30, '#ffb347', 0.5) +
+    `<path class="swing" style="transform-origin:0 6px" d="M-2 6 q-10 18 -4 34 M0 6 q0 20 8 32 M2 6 q10 14 16 24" stroke="#ffcf5a" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".9"/>` +
+    `<circle cx="-6" cy="40" r="2.2" fill="#ff7a45"/><circle cx="8" cy="38" r="2.2" fill="#ffcf5a"/><circle cx="18" cy="30" r="2" fill="#ff7a45"/>` +
+    `<path d="M-2 0 Q-22 -16 -26 -2 Q-16 -4 -4 6Z" fill="#ff8a3d" class="wing-l"/>` +
+    `<path d="M2 0 Q22 -16 26 -2 Q16 -4 4 6Z" fill="#ff8a3d" class="wing-r"/>` +
+    `<ellipse cx="0" cy="2" rx="7" ry="9" fill="url(#ph-${uid})"/>` +
+    `<circle cx="0" cy="-8" r="5.5" fill="url(#ph-${uid})"/>` +
+    `<path d="M-1 -13 q-3 -6 0 -9 q1 4 3 1 q0 5 -3 8Z" fill="#ffcf5a"/>` +
+    `<circle cx="2" cy="-9" r="1" fill="#3b2f2f"/><path d="M5 -8 l3 1 l-3 1Z" fill="#e8a23a"/>` +
+    `</g></g>`,
+
   'comp-butterflies': () =>
     times(3, (i) => {
       const x = [64, 96, 250][i];

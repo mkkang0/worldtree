@@ -156,6 +156,8 @@
 .cups { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
 .cup { aspect-ratio: 1 / 1.25; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-solid); color: var(--line); cursor: pointer; display: grid; place-items: center; padding: 0; }
 .cup .ic { width: 60%; height: 60%; }
+/* 좁은 폰(아이폰 SE 등)에서는 물컵을 4개씩 두 줄로 — 누르기 쉽게 */
+@media (max-width: 360px) { .cups { grid-template-columns: repeat(4, 1fr); } .cup { aspect-ratio: auto; min-height: 46px; } }
 .cup.on { color: var(--dew); background: color-mix(in srgb, var(--dew) 12%, var(--surface-solid)); border-color: color-mix(in srgb, var(--dew) 40%, transparent); }
 .missions { display: flex; flex-direction: column; gap: 8px; }
 .missions li { display: flex; align-items: center; gap: 4px; }
@@ -344,12 +346,24 @@ body.immersive main { padding-top: 6px; padding-bottom: calc(28px + env(safe-are
 .picks .item-name { min-height: 0; }
 .picks .item:first-child { border-color: #e5605b; box-shadow: 0 0 0 1px #e5605b inset; }
 .thumb .deal { position: absolute; left: 4px; top: 4px; font-style: normal; font-size: .66rem; font-weight: 800; padding: 2px 6px; border-radius: 99px; background: #e5605b; color: #fff; }
+.thumb .legend { position: absolute; left: 4px; top: 4px; font-style: normal; font-size: .62rem; font-weight: 800; padding: 2px 6px; border-radius: 99px; background: linear-gradient(90deg, #ffd36b, #ff8fb8); color: #3a2410; }
+/* ✨ 전설 아이템: 무지갯빛이 흐르는 테두리 */
+.item.rare, .stile.rare .stile-body {
+  border-color: transparent;
+  background: linear-gradient(var(--surface-solid), var(--surface-solid)) padding-box, linear-gradient(120deg, #ffd36b, #ff8fb8, #8fd0ff, #b8f5c8, #ffd36b) border-box;
+  background-size: 100% 100%, 300% 100%;
+  animation: legend 5s linear infinite;
+}
+.item.rare { border-width: 1.5px; }
+.legend-card .title { color: var(--accent); }
 .thumb .owned { position: absolute; right: 4px; top: 4px; font-style: normal; font-size: .62rem; padding: 1px 6px; border-radius: 99px; background: rgba(20, 24, 22, .55); color: #fff; }
 .item-slot { font-size: .66rem; color: var(--muted); }
 .slot-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .slot-head b { font-family: var(--font-serif); font-size: 1.05rem; flex: 1; }
 .chips.tight { gap: 6px; margin-bottom: 8px; }
-.chips.tight .chip-btn { padding: 5px 11px; font-size: .78rem; }
+.chips.tight .chip-btn { padding: 7px 12px; font-size: .8rem; min-height: 36px; }
+.chips.tight.scroll { margin-left: 0; margin-right: 0; }
+.chip-sep { flex: none; }
 .chip-sep { width: 1px; background: var(--line); margin: 2px 2px; }
 .slot-nav { display: flex; justify-content: space-between; gap: 8px; margin-top: 12px; }
 .slot-nav .btn { width: auto; }
@@ -405,3 +419,12 @@ body.immersive main { padding-top: 6px; padding-bottom: calc(28px + env(safe-are
 .wrong-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-bottom: 12px; }
 .wrong-list small { font-size: .62rem; }
 .quiz-result .row { margin-top: 6px; }
+
+/* 키가 작은 폰: 상점 무대와 정원 장면을 줄여 목록이 더 보이게 */
+@media (max-height: 700px) {
+  .stage { grid-template-columns: 1fr 1fr; padding: 6px; gap: 6px; }
+  .stage-scene { max-height: 150px; }
+  .stage-scene svg { height: 150px; width: auto; margin: 0 auto; }
+  .stage-portrait svg { max-height: 110px; }
+  .garden-stage .scene { height: min(44vh, calc((100vw - 32px) * 1.2)); }
+}
