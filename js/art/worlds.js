@@ -45,11 +45,31 @@ function mist(uid, y, color, opacity) {
   return `<defs>${linear(`ms-${uid}-${y}`, [[0, color, 0], [0.5, color, opacity], [1, color, 0]])}</defs><rect y="${y - 26}" width="${W}" height="52" fill="url(#ms-${uid}-${y})"/>`;
 }
 
+// 하늘을 천천히 가로지르는 구름 (css .cloud-pass). delay는 초.
+// 움직임을 끈 기기에서도 하늘에 고르게 보이도록 구름마다 쉬는 자리(x)를 둔다.
+function cloud(y, s, color, opacity, delay, dur = 46) {
+  const x = 40 + ((delay * 53) % 220);
+  return (
+    `<g class="cloud-pass" style="animation-duration:${dur * 1.6}s;animation-delay:-${delay * 1.6}s"><g transform="translate(${x} ${y}) scale(${s})" opacity="${opacity}">` +
+    `<ellipse cx="0" cy="0" rx="30" ry="9" fill="${color}"/><ellipse cx="-10" cy="-6" rx="14" ry="10" fill="${color}"/><ellipse cx="9" cy="-8" rx="16" ry="12" fill="${color}"/></g></g>`
+  );
+}
+
+// 가끔 떨어지는 별똥별 (css .shoot)
+function shootingStar(uid, x, y, delay, dur = 7) {
+  return (
+    `<defs>${linear(`st-${uid}-${x}`, [[0, '#ffffff', 0], [1, '#ffffff', 0.95]], [0, 0, 1, 0])}</defs>` +
+    `<g class="shoot" style="animation-delay:${delay}s;animation-duration:${dur}s"><g transform="translate(${x} ${y}) rotate(25)">` +
+    `<rect x="-46" y="-.8" width="46" height="1.6" rx=".8" fill="url(#st-${uid}-${x})"/><circle r="1.8" fill="#fff"/></g></g>`
+  );
+}
+
 /* ---------- 시간대 (기본 배경) ---------- */
 
 const dawn = (uid) =>
   sky(uid, [[0, '#f6d7d0'], [0.55, '#fbe9d2'], [1, '#f3efdc']]) +
   glow(`sun-${uid}`, 230, 210, 90, '#ffd9a0', 0.7) +
+  cloud(70, 0.9, '#fff3ea', 0.75, 10) +
   ridge('dawn-a', 250, 40, '#c7b3bd', 0.5) +
   ridge('dawn-b', 272, 26, '#a9b8a1', 0.6) +
   mist(uid, 270, '#fff4e6', 0.6) +
@@ -58,6 +78,8 @@ const dawn = (uid) =>
 const day = (uid) =>
   sky(uid, [[0, '#cfe5f2'], [0.6, '#eef4ea'], [1, '#f1f3e2']]) +
   glow(`sun-${uid}`, 70, 70, 70, '#fff6d8', 0.8) +
+  cloud(56, 1, '#ffffff', 0.85, 6) +
+  cloud(104, 0.7, '#ffffff', 0.7, 28, 60) +
   ridge('day-a', 248, 44, '#a9c6c9', 0.55) +
   ridge('day-b', 270, 28, '#94b48c', 0.65) +
   ground(uid, '#86b072', '#56804c', '#c4e0a8');
@@ -65,6 +87,7 @@ const day = (uid) =>
 const dusk = (uid) =>
   sky(uid, [[0, '#4a4a7a'], [0.45, '#c9817a'], [0.8, '#f2c38e'], [1, '#f6dcae']]) +
   glow(`sun-${uid}`, 90, 240, 80, '#ffcf8a', 0.85) +
+  cloud(80, 0.9, '#f3b8a0', 0.6, 14, 54) +
   ridge('dusk-a', 252, 40, '#6b5470', 0.55) +
   ridge('dusk-b', 274, 26, '#5a5262', 0.7) +
   ground(uid, '#6a6a4f', '#3f4434', '#c99f7a');
@@ -72,6 +95,7 @@ const dusk = (uid) =>
 const night = (uid) =>
   sky(uid, [[0, '#0d1430'], [0.6, '#1d2c4f'], [1, '#2b3d55']]) +
   stars('night', 70, 230) +
+  shootingStar(uid, 70, 40, 3, 11) +
   glow(`moon-${uid}`, 232, 64, 40, '#e8ecff', 0.55) +
   `<circle cx="232" cy="64" r="11" fill="#f4f1e2"/><circle cx="237" cy="60" r="10" fill="#1a2747"/>` +
   ridge('night-a', 252, 40, '#1b2a3f', 0.8) +
@@ -101,6 +125,58 @@ export const WORLDS = {
     mist(uid, 258, '#ffffff', 0.75) +
     ridge('mist-c', 276, 24, '#7f9a84', 0.7) +
     ground(uid, '#7d9d74', '#4f6e4b', '#c7d8bd'),
+
+  // 움직이는 배경
+  'world-clouds': (uid) =>
+    sky(uid, [[0, '#a9d3ef'], [0.6, '#dcecf3'], [1, '#eef4ea']]) +
+    glow(`sun-${uid}`, 240, 60, 60, '#fff6d8', 0.8) +
+    cloud(40, 1.2, '#ffffff', 0.95, 0, 38) +
+    cloud(84, 0.8, '#ffffff', 0.85, 14, 30) +
+    cloud(128, 1, '#ffffff', 0.8, 26, 44) +
+    cloud(170, 0.6, '#ffffff', 0.7, 8, 26) +
+    ridge('clouds-a', 252, 40, '#a3c3cc', 0.55) +
+    ridge('clouds-b', 272, 26, '#8fb487', 0.65) +
+    ground(uid, '#8ab873', '#56804c', '#c4e0a8'),
+
+  'world-shooting': (uid) =>
+    sky(uid, [[0, '#070b22'], [0.6, '#16234a'], [1, '#243a5c']]) +
+    stars('shooting', 90, 240) +
+    shootingStar(uid, 40, 30, 0, 5) +
+    shootingStar(uid, 150, 20, 2.2, 6) +
+    shootingStar(uid, 90, 90, 4, 7) +
+    shootingStar(uid, 200, 60, 5.5, 8) +
+    ridge('shoot-a', 254, 38, '#1b2a3f', 0.85) +
+    ridge('shoot-b', 276, 24, '#14203a', 0.9) +
+    ground(uid, '#22392d', '#111d17', '#4f7a5a'),
+
+  'world-rain': (uid) => {
+    const r = rng('rain');
+    return (
+      sky(uid, [[0, '#7f8f96'], [0.6, '#a9b5b2'], [1, '#c3ccc4']]) +
+      ridge('rain-a', 246, 46, '#7d9284', 0.6) +
+      mist(uid, 256, '#e6ece8', 0.55) +
+      ridge('rain-b', 272, 28, '#647c6a', 0.7) +
+      ground(uid, '#5f7d58', '#3d5539', '#9fbf94') +
+      times(46, (i) => `<line class="rain" x1="${n(r() * W)}" y1="${n(r() * 60 - 60)}" x2="${n(r() * W - 4)}" y2="${n(r() * 60 - 46)}" stroke="#e8f2f8" stroke-width=".8" opacity=".55" style="animation-delay:-${n(r() * 1.2)}s;animation-duration:${n(0.8 + r() * 0.5)}s"/>`) +
+      times(7, (i) => `<ellipse class="ripple" cx="${n(20 + r() * 260)}" cy="${n(310 + r() * 40)}" rx="7" ry="2" fill="none" stroke="#e8f2f8" stroke-width=".7" style="animation-delay:-${n(r() * 1.8)}s"/>`)
+    );
+  },
+
+  'world-sea': (uid) => {
+    const wave = (y, color, op, delay) =>
+      `<path class="wave" style="animation-delay:-${delay}s" d="M-20 ${y} q20 -6 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 V${y + 40} H-20Z" fill="${color}" opacity="${op}"/>`;
+    return (
+      sky(uid, [[0, '#8fcbe8'], [0.55, '#d4ecf2'], [1, '#f4f0dc']]) +
+      glow(`sun-${uid}`, 210, 110, 70, '#fff3c8', 0.85) +
+      cloud(60, 0.9, '#ffffff', 0.85, 10, 50) +
+      `<rect y="218" width="${W}" height="80" fill="#4f9cc4"/>` +
+      `<ellipse cx="210" cy="232" rx="40" ry="3" fill="#fff6d0" opacity=".7" class="shimmer"/>` +
+      wave(228, '#6fb6d8', 0.8, 0) +
+      wave(244, '#5aa6cc', 0.85, 1.5) +
+      wave(260, '#8fd0e8', 0.6, 3) +
+      `<path d="M0 290 Q75 272 150 280 T300 286 V${H} H0Z" fill="#ecd9a8"/><path d="M0 290 Q75 272 150 280 T300 286" fill="none" stroke="#fff" stroke-width="2" opacity=".7" class="shimmer"/>`
+    );
+  },
 
   'world-sakura': (uid) => {
     const r = rng('sakura-petals');

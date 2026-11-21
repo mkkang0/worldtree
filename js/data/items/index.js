@@ -21,6 +21,7 @@ export const SLOTS = [
   { id: 'face', label: '정령 얼굴', group: '정령 옷장', tint: true },
   { id: 'neck', label: '정령 목걸이', group: '정령 옷장', tint: true },
   { id: 'hand', label: '정령 손', group: '정령 옷장', tint: true },
+  { id: 'motion', label: '정령 동작', group: '정령 옷장' },
   { id: 'theme', label: '앱 테마', group: '앱' },
 ];
 

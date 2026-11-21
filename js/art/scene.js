@@ -46,7 +46,7 @@ export function renderScene({ growth = 0, stage = 0, tree, equipped = {}, custom
     many('land', (id) => landArt(id, uid)),
     many('companion', (id) => companionArt(id, uid)),
     spirit
-      ? spiritArt({ x: 226, y: 300, scale: 0.55, mood, wardrobe: wear, hues: Object.fromEntries(Object.entries(wear).map(([s, id]) => [s, hue(id)])), tree, uid })
+      ? spiritArt({ x: 226, y: 300, scale: 0.55, mood, wardrobe: wear, hues: Object.fromEntries(Object.entries(wear).map(([s, id]) => [s, hue(id)])), tree, uid, motion: one('motion') })
       : '',
     tint(effectArt(one('fx'), uid, t), uid, hue(one('fx'))),
     // 가장자리를 살짝 어둡게 해 깊이감을 준다
@@ -60,13 +60,13 @@ export function renderScene({ growth = 0, stage = 0, tree, equipped = {}, custom
 }
 
 // 정령만 크게 (상점 옷장 미리보기, 코디 카드). wear = { hat, face, neck, hand }, hues 같은 모양
-export function spiritPortrait({ wear = {}, custom = {}, tree, mood = 'happy', viewBox = '-52 -96 104 140' }) {
+export function spiritPortrait({ wear = {}, custom = {}, tree, mood = 'happy', motion = '', viewBox = '-52 -96 104 140' }) {
   const uid = nextUid();
   const hues = Object.fromEntries(Object.entries(wear).map(([s, id]) => [s, custom[id]?.hue || 0]));
   return (
     `<svg viewBox="${viewBox}" role="img" aria-label="정령" xmlns="http://www.w3.org/2000/svg">` +
     hueDefs(uid, HUES) +
-    spiritArt({ x: 0, y: 0, scale: 1, mood, wardrobe: wear, hues, tree, uid }) +
+    spiritArt({ x: 0, y: 0, scale: 1, mood, wardrobe: wear, hues, tree, uid, motion }) +
     `</svg>`
   );
 }

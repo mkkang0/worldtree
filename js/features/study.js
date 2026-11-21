@@ -9,7 +9,7 @@ import { studyStars, capEarn } from '../core/scoring.js';
 import { starsOn, studyMinOn, studyBySubject, studyMinBySubjectOn, weekSummary, lastDays } from '../core/records.js';
 import { FOCUS_LEVELS, SUBJECT_EMOJIS, subjectOf, activeSubjects } from '../data/lists.js';
 import { newId } from '../data/store.js';
-import { esc, bar, radioChips, stat, money, title } from '../ui/dom.js';
+import { esc, bar, radioChips, stat, money, title, fold, moreList } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { barChart, ddayBadge } from '../ui/components.js';
 import { toast, chime, confetti } from '../ui/effects.js';
@@ -62,7 +62,7 @@ function examText(s) {
 
 /* ---------- 화면 ---------- */
 
-export function view(state) {
+export function view(state, ui) {
   const day = todayKey();
   const timer = state.study.timer;
   const week = weekSummary(state);
@@ -82,7 +82,8 @@ export function view(state) {
       ${
         timer
           ? `<div class="row two"><button class="btn ghost" data-act="study.discard">${icon('close')} 취소</button><button class="btn" data-act="study.stop">${icon('stop')} 끝내기</button></div>`
-          : `<button class="btn gold" data-act="study.start">${icon('play')} 공부 시작</button>`
+          : `<button class="btn gold" data-act="study.start">${icon('play')} 공부 시작</button>
+             <button class="btn small ghost" data-act="study.manualOpen">${icon('edit')} 타이머 없이 직접 기록하기</button>`
       }
     </section>
     <section class="row three">
@@ -96,6 +97,10 @@ export function view(state) {
       <button class="btn small soft" data-act="study.subjectNew" ${activeSubjects(state).length >= MAX_SUBJECTS ? 'disabled' : ''}>${icon('plus')} 과목 추가</button>
     </section>
     <section class="card">
+      ${title('최근 기록', { iconName: 'scroll', aside: '눌러서 고치기' })}
+      ${moreList(byDateDesc(state.study.sessions).map((x) => sessionRow(state, x)), 'study', ui.more?.study)}
+    </section>
+    <section class="card">
       ${title('최근 7일 (분)', { iconName: 'chart' })}
       ${barChart(lastDays(state, 7).map((d) => ({ label: weekdayLabel(d.date), value: d.studyMin, highlight: d.date === day })), '최근 7일 공부 시간', 60)}
     </section>
@@ -104,21 +109,12 @@ export function view(state) {
       ${subjectList(state)}
     </section>
     <section class="card">
-      ${title('직접 기록하기', { iconName: 'scroll', aside: '타이머를 깜빡했을 때' })}
-      <form data-form="study.manual" data-input="study.preview" autocomplete="off">
-        ${studyFields(state, { date: day, subject: lastSubject(state), focus: 3 })}
-        <p class="tiny" data-preview>집중도와 시간에 따라 별빛을 받아요</p>
-        <button class="btn" type="submit">${icon('sparkle')} 기록하고 별빛 받기</button>
-      </form>
-    </section>
-    <section class="card">
-      ${title('최근 기록', { iconName: 'scroll', aside: '눌러서 고치기' })}
-      ${recentList(state)}
-    </section>
-    <section class="card">
-      ${title('집중도 기준', { iconName: 'sparkle' })}
-      <ul class="zones">${FOCUS_LEVELS.map((f) => `<li><span>${f.emoji} ${f.value} · ${f.label}</span><b>분당 ${money('star', FOCUS_WEIGHTS[f.value])}</b></li>`).join('')}</ul>
-      <p class="tiny">하루 별빛은 최대 ${DAILY_STAR_CAP}까지예요. 솔직하게 고를수록 기록이 도움이 돼요.</p>
+      ${fold(
+        `${icon('sparkle')} 집중도 기준`,
+        `<ul class="zones">${FOCUS_LEVELS.map((f) => `<li><span>${f.emoji} ${f.value} · ${f.label}</span><b>분당 ${money('star', FOCUS_WEIGHTS[f.value])}</b></li>`).join('')}</ul>
+        <p class="tiny">하루 별빛은 최대 ${DAILY_STAR_CAP}까지예요. 솔직하게 고를수록 기록이 도움이 돼요.</p>`,
+        { cls: 'plain' }
+      )}
     </section>`;
 }
 
@@ -127,8 +123,10 @@ function studyFields(state, v, { minDate } = {}) {
   const day = todayKey();
   const lo = minDate && minDate < addDays(day, -BACKDATE_DAYS) ? minDate : addDays(day, -BACKDATE_DAYS);
   return `
-    <label>날짜<input name="date" type="date" value="${v.date}" min="${lo}" max="${day}" required></label>
-    <label>공부 시간 (분)<input name="min" type="number" inputmode="numeric" min="${MIN_MIN}" max="${MAX_MIN}" required placeholder="예: 50" value="${v.min || ''}"></label>
+    <div class="row two fields">
+      <label>날짜<input name="date" type="date" value="${v.date}" min="${lo}" max="${day}" required></label>
+      <label>시간 (분)<input name="min" type="number" inputmode="numeric" min="${MIN_MIN}" max="${MAX_MIN}" required placeholder="예: 50" value="${v.min || ''}"></label>
+    </div>
     ${quickMinutes()}
     <div class="label-like">과목</div>
     ${subjectChips(state, v.subject)}
@@ -194,12 +192,6 @@ export function sessionRow(state, x) {
   </li>`;
 }
 
-function recentList(state) {
-  const recent = byDateDesc(state.study.sessions).slice(0, 14);
-  if (!recent.length) return '<p class="muted">아직 기록이 없어요.</p>';
-  return `<ul class="log">${recent.map((x) => sessionRow(state, x)).join('')}</ul>`;
-}
-
 /* ---------- 창 (모달) ---------- */
 
 // 타이머를 끝낼 때 뜨는 창
@@ -220,6 +212,20 @@ export function finishModal(state, ui) {
     <div class="row two">
       <button class="btn ghost" type="button" data-act="modal.close">계속 공부하기</button>
       <button class="btn gold" type="submit">별빛 받기</button>
+    </div>
+  </form>`;
+}
+
+// 타이머 없이 직접 기록하기
+export function manualModal(state) {
+  return `<form class="sheet" data-form="study.manual" data-input="study.preview" autocomplete="off">
+    <div class="intro"><span class="eyebrow">RECORD</span><h1>직접 기록하기</h1>
+    <p class="muted">타이머를 깜빡했을 때 공부한 시간을 적어요.</p></div>
+    ${studyFields(state, { date: todayKey(), subject: lastSubject(state), focus: 3 })}
+    <p class="tiny" data-preview>집중도와 시간에 따라 별빛을 받아요</p>
+    <div class="row two">
+      <button class="btn ghost" type="button" data-act="modal.close">닫기</button>
+      <button class="btn gold" type="submit">${icon('sparkle')} 별빛 받기</button>
     </div>
   </form>`;
 }
@@ -333,8 +339,16 @@ export const actions = {
     rerender();
   },
 
+  'study.manualOpen': () => {
+    ctx.ui.modal = 'study-manual';
+    ctx.ui.modalData = null;
+    rerender();
+  },
+
   'study.manual': (form) => {
-    if (save(form)) rerender();
+    if (!save(form)) return;
+    closeModal();
+    rerender();
   },
 
   // 25분·50분 같은 버튼: 시간 칸을 채운다

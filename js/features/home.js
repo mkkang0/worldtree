@@ -4,7 +4,7 @@ import { gain, settle } from '../app/wallet.js';
 import { CARE_REWARD, DAILY_SUN_CAP, DAILY_STAR_CAP, JOURNEY_DAYS } from '../core/config.js';
 import { todayKey } from '../core/dates.js';
 import { LAST_STAGE, STAGES, plantXp, stageOf } from '../core/scoring.js';
-import { earnedOn, minutesOn, missionsDone, allMissions, needsRest, studyMinOn, starsOn, streakOf, studyMinBySubjectOn } from '../core/records.js';
+import { earnedOn, minutesOn, missionsDone, allMissions, needsRest, studyMinOn, starsOn, streakOf, studyMinBySubjectOn, recentXpPerDay } from '../core/records.js';
 import { LINES, STAGE_LINES, fill } from '../data/lines.js';
 import { activeSubjects } from '../data/lists.js';
 import { TREES, treeById } from '../data/trees.js';
@@ -25,8 +25,8 @@ export function view(state, ui) {
           <div><span class="eyebrow">${j.tree.label} · ${j.day}일째</span><h1>${j.stageName}</h1></div>
           <div class="hero-side">${ddayBadge(state)}<span class="spirit-tag">정령 <b>${esc(state.settings.name)}</b></span></div>
         </div>
-        ${bar(j.ratio)}
-        <p class="tiny">${j.nextName ? `다음 '${j.nextName}'까지 ${j.remain}점 · ${j.total}일의 여정` : '세계수가 완성됐어요. 숲에 심고 새로운 세계수를 키워요'}</p>
+        ${stageTrack(j)}
+        <p class="tiny">${j.nextName ? `${STAGES.length}단계 중 ${j.stage + 1}단계 · 다음 '${j.nextName}'까지 ${j.remain}점` : '세계수가 완성됐어요. 숲에 심고 새로운 세계수를 키워요'}</p>
         <div class="row two">
           <button class="btn small soft" data-act="home.care" data-arg="water" ${care.water ? 'disabled' : ''}>${icon('drop')} 이슬 주기 ${care.water ? icon('check') : `+${CARE_REWARD}`}</button>
           <button class="btn small soft" data-act="home.care" data-arg="sun" ${care.sun ? 'disabled' : ''}>${icon('sun')} 햇살 쬐기 ${care.sun ? icon('check') : `+${CARE_REWARD}`}</button>
@@ -60,6 +60,54 @@ function todayCard(state) {
       <button class="btn small soft" data-act="nav.tab" data-arg="meal">식단 체크</button>
     </div>
   </section>`;
+}
+
+// 성장 단계 길: 씨앗부터 세계수까지 7칸에 지금 위치를 표시한다. 누르면 성장 지도가 열린다.
+function stageTrack(j) {
+  const last = STAGES.length - 1;
+  const p = Math.min(1, (j.stage + (j.nextName ? j.ratio : 0)) / last);
+  return `<button class="stage-track" data-act="home.stages" aria-label="성장 단계 보기: ${STAGES.length}단계 중 ${j.stage + 1}단계 ${j.stageName}">
+    <span class="track-line"><i style="width:${(p * 100).toFixed(1)}%"></i></span>
+    <ol>${STAGES.map((s, i) => `<li class="${i < j.stage ? 'done' : i === j.stage ? 'now' : ''}"><i>${i === j.stage ? STAGE_ICONS[i] : ''}</i><span>${s.name}</span></li>`).join('')}</ol>
+  </button>`;
+}
+
+const STAGE_ICONS = ['🌰', '🌱', '🌿', '🌳', '🌲', '✨', '🌟'];
+// 단계마다 세계수에 생기는 것 (art/tree.js · art/scene.js 기준)
+const STAGE_UNLOCKS = [
+  '여정이 시작돼요',
+  '첫 잎이 나요',
+  '줄기가 단단해져요 · 가지 장식, 꽃·열매 아이템이 보여요',
+  '뿌리가 땅 위로 드러나요',
+  '잎 사이에 꽃이 피어요',
+  '빛나는 열매가 열려요',
+  '머리 위에 빛 고리가 떠요 · 숲에 심을 수 있어요',
+];
+
+// 성장 지도: 단계별 필요한 점수, 지금 위치, 최근 속도로 본 남은 날
+export function stagesModal(state) {
+  const j = journey(state);
+  const xp = Math.floor(plantXp(state));
+  const pace = recentXpPerDay(state);
+  const toEnd = Math.max(0, STAGES[STAGES.length - 1].at - xp);
+  const days = pace > 0.5 ? Math.ceil(toEnd / pace) : null;
+  return `<div class="sheet" role="dialog" aria-labelledby="stages-title">
+    <div class="intro"><span class="eyebrow">GROWTH MAP</span><h1 id="stages-title">성장 지도</h1>
+    <p class="muted">${esc(j.tree.label)} · ${j.day}일째 · 지금 ${xp}점</p></div>
+    <ol class="stage-map">${STAGES.map((s, i) => {
+      const cls = i < j.stage ? 'done' : i === j.stage ? 'now' : '';
+      const need = i > j.stage ? `<b>${Math.ceil(s.at - xp)}점 남음</b>` : i === j.stage ? '<b>지금 여기</b>' : icon('check');
+      return `<li class="${cls}"><span class="em">${STAGE_ICONS[i]}</span><span class="grow"><b>${s.name}</b> <span class="tiny">${s.at}점</span><span class="tiny unlock">${STAGE_UNLOCKS[i]}</span></span><span class="need">${need}</span></li>`;
+    }).join('')}</ol>
+    <p class="report-note">${
+      toEnd === 0
+        ? '세계수가 완성됐어요! 숲에 심고 새로운 세계수를 키워요.'
+        : days
+          ? `최근 7일 하루 평균 약 ${Math.round(pace)}점을 모았어요. 이대로면 세계수까지 약 ${days}일 남았어요.`
+          : '최근 7일 기록이 적어서 남은 날을 계산할 수 없어요. 오늘 하나만 기록해 봐요!'
+    }</p>
+    <button class="btn" data-act="modal.close">닫기</button>
+  </div>`;
 }
 
 // 하루 목표를 정한 과목들 (예: 🇯🇵 30/60분 · 🇨🇳 60/60분 ✓)
@@ -158,6 +206,12 @@ export const actions = {
     settle();
     chime('ok');
     ctx.ui.bubble = kind === 'water' ? '촉촉한 이슬이 반짝여요' : '따스한 햇살에 잎이 반짝여요';
+    rerender();
+  },
+
+  'home.stages': () => {
+    ctx.ui.modal = 'stages';
+    ctx.ui.modalData = null;
     rerender();
   },
 

@@ -16,6 +16,11 @@ export const SCENERY = [
   { id: 'world-golden', slot: 'world', name: '황금 들판', cost: c(110, 30) },
   { id: 'world-cosmos', slot: 'world', name: '우주', cost: c(150, 50) },
   { id: 'world-library', slot: 'world', name: '지혜의 도서관', cost: c(0, 0, 100) },
+  // 움직이는 배경
+  { id: 'world-clouds', slot: 'world', name: '흐르는 구름', cost: c(40, 10) },
+  { id: 'world-rain', slot: 'world', name: '비 오는 숲', cost: c(0, 60) },
+  { id: 'world-shooting', slot: 'world', name: '별똥별 밤', cost: c(80, 30) },
+  { id: 'world-sea', slot: 'world', name: '바닷가', cost: c(100, 30) },
 
   /* ---------- 하늘 (sky) ---------- */
   { id: 'sky-moon', slot: 'sky', name: '초승달', cost: c(25) },

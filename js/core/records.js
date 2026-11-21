@@ -1,5 +1,6 @@
 // 기록 집계(하루·주간·연속 일수 등). 상태를 읽기만 한다.
-import { DAILY_SUN_CAP, CUP_GOAL } from './config.js';
+import { DAILY_SUN_CAP, CUP_GOAL, CARE_REWARD, MISSION_WATER, MISSION_REWARD_LIMIT } from './config.js';
+import { xpOf, cupsWater } from './scoring.js';
 import { todayKey, addDays, weekStart } from './dates.js';
 import { DEFAULT_MISSIONS } from '../data/lists.js';
 
@@ -153,4 +154,18 @@ export function weekReport(state, start, today = todayKey()) {
     sessionsOn(state, d).forEach((s) => (out.bySubject[s.subject] = (out.bySubject[s.subject] || 0) + s.min));
   }
   return out;
+}
+
+/* ---------- 성장 속도 ---------- */
+
+// 최근 며칠 동안 하루 평균 성장 점수 (운동·공부·식단·돌보기 기준, 퀘스트·업적 보상은 뺀 대략값)
+export function recentXpPerDay(state, days = 7, end = todayKey()) {
+  let total = 0;
+  for (let i = 0; i < days; i++) {
+    const d = addDays(end, -i);
+    const care = Object.values(state.care[d] || {}).filter(Boolean).length * CARE_REWARD;
+    const water = Math.min(missionsDone(state, d), MISSION_REWARD_LIMIT) * MISSION_WATER + cupsWater(state.cups[d] || 0) + care / 2;
+    total += xpOf({ sun: earnedOn(state, d) + care / 2, water, star: starsOn(state, d) });
+  }
+  return total / days;
 }

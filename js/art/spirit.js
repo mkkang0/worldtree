@@ -1,6 +1,6 @@
 // 세계수를 돌보는 작은 정령. 표정은 mood, 옷은 art/wardrobe.js.
 // 크기 28을 기준으로 그린 뒤 장면에서 줄여서 놓는다 (옷 그림이 이 크기에 맞춰져 있음).
-import { radial, glow, tint } from './svg.js';
+import { n, radial, glow, tint } from './svg.js';
 import { hatArt, faceArt, neckArt, handArt } from './wardrobe.js';
 
 const R = 28;
@@ -25,7 +25,8 @@ function mouth(mood) {
 }
 
 // x, y = 장면 안의 위치, scale = 크기, hues = 옷마다 색 바꾸기 번호 { hat: 2, … } (필터는 장면의 hueDefs)
-export function spiritArt({ x, y, scale, mood, wardrobe = {}, hues = {}, tree, uid }) {
+// motion = 정령 동작 아이템 id (css/motion.css의 .motion-…). 산책은 그림자까지 함께 움직인다.
+export function spiritArt({ x, y, scale, mood, wardrobe = {}, hues = {}, tree, uid, motion = '' }) {
   const pal = tree.palette;
   const body =
     `<defs>${radial(`sp-${uid}`, [[0, '#ffffff'], [0.6, '#fbf7ea'], [1, pal.glow]], { cx: 0.4, cy: 0.32, r: 0.7 })}</defs>` +
@@ -49,8 +50,14 @@ export function spiritArt({ x, y, scale, mood, wardrobe = {}, hues = {}, tree, u
     tint(hatArt(wardrobe.hat, 0, -R, R), uid, hues.hat) +
     tint(handArt(wardrobe.hand, R * 0.98, R * 0.38), uid, hues.hand);
 
-  return (
-    `<ellipse cx="${x}" cy="${y + R * scale + 4}" rx="${R * scale * 0.75}" ry="3" fill="#000" opacity=".18"/>` +
-    `<g transform="translate(${x} ${y}) scale(${scale})"><g class="spirit-bob">${body}</g></g>`
-  );
+  const feet = `transform-origin:${x}px ${y + R * scale}px`;
+  const cls = motion ? `motion-${motion.replace('move-', '')}` : '';
+  const zzz =
+    motion === 'move-sleep'
+      ? [0, 1, 2].map((i) => `<text class="zzz" x="${x + R * scale * 0.9}" y="${y - R * scale}" font-size="${n(9 * scale + 3)}" fill="#ffffff" style="animation-delay:-${i}s">z</text>`).join('')
+      : '';
+  const shadow = `<ellipse cx="${x}" cy="${y + R * scale + 4}" rx="${R * scale * 0.75}" ry="3" fill="#000" opacity=".18"/>`;
+  const figure = `<g transform="translate(${x} ${y}) scale(${scale})"><g class="spirit-bob">${body}</g></g>`;
+  if (motion === 'move-walk') return `<g class="${cls}">${shadow}${figure}</g>`;
+  return shadow + (cls ? `<g class="${cls}" style="${feet}">${figure}</g>` : figure) + zzz;
 }

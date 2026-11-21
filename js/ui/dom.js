@@ -50,4 +50,19 @@ export function title(text, { iconName = '', aside = '' } = {}) {
   return `<h2 class="title">${iconName ? icon(iconName) : ''}<span>${text}</span>${aside ? `<small>${aside}</small>` : ''}</h2>`;
 }
 
+// 접었다 펴는 칸 (자주 안 보는 설명·선택 입력). open이면 펼친 채로 시작
+export function fold(label, body, { open = false, cls = '' } = {}) {
+  return `<details class="fold ${cls}" ${open ? 'open' : ''}><summary>${label}${icon('right', 'fold-ic')}</summary><div class="fold-body">${body}</div></details>`;
+}
+
+// 최근 기록 목록: 처음엔 count개만, '더 보기'를 누르면 max개까지 (ctx.ui.more[key])
+export function moreList(rows, key, open, { count = 5, max = 20 } = {}) {
+  if (!rows.length) return '<p class="muted">아직 기록이 없어요.</p>';
+  const shown = rows.slice(0, open ? max : count);
+  const rest = Math.min(rows.length, max) - shown.length;
+  return `<ul class="log">${shown.join('')}</ul>${
+    rest > 0 ? `<button class="btn small ghost" data-act="ui.more" data-arg="${key}">${rest}개 더 보기</button>` : open && rows.length > count ? `<button class="btn small ghost" data-act="ui.more" data-arg="${key}">접기</button>` : ''
+  }`;
+}
+
 export const backButton = `<button class="back" data-act="nav.sub" data-arg="">${icon('left')}더보기</button>`;

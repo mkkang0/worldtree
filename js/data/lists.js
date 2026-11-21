@@ -21,10 +21,10 @@ export const MOODS = [
 // 심박을 모를 때 체감 강도 → Zone
 export const INTENSITIES = [
   { value: 1, zone: 1, label: '1 · 아주 가벼움' },
-  { value: 2, zone: 2, label: '2 · 편하게 대화 가능' },
+  { value: 2, zone: 2, label: '2 · 대화 가능' },
   { value: 3, zone: 3, label: '3 · 숨이 약간 참' },
   { value: 4, zone: 4, label: '4 · 힘듦' },
-  { value: 5, zone: 5, label: '5 · 최대한 힘듦' },
+  { value: 5, zone: 5, label: '5 · 최대' },
 ];
 
 export const DEFAULT_MISSIONS = [

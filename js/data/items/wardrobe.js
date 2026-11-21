@@ -57,4 +57,12 @@ export const WARDROBE = [
   { id: 'hand-lantern', slot: 'hand', name: '초롱', cost: c(60, 20) },
   { id: 'hand-wand', slot: 'hand', name: '별 요술봉', cost: c(90, 30) },
   { id: 'hand-dumbbell', slot: 'hand', name: '아령', cost: c(50) },
+
+  /* ---------- 정령 동작 (motion) — 움직임은 css/motion.css의 .motion-… ---------- */
+  { id: 'move-hop', slot: 'motion', name: '깡충깡충', cost: c(30, 10) },
+  { id: 'move-walk', slot: 'motion', name: '산책', cost: c(40, 10) },
+  { id: 'move-dance', slot: 'motion', name: '신나는 춤', cost: c(60, 20) },
+  { id: 'move-spin', slot: 'motion', name: '빙그르르', cost: c(50, 20) },
+  { id: 'move-float', slot: 'motion', name: '둥실 비행', cost: c(0, 0, 50) },
+  { id: 'move-sleep', slot: 'motion', name: '꾸벅꾸벅', cost: c(0, 40) },
 ];

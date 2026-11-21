@@ -22,6 +22,22 @@
 .wing-l { transform-origin: right center; }
 .wing-r { transform-origin: left center; }
 
+/* 움직이는 배경 (art/worlds.js) */
+.cloud-pass { animation: cloud-pass 46s linear infinite; }
+.shoot { opacity: 0; animation: shoot 7s ease-in infinite; }
+.rain { animation: rain .9s linear infinite; }
+.ripple { transform-box: fill-box; transform-origin: center; animation: ripple 1.8s ease-out infinite; }
+.wave { animation: wave 5s ease-in-out infinite alternate; }
+
+/* 정령 동작 (art/spirit.js, 상점 '정령 동작') — 발밑을 기준으로 움직인다 */
+.motion-hop { animation: hop 1.8s ease-in-out infinite; }
+.motion-walk { animation: walk 9s ease-in-out infinite; }
+.motion-dance { animation: dance 1.3s ease-in-out infinite; }
+.motion-spin { animation: spin-jump 4.5s ease-in-out infinite; }
+.motion-float { animation: float-high 4s ease-in-out infinite; }
+.motion-sleep { animation: nod 3.2s ease-in-out infinite; }
+.zzz { animation: zzz 3s ease-out infinite; opacity: 0; }
+
 /* 빛 효과 */
 .rise { animation: rise 9s ease-in infinite; }
 .fall { animation: fall 8s linear infinite; }
@@ -55,6 +71,18 @@ main.entering > *:nth-child(4) { animation-delay: .12s; }
 @keyframes confetti { to { transform: translateY(110vh) rotate(360deg); opacity: .8; } }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes pop { from { transform: scale(.85); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes cloud-pass { from { transform: translateX(-340px); } to { transform: translateX(340px); } }
+@keyframes shoot { 0% { transform: translate(0, 0); opacity: 0; } 4% { opacity: 1; } 16% { transform: translate(130px, 60px); opacity: 0; } 100% { transform: translate(130px, 60px); opacity: 0; } }
+@keyframes rain { from { transform: translateY(0); } to { transform: translateY(400px); } }
+@keyframes ripple { from { transform: scale(.2); opacity: .8; } to { transform: scale(1.5); opacity: 0; } }
+@keyframes wave { from { transform: translateX(-14px); } to { transform: translateX(14px); } }
+@keyframes hop { 0%, 55%, 100% { transform: translateY(0) scale(1, 1); } 65% { transform: translateY(0) scale(1.08, .9); } 78% { transform: translateY(-14px) scale(.95, 1.06); } 90% { transform: translateY(0) scale(1.05, .95); } }
+@keyframes walk { 0%, 100% { transform: translateX(0); } 22% { transform: translateX(-34px); } 30% { transform: translateX(-34px); } 70% { transform: translateX(26px); } 78% { transform: translateX(26px); } }
+@keyframes dance { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(10deg) translateY(-3px); } }
+@keyframes spin-jump { 0%, 65% { transform: translateY(0) rotate(0); } 82% { transform: translateY(-18px) rotate(180deg); } 100% { transform: translateY(0) rotate(360deg); } }
+@keyframes float-high { 0%, 100% { transform: translateY(-8px); } 50% { transform: translateY(-26px); } }
+@keyframes nod { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(9deg) translateY(2px); } }
+@keyframes zzz { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: .9; } 100% { transform: translate(10px, -22px); opacity: 0; } }
 @keyframes enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {

@@ -33,11 +33,17 @@ function mealDay() {
   return d && d <= today && d >= addDays(today, -BACKDATE_DAYS) ? d : today;
 }
 
-function dayPicker(day) {
+// 날짜 고르기: 최근 8일을 달력처럼 왼쪽(오래된 날) → 오른쪽(오늘)으로 한 줄에 놓는다. 기록이 있는 날은 점.
+function dayPicker(state, day) {
   const today = todayKey();
-  const days = Array.from({ length: BACKDATE_DAYS + 1 }, (_, i) => addDays(today, -i));
-  return `<div class="chips scroll day-chips" role="tablist" aria-label="기록할 날짜">${days
-    .map((d) => `<button class="chip-btn ${d === day ? 'on' : ''}" data-act="meal.day" data-arg="${d}" role="tab" aria-selected="${d === day}">${dateLabel(d)}${d === today || d === addDays(today, -1) ? '' : ` ${weekdayLabel(d)}`}</button>`)
+  const days = Array.from({ length: BACKDATE_DAYS + 1 }, (_, i) => addDays(today, i - BACKDATE_DAYS));
+  return `<div class="day-strip" role="tablist" aria-label="기록할 날짜">${days
+    .map((d) => {
+      const has = Object.keys(state.meals[d] || {}).length || state.cups[d];
+      const label = d === today ? '오늘' : weekdayLabel(d);
+      return `<button class="${d === day ? 'on' : ''} ${d === today ? 'today' : ''}" data-act="meal.day" data-arg="${d}" role="tab" aria-selected="${d === day}" aria-label="${dateLabel(d)} ${weekdayLabel(d)}요일">
+        <small>${label}</small><b>${Number(d.slice(8))}</b><i class="${has ? 'has' : ''}"></i></button>`;
+    })
     .join('')}</div>`;
 }
 
@@ -54,7 +60,7 @@ export function view(state) {
   const custom = new Set(state.customMissions.map((m) => m.id));
   return `
     <header class="page-head"><h1>식단</h1><span class="tiny">잘 먹을수록 이슬이 맺혀요</span></header>
-    ${dayPicker(day)}
+    ${dayPicker(state, day)}
     ${isToday ? '' : `<section class="card note">${icon('calendar')} ${dayName} 기록을 채우는 중이에요. 보상도 그날 기준으로 계산해요.</section>`}
     <section class="card">
       ${title('물 마시기', { iconName: 'drop', aside: `${dayName} ${cups} / ${CUP_GOAL}잔` })}

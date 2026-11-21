@@ -30,6 +30,29 @@
 .dday.today { background: linear-gradient(180deg, #d9bd7a, #b48c43); color: #1d1a10; border-color: transparent; }
 .spirit-tag b { color: var(--ink); font-family: var(--font-serif); }
 .hero-info .row { margin-top: 12px; }
+/* 성장 단계 길 (features/home.js stageTrack) */
+.stage-track { position: relative; display: block; width: 100%; margin: 12px 0 2px; padding: 0; font: inherit; color: inherit; background: none; border: 0; cursor: pointer; text-align: center; }
+.stage-track ol { position: relative; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.stage-track li { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.stage-track li i { display: grid; place-items: center; width: 12px; height: 12px; margin-top: 6px; border-radius: 50%; background: var(--surface-solid); border: 2px solid var(--line); font-style: normal; font-size: .8rem; }
+.stage-track li.done i { background: var(--accent); border-color: var(--accent); }
+.stage-track li.now i { width: 26px; height: 26px; margin-top: -1px; background: var(--accent-soft); border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+.stage-track li span { font-size: .62rem; color: var(--muted); line-height: 1.2; word-break: keep-all; }
+.stage-track li.now span { color: var(--ink); font-weight: 700; }
+.track-line { position: absolute; top: 11px; left: calc(100% / 14); right: calc(100% / 14); height: 3px; border-radius: 3px; background: var(--line); }
+.track-line i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--primary)); }
+.stage-track:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 12px; }
+/* 성장 지도 */
+.stage-map { list-style: none; margin: 12px 0; padding: 0; }
+.stage-map li { display: flex; align-items: center; gap: 12px; padding: 9px 4px; border-bottom: 1px solid var(--line); font-size: .9rem; }
+.stage-map li:last-child { border-bottom: 0; }
+.stage-map .em { font-size: 1.3rem; width: 28px; text-align: center; }
+.stage-map .unlock { display: block; }
+.stage-map .need { font-size: .78rem; color: var(--muted); white-space: nowrap; }
+.stage-map .need .ic { color: var(--accent); }
+.stage-map li.done { opacity: .6; }
+.stage-map li.now { background: var(--accent-soft); border-radius: 12px; border-bottom-color: transparent; }
+.stage-map li.now .need b { color: var(--accent); }
 .hero-info > .btn { margin-top: 10px; }
 .heart { position: absolute; left: 75%; top: 70%; font-size: 1.5rem; animation: heart 1.2s ease-out forwards; pointer-events: none; z-index: 3; }
 
@@ -123,7 +146,17 @@
 .mission.on .chk { background: var(--primary); border-color: var(--primary); }
 .missions + .tiny + .save-note, .save-note { color: var(--accent); font-weight: 600; }
 .missions ~ .row { margin-top: 12px; }
-.day-chips { margin-bottom: -4px; }
+/* 식단 날짜: 최근 8일 한 줄 (features/meal.js dayPicker) */
+.day-strip { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
+.day-strip button { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 7px 0 6px; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; cursor: pointer; min-height: 56px; }
+.day-strip small { font-size: .66rem; color: var(--muted); white-space: nowrap; }
+.day-strip b { font-family: var(--font-serif); font-size: 1rem; line-height: 1.1; }
+.day-strip i { width: 5px; height: 5px; border-radius: 50%; background: transparent; }
+.day-strip i.has { background: var(--dew); }
+.day-strip .today small { color: var(--accent); font-weight: 700; }
+.day-strip .on { background: var(--primary-soft); border-color: var(--primary); }
+.day-strip .on b { color: var(--primary); }
+.day-strip button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* ---------- 상점 ---------- */
 .slot-group { flex: none; white-space: nowrap; font-size: .7rem; letter-spacing: .08em; color: var(--accent); padding: 0 2px 0 8px; }

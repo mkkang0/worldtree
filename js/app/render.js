@@ -34,8 +34,10 @@ const MODALS = {
   onboarding: onboarding.modal,
   complete: home.completeModal,
   stageup: home.stageUpModal,
+  stages: home.stagesModal,
   'study-finish': study.finishModal,
   'study-edit': study.editModal,
+  'study-manual': study.manualModal,
   subject: study.subjectModal,
   'workout-edit': workout.editModal,
 };
@@ -106,15 +108,24 @@ export function render() {
 }
 
 export function go(tab, sub = '') {
-  Object.assign(ctx.ui, { tab, sub, bubble: '', mealDay: '', calDay: '' });
+  Object.assign(ctx.ui, { tab, sub, bubble: '', mealDay: '', calDay: '', more: {} });
   if (tab !== 'shop') ctx.ui.preview = {};
   rerender();
   window.scrollTo(0, 0);
 }
 
 export const actions = {
-  'nav.tab': (el) => go(el.dataset.arg),
+  // 지금 보고 있는 탭을 다시 누르면 맨 위로 올라간다
+  'nav.tab': (el) => {
+    if (el.dataset.arg === ctx.ui.tab && !ctx.ui.sub) return window.scrollTo({ top: 0, behavior: 'smooth' });
+    go(el.dataset.arg);
+  },
   'nav.sub': (el) => go('more', el.dataset.arg || ''),
+  // 최근 기록 '더 보기 / 접기'
+  'ui.more': (el) => {
+    ctx.ui.more = { ...ctx.ui.more, [el.dataset.arg]: !ctx.ui.more?.[el.dataset.arg] };
+    rerender();
+  },
   'modal.close': () => {
     ctx.ui.modal = '';
     ctx.ui.modalData = null;

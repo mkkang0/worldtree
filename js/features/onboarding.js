@@ -10,8 +10,8 @@ import { toast, chime } from '../ui/effects.js';
 export function modal() {
   return `<form class="sheet" data-form="onboarding.start" autocomplete="off">
     <div class="intro">
-      <span class="eyebrow">WORLD TREE · ${JOURNEY_DAYS} DAYS</span>
-      <h1>세계수 ${JOURNEY_DAYS}일</h1>
+      <span class="eyebrow">WORLD TREE</span>
+      <h1>세계수</h1>
       <p class="muted">운동하고, 잘 먹고, 공부할수록 세계수가 자라요. ${JOURNEY_DAYS}일 동안 함께 키울 씨앗을 골라 주세요.</p>
     </div>
     ${treePicker('tree', TREES[0].id)}

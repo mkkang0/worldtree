@@ -54,7 +54,7 @@ function stage(state, ui) {
     <div class="stage-scene">${sceneSvg(state, { equipped: ui.preview })}
       ${previewing ? `<button class="stage-reset" data-act="shop.previewReset" aria-label="미리보기 끄기">${icon('close')} 미리보기</button>` : ''}</div>
     <div class="stage-side">
-      <div class="stage-portrait">${spiritPortrait({ wear, custom: state.custom, tree: treeById(state.plant.species) })}</div>
+      <div class="stage-portrait">${spiritPortrait({ wear, custom: state.custom, tree: treeById(state.plant.species), motion: placed(eq, 'motion')[0] })}</div>
       <div class="stage-wallet">${CURRENCIES.filter((c) => c.id !== 'star' || state.settings.studyEnabled || state.star > 0)
         .map((c) => `<span>${money(c.id, state[c.id])}</span>`)
         .join('')}</div>

@@ -37,6 +37,8 @@ const THUMBS = {
   face: (id, uid, h) => spiritThumb({ face: id }, { face: h }, uid, '-40 -24 80 60'),
   neck: (id, uid, h) => spiritThumb({ neck: id }, { neck: h }, uid, '-44 -2 88 66'),
   hand: (id, uid, h) => spiritThumb({ hand: id }, { hand: h }, uid, '4 -22 64 48'),
+  // 정령 동작: 움직이는 정령 전체
+  motion: (id, uid) => svg('-46 -52 92 69', spiritArt({ x: 0, y: 0, scale: 1, mood: 'happy', wardrobe: {}, tree: TREES[0], uid, motion: id })),
   theme: () => '',
 };
 
