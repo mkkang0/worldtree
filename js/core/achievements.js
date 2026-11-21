@@ -45,6 +45,9 @@ export const ACHIEVEMENTS = [
   // 나의 섬
   { id: 'island1', emoji: '🏠', name: '첫 건물', desc: '섬에 건물 하나 완성', check: (s) => s.island.lots.some((l) => l && l.done) },
   { id: 'island4', emoji: '🏘️', name: '섬마을', desc: '섬에 건물 4개 완성', check: (s) => s.island.lots.filter((l) => l && l.done).length >= 4 },
+  { id: 'resident1', emoji: '🧚', name: '첫 이웃', desc: '섬에 주민이 이사 오기', check: (s) => Object.keys(s.island.residents).length >= 1 },
+  { id: 'resident8', emoji: '🎎', name: '북적이는 섬', desc: '주민 8명 모두 이사 오기', check: (s) => Object.keys(s.island.residents).length >= 8 },
+  { id: 'level3', emoji: '🌟', name: '최고의 건물', desc: '건물 하나를 Lv.3으로', check: (s) => s.island.lots.some((l) => l && l.done && l.lv >= 3) },
   { id: 'island8', emoji: '🏝️', name: '섬나라의 시작', desc: '섬의 자리 8곳을 모두 채우기', check: (s) => s.island.lots.filter((l) => l && l.done).length >= 8 },
   // 미니게임
   { id: 'kana1', emoji: '🎌', name: '가나 첫걸음', desc: '가나 퀴즈 한 판', check: (s) => s.kana.plays >= 1 },

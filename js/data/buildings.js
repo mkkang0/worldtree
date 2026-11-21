@@ -17,6 +17,27 @@ export const BUILDINGS = [
 
 export const buildingById = (id) => BUILDINGS.find((b) => b.id === id);
 
+/* ---------- 건물 레벨 (섬 키우기 2단계) ---------- */
+
+export const MAX_LEVEL = 3;
+const COST_X = [1, 1.6, 2.6]; // 레벨마다 짓는 값
+const WORK_X = [1, 1.5, 2.2]; // 레벨마다 필요한 성장 점수
+
+// lv 레벨로 짓거나 올릴 때 내는 포인트
+export function costOf(b, lv = 1) {
+  const x = COST_X[lv - 1] || 1;
+  const r = (v) => (v ? Math.round((v * x) / 5) * 5 : 0);
+  return { sun: r(b.cost.sun), water: r(b.cost.water), star: r(b.cost.star) };
+}
+export const workOf = (b, lv = 1) => Math.round(b.work * (WORK_X[lv - 1] || 1));
+
+// 주민이 살 수 있는 자리: 집은 레벨마다 2명, 찻집·도서관·등대는 Lv.2부터 레벨마다 1명
+export function bedsOf(id, lv) {
+  if (id === 'house') return lv * 2;
+  if (['teahouse', 'library', 'lighthouse'].includes(id)) return lv - 1;
+  return 0;
+}
+
 // 섬 자리 수 (섬 그림의 빈터). 세계수가 자랄수록 열리고, 세계수를 하나 완성하면 모두 열린다.
 export const LOT_COUNT = 8;
 export const lotsOpen = (stage, completed) => (completed > 0 ? LOT_COUNT : Math.min(LOT_COUNT, 2 + stage));

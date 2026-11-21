@@ -75,7 +75,7 @@ export function defaultState() {
     weekClaims: [], // 보상 받은 주 시작일
     achievements: {}, // { id: 'YYYY-MM-DD' }
     // 나의 섬: 건물 자리 8곳 (features/island.js, core/island.js)
-    island: { lots: Array(8).fill(null) },
+    island: { lots: Array(8).fill(null), residents: {}, giftDay: '' },
     // 미니게임: 가나 퀴즈 (features/games.js)
     kana: { stats: {}, plays: 0, best: 0, perfect: 0, day: null, prefs: { script: 'hira', groups: ['basic'], dir: 'both', count: 10 } },
     // 함께하기
@@ -221,8 +221,10 @@ function sanitize(raw) {
     lots: Array.from({ length: 8 }, (_, i) => {
       const l = lots[i];
       if (!l || typeof l !== 'object' || !buildingById(l.b)) return null;
-      return { b: l.b, done: l.done === true, progress: Math.max(0, num(l.progress, 0)), ...(isDate(l.date) ? { date: l.date } : {}) };
+      return { b: l.b, lv: clampNum(l.lv, 1, 1, 3), done: l.done === true, progress: Math.max(0, num(l.progress, 0)), ...(isDate(l.date) ? { date: l.date } : {}) };
     }),
+    residents: Object.fromEntries(Object.entries(obj(obj(raw.island).residents)).filter(([k, v]) => /^[a-z]{2,10}$/.test(k) && isDate(v))),
+    giftDay: isDate(obj(raw.island).giftDay) ? raw.island.giftDay : '',
   };
   // 짓는 중인 건물은 하나만
   let busy = false;

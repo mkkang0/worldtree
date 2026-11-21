@@ -5,7 +5,7 @@ import { checkAchievements } from '../core/achievements.js';
 import { ACHIEVEMENT_REWARD, EXCHANGE_RATE } from '../core/config.js';
 import { todayKey } from '../core/dates.js';
 import { toast, chime, confetti } from '../ui/effects.js';
-import { addWork } from '../core/island.js';
+import { addWork, moveIn } from '../core/island.js';
 
 const KEYS = ['sun', 'water', 'star'];
 
@@ -20,9 +20,9 @@ export function gain(r = {}) {
   const built = addWork(s, xpOf(r));
   if (built) {
     setTimeout(() => {
-      toast(`🏝️ ${built.name} 완성! 섬에 가서 보세요`);
+      toast(built.lv > 1 ? `🏝️ ${built.b.name} Lv.${built.lv} 완성!` : `🏝️ ${built.b.name} 완성! 섬에 가서 보세요`);
       chime('level');
-      confetti([built.emoji, '✨', '🌿']);
+      confetti([built.b.emoji, '✨', '🌿']);
     }, 700);
   }
   // 자랐으면 화면이 다시 그려질 때 축하 창을 띄운다 (app/render.js showCelebration)
@@ -64,5 +64,13 @@ export function settle() {
       }, 900);
     });
   }
+  // 섬에 새 주민이 이사 왔는지
+  const moved = moveIn(ctx.state, todayKey());
+  moved.forEach((r, i) =>
+    setTimeout(() => {
+      toast(`🏡 ${r.name}가 섬에 이사 왔어요!`);
+      chime('level');
+    }, 1300 + i * 1500)
+  );
   commit();
 }

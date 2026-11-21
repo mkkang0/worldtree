@@ -6,7 +6,7 @@ import { leafTree } from './leaves.js';
 import { bloomArt } from './blooms.js';
 import { ornamentArt } from './ornaments.js';
 import { spiritArt } from './spirit.js';
-import { buildingArt, constructionArt } from './buildings.js';
+import { buildingArt, constructionArt, levelBadge, upgradeRing } from './buildings.js';
 import { HUES, placed } from '../data/items/index.js';
 
 export const MAP = { w: 900, h: 390 };
@@ -79,8 +79,24 @@ const lockedLot = (x, y) =>
   `<path d="M${x - 14} ${y + 1} q4 -9 9 -3 q4 -8 10 -1 q5 -6 9 4Z" fill="#7a8a6a" opacity=".7"/>` +
   `<g opacity=".75"><rect x="${x - 5}" y="${y - 16}" width="10" height="8" rx="1.5" fill="#fffaf0"/><path d="M${x - 3} ${y - 16} v-2.5 a3 3 0 0 1 6 0 v2.5" fill="none" stroke="#fffaf0" stroke-width="1.6"/></g>`;
 
-// lots: [{ state: 'built' | 'building' | 'empty' | 'locked', id, ratio }]
-export function islandMap({ growth, stage, tree, equipped = {}, custom = {}, mood = 'calm', lots = [] }) {
+// 주민이 거니는 자리 (건물과 세계수 사이)
+const STROLL = [98, 172, 246, 352, 548, 656, 730, 804];
+
+function residentsArt(residents, tree, uid) {
+  return residents
+    .map((r, i) => {
+      const x = STROLL[i % STROLL.length];
+      const y = islandTop(x) + 4;
+      const dur = (7 + (i % 3) * 2.5).toFixed(1);
+      return `<g class="stroll" style="animation-duration:${dur}s;animation-delay:-${(i * 1.7).toFixed(1)}s">` +
+        spiritArt({ x, y, scale: 0.34, mood: 'happy', wardrobe: {}, hues: {}, tree, uid: `${uid}-r${i}`, body: r.color, light: { color: '#fff1d6', wash: 0.04, halo: 0.08 } }) +
+        `</g>`;
+    })
+    .join('');
+}
+
+// lots: [{ state: 'built' | 'upgrading' | 'building' | 'empty' | 'locked', id, lv, ratio }], residents: [{ id, color }]
+export function islandMap({ growth, stage, tree, equipped = {}, custom = {}, mood = 'calm', lots = [], residents = [] }) {
   const uid = nextUid();
   const one = (slot) => placed(equipped, slot)[0];
   const t = treeArt({ growth, stage, tree: leafTree(tree, one('leaf')), uid });
@@ -88,7 +104,9 @@ export function islandMap({ growth, stage, tree, equipped = {}, custom = {}, moo
   const hue = (id) => custom[id]?.hue || 0;
   const lotArt = LOTS.map(({ x, y }, i) => {
     const l = lots[i] || { state: 'locked' };
-    if (l.state === 'built') return `<g transform="translate(${x} ${y}) scale(1.25)">${buildingArt(l.id, `${uid}-${i}`)}</g>`;
+    const sc = n(1.25 * (1 + ((l.lv || 1) - 1) * 0.08)); // 레벨이 오를수록 조금씩 크게
+    if (l.state === 'built') return `<g transform="translate(${x} ${y}) scale(${sc})">${buildingArt(l.id, `${uid}-${i}`, l.lv)}${levelBadge(l.lv)}</g>`;
+    if (l.state === 'upgrading') return `<g transform="translate(${x} ${y}) scale(${sc})">${buildingArt(l.id, `${uid}-${i}`, l.lv)}${levelBadge(l.lv)}${upgradeRing(l.ratio)}</g>`;
     if (l.state === 'building') return `<g transform="translate(${x} ${y}) scale(1.25)">${constructionArt(l.ratio, `${uid}-${i}`)}</g>`;
     if (l.state === 'empty') return emptyLot(x, y);
     return lockedLot(x, y);
@@ -103,6 +121,7 @@ export function islandMap({ growth, stage, tree, equipped = {}, custom = {}, moo
     (stage >= 2 ? tint(bloomArt(one('bloom'), t.clusters, uid), uid, hue(one('bloom'))) + tint(ornamentArt(one('ornament'), t.anchors, uid), uid, hue(one('ornament'))) : '') +
     `</g>` +
     lotArt +
+    residentsArt(residents, tree, uid) +
     spiritArt({ x: MID + 74, y: islandTop(MID + 74) + 2, scale: 0.5, mood, wardrobe: Object.fromEntries(['hat', 'face', 'neck', 'hand'].map((s) => [s, one(s)])), hues: {}, tree, uid, motion: one('motion'), light: { color: '#fff1d6', wash: 0.06, halo: 0.12 } }) +
     `</svg>`
   );

@@ -42,6 +42,9 @@
 .spin-slow { transform-box: fill-box; transform-origin: center; animation: spin 26s linear infinite; }
 .starfall { animation: starfall 3.4s linear infinite; }
 
+/* 섬 주민이 좌우로 거닌다 */
+.stroll { animation: stroll 8s ease-in-out infinite; }
+
 /* 빛 효과 */
 .rise { animation: rise 9s ease-in infinite; }
 .fall { animation: fall 8s linear infinite; }
@@ -90,6 +93,7 @@ main.entering > *:nth-child(4) { animation-delay: .12s; }
 @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 @keyframes starfall { 0% { transform: translate(75px, -100px); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(-75px, 100px); opacity: 0; } }
 @keyframes legend { from { background-position: 0 0, 0% 50%; } to { background-position: 0 0, 300% 50%; } }
+@keyframes stroll { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-22px); } 30% { transform: translateX(-22px) translateY(-2px); } 40% { transform: translateX(-22px); } 75% { transform: translateX(18px); } 85% { transform: translateX(18px) translateY(-3px); } }
 @keyframes enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {

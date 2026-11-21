@@ -457,3 +457,19 @@ body.immersive main { padding-top: 6px; padding-bottom: calc(28px + env(safe-are
 .lot-art svg { width: 100%; height: auto; display: block; }
 .build-now .bar { height: 8px; }
 .garden-link .bar { margin: 6px 0 0; height: 4px; }
+
+/* 섬 2단계: 선물 · 주민 · 레벨 올리기 */
+.gift-card { display: flex; align-items: center; gap: 12px; }
+.gift-card .em { font-size: 1.6rem; }
+.gift-card b { display: block; }
+.residents { list-style: none; margin: 8px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.residents li { display: flex; align-items: center; gap: 10px; padding: 6px 4px; border-bottom: 1px solid var(--line); font-size: .88rem; }
+.residents li:last-child { border-bottom: 0; }
+.residents b { display: block; }
+.rface { width: 40px; height: 48px; flex: none; }
+.rface svg { width: 100%; height: 100%; display: block; }
+.rface.off { filter: grayscale(1) brightness(.35); opacity: .5; }
+.residents .ready { color: var(--accent); font-weight: 700; white-space: nowrap; }
+.warn { color: var(--accent); font-weight: 600; }
+.upgrade-box { display: flex; flex-direction: column; gap: 4px; padding: 12px; margin: 10px 0; border-radius: 16px; background: var(--accent-soft); }
+.upgrade-box .btn { margin-top: 6px; }

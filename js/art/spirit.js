@@ -27,7 +27,8 @@ function mouth(mood) {
 // x, y = 장면 안의 위치, scale = 크기, hues = 옷마다 색 바꾸기 번호 { hat: 2, … } (필터는 장면의 hueDefs)
 // motion = 정령 동작 아이템 id (css/motion.css의 .motion-…). 산책은 그림자까지 함께 움직인다.
 // light = 장면의 빛 { color, halo } (art/worlds.js lightOf). 없으면(상점 썸네일 등) 원래 색 그대로
-export function spiritArt({ x, y, scale, mood, wardrobe = {}, hues = {}, tree, uid, motion = '', light = null }) {
+// body = 몸 색 (섬 주민은 각자 색, 없으면 세계수 정령의 크림색)
+export function spiritArt({ x, y, scale, mood, wardrobe = {}, hues = {}, tree, uid, motion = '', light = null, body: bodyColor = '' }) {
   const pal = tree.palette;
   const bodyPath = `M0 ${-R} C${R * 0.62} ${-R} ${R} ${-R * 0.45} ${R} ${R * 0.12} C${R} ${R * 0.72} ${R * 0.55} ${R} 0 ${R} C${-R * 0.55} ${R} ${-R} ${R * 0.72} ${-R} ${R * 0.12} C${-R} ${-R * 0.45} ${-R * 0.62} ${-R} 0 ${-R}Z`;
   // 장면 빛에 물들기: 몸과 팔 위에 빛 색을 곱하기로 얹고, 아래쪽은 살짝 그늘
@@ -37,7 +38,7 @@ export function spiritArt({ x, y, scale, mood, wardrobe = {}, hues = {}, tree, u
       `<defs>${radial(`sd-${uid}`, [[0.55, '#000', 0], [1, '#000', 0.22]], { cx: 0.42, cy: 0.3, r: 0.75 })}</defs><path d="${bodyPath}" fill="url(#sd-${uid})"/>`
     : '';
   const body =
-    `<defs>${radial(`sp-${uid}`, [[0, '#ffffff'], [0.6, '#fbf7ea'], [1, pal.glow]], { cx: 0.4, cy: 0.32, r: 0.7 })}</defs>` +
+    `<defs>${radial(`sp-${uid}`, [[0, '#ffffff'], [0.6, bodyColor || '#fbf7ea'], [1, bodyColor || pal.glow]], { cx: 0.4, cy: 0.32, r: 0.7 })}</defs>` +
     glow(`sh-${uid}`, 0, 0, R * 1.9, pal.glow, light ? light.halo : 0.5) +
     // 머리 위 새싹
     `<path d="M0 ${-R + 2} q-1 -7 1 -10" fill="none" stroke="${pal.canopy[1]}" stroke-width="2.2" stroke-linecap="round"/>` +

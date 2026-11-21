@@ -16,6 +16,7 @@ if (!ctx.state.onboarded) ctx.ui.modal = 'onboarding';
 render();
 if (!ctx.ui.modal) importFromHash();
 settle();
+render(); // 시작할 때 달성한 업적·이사 온 주민까지 반영해 다시 그린다
 
 // 공부 타이머 시계
 setInterval(tickTimers, 1000);

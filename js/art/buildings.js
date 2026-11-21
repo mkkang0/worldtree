@@ -7,13 +7,17 @@ const smoke = (x, y) =>
   times(3, (i) => `<circle class="rise" cx="${x + i * 1.5}" cy="${y}" r="${2.4 + i * 0.6}" fill="#ffffff" opacity=".7" style="animation-duration:5s;animation-delay:-${i * 1.6}s"/>`);
 
 export const BUILDING_ART = {
-  house: (uid) =>
+  house: (uid, lv = 1) =>
     shadow(26) +
+    (lv >= 2
+      ? `<g transform="translate(0 -22)"><rect x="-19" y="-24" width="38" height="24" rx="2" fill="#f6e6c6" stroke="#d9c49a"/>` +
+        `<rect x="-13" y="-19" width="9" height="8" rx="1.5" fill="#ffe8a0" stroke="#a8553f"/><rect x="4" y="-19" width="9" height="8" rx="1.5" fill="#ffe8a0" stroke="#a8553f"/>` +
+        `<rect x="-15" y="-10" width="13" height="2.4" fill="#a8553f"/><circle cx="-12" cy="-11" r="1.4" fill="#ff8fb1"/><circle cx="-7" cy="-11" r="1.4" fill="#ffe066"/></g>`
+      : '') +
+    `<g transform="translate(0 ${lv >= 2 ? -22 : 0})"><path d="M-27 -26 L0 -48 L27 -26Z" fill="#d9584a"/><path d="M-27 -26 L0 -48 L0 -44 L-23 -26Z" fill="#e8705f"/>` +
+    `<rect x="9" y="-48" width="6" height="12" fill="#a8553f"/>${smoke(12, -52)}</g>` +
     `<rect x="-22" y="-28" width="44" height="28" rx="2" fill="#fbf1dc" stroke="#d9c49a"/>` +
     `<rect x="-22" y="-6" width="44" height="6" fill="#e9dcc0"/>` +
-    `<path d="M-27 -26 L0 -48 L27 -26Z" fill="#d9584a"/><path d="M-27 -26 L0 -48 L0 -44 L-23 -26Z" fill="#e8705f"/>` +
-    `<rect x="9" y="-48" width="6" height="12" fill="#a8553f"/>` +
-    smoke(12, -52) +
     `<rect x="-5" y="-17" width="10" height="17" rx="5" fill="#8a5a3a"/><circle cx="3" cy="-8" r=".9" fill="#ffd34d"/>` +
     `<rect x="-17" y="-22" width="9" height="8" rx="1.5" fill="#ffe8a0" stroke="#a8553f"/><rect x="8" y="-22" width="9" height="8" rx="1.5" fill="#ffe8a0" stroke="#a8553f"/>` +
     `<path d="M-12.5 -22 v8 M12.5 -22 v8" stroke="#a8553f" stroke-width=".8"/>` +
@@ -89,6 +93,45 @@ export const BUILDING_ART = {
     `<rect x="-3" y="-10" width="6" height="10" rx="3" fill="#6b4a2f"/>`,
 };
 
+// 레벨 꾸밈: Lv.2 깃발과 꽃밭, Lv.3 금빛 전구줄과 반짝임 (모든 건물 공통)
+export function adornArt(lv, uid) {
+  let s = '';
+  if (lv >= 2) {
+    s +=
+      `<path d="M30 0 V-44" stroke="#8a6a4a" stroke-width="1.6"/><path class="swing" style="transform-origin:30px -44px" d="M30 -44 l14 4 l-14 5Z" fill="#e5605b"/>` +
+      `<ellipse cx="-30" cy="-1" rx="8" ry="3.5" fill="#6fae5c"/>` +
+      times(4, (i) => `<circle cx="${-35 + i * 3.4}" cy="${-3 - (i % 2)}" r="1.4" fill="${['#ff8fb1', '#ffe066', '#fff', '#c3a6ff'][i]}"/>`);
+  }
+  if (lv >= 3) {
+    s +=
+      `<path d="M-30 -30 Q0 -20 30 -30" fill="none" stroke="#6b4a2f" stroke-width=".6"/>` +
+      times(7, (i) => {
+        const t = i / 6;
+        const x = -30 + t * 60;
+        const y = -30 + Math.sin(t * Math.PI) * 9;
+        return `<circle class="twinkle" cx="${n(x)}" cy="${n(y)}" r="1.6" fill="${['#ffe066', '#ff8fb1', '#9fd4ff'][i % 3]}" style="animation-delay:-${(i * 0.4).toFixed(1)}s"/>`;
+      }) +
+      glow(`ad-${uid}`, 0, -24, 40, '#fff3b0', 0.35) +
+      `<path class="twinkle" d="M-24 -52 l1.2 3 l3 1.2 l-3 1.2 l-1.2 3 l-1.2 -3 l-3 -1.2 l3 -1.2Z" fill="#fff"/>`;
+  }
+  return s;
+}
+
+// 레벨 표시 작은 배지
+export const levelBadge = (lv) =>
+  lv > 1 ? `<g transform="translate(22 -4)"><circle r="7" fill="${lv >= 3 ? '#ffd34d' : '#fffaf0'}" stroke="#b48c43" stroke-width="1.2"/><text y="3" font-size="8" font-weight="700" text-anchor="middle" fill="#6b4a2f">${lv}</text></g>` : '';
+
+// 레벨 올리는 중: 건물 위에 진행 고리
+export function upgradeRing(ratio) {
+  const R = 11;
+  const C = 2 * Math.PI * R;
+  return (
+    `<g transform="translate(0 -70)"><circle r="${R}" fill="#fffaf0" stroke="#e8dcc0" stroke-width="3"/>` +
+    `<circle r="${R}" fill="none" stroke="#e0a800" stroke-width="3" stroke-linecap="round" stroke-dasharray="${n(C)}" stroke-dashoffset="${n(C * (1 - ratio))}" transform="rotate(-90)"/>` +
+    `<text y="4" font-size="10" text-anchor="middle">⬆</text></g>`
+  );
+}
+
 // 짓는 중: 나무 비계 + 망치 + 진행 고리
 export function constructionArt(ratio, uid) {
   const R = 13;
@@ -103,4 +146,5 @@ export function constructionArt(ratio, uid) {
   );
 }
 
-export const buildingArt = (id, uid) => (BUILDING_ART[id] ? BUILDING_ART[id](uid) : '');
+// 건물 + 레벨 꾸밈
+export const buildingArt = (id, uid, lv = 1) => (BUILDING_ART[id] ? adornArt(lv, uid) + BUILDING_ART[id](uid, lv) : '');
