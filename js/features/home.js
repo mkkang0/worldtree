@@ -8,7 +8,8 @@ import { earnedOn, minutesOn, missionsDone, allMissions, needsRest, studyMinOn, 
 import { LINES, STAGE_LINES, fill } from '../data/lines.js';
 import { activeSubjects } from '../data/lists.js';
 import { buildingById, islandLevel, workOf } from '../data/buildings.js';
-import { builtCount, buildingNow, residentCount } from '../core/island.js';
+import { isleName, nationName } from '../data/isles.js';
+import { builtCount, buildingNow, residentCount, isleCount } from '../core/island.js';
 import { saveBackupFile, backupDue, daysSinceBackup } from '../app/backup.js';
 import { TREES, treeById } from '../data/trees.js';
 import { esc, bar, money, title } from '../ui/dom.js';
@@ -129,13 +130,14 @@ function backupNote(state, ui) {
 function islandLink(state) {
   const built = builtCount(state);
   const now = buildingNow(state);
-  const l = now >= 0 && state.island.lots[now];
+  const l = now && now.l;
   const b = l && buildingById(l.b);
+  const nation = nationName(isleCount(state));
   const need = b && workOf(b, l.lv);
   const gift = residentCount(state) && state.island.giftDay !== todayKey() ? ' · 🎁 선물이 있어요' : '';
   const sub = b
     ? `${b.emoji} ${b.name}${l.lv > 1 ? ` Lv.${l.lv}로 올리는 중` : ' 짓는 중'} · ${Math.floor((l.progress / need) * 100)}%${gift}`
-    : `${islandLevel(built).name} · 건물 ${built} / 8 · 주민 ${residentCount(state)}명${gift}`;
+    : `${nation ? `${nation} · 섬 ${isleCount(state)}개` : islandLevel(built).name} · 건물 ${built}${nation ? '' : ' / 8'} · 주민 ${residentCount(state)}명${gift}`;
   return `<button class="card garden-link" data-act="island.open"><span class="em">🏝️</span><span class="grow"><b>나의 섬</b><span class="tiny">${sub}</span>${b ? bar(l.progress / need) : ''}</span>${icon('right')}</button>`;
 }
 
@@ -260,6 +262,10 @@ export const actions = {
     const s = ctx.state;
     if (stageOf(plantXp(s)) < LAST_STAGE) return;
     s.dex.push({ species: s.plant.species, name: s.settings.name, date: todayKey() });
+    // 섬 키우기 3단계: 완성한 세계수가 선 새 섬이 생긴다
+    const isle = { species: s.plant.species, name: isleName(s.plant.species, s.island.isles), date: todayKey(), lots: Array(8).fill(null) };
+    s.island.isles.push(isle);
+    setTimeout(() => toast(`🏝️ 새 섬 '${isle.name}'이(가) 생겼어요! 나의 섬에서 다리로 이어져 있어요`), 2600);
     const next = form.tree.value;
     s.plant = { species: TREES.some((t) => t.id === next) ? next : TREES[0].id, startXp: s.xp, startDate: todayKey() };
     ctx.ui.modal = '';

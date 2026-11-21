@@ -4,6 +4,7 @@ import { streakOf, totalStudyMin, studyBySubject } from './records.js';
 import { DEFAULT_MISSIONS } from '../data/lists.js';
 import { TREES } from '../data/trees.js';
 import { KANA_GROUPS, toKatakana } from '../data/kana.js';
+import { builtCount, hasLevel } from './island.js';
 
 const totalMin = (s) => s.log.reduce((a, e) => a + e.min, 0);
 const maxZone = (s) => s.log.reduce((a, e) => Math.max(a, e.zone), 0);
@@ -43,12 +44,15 @@ export const ACHIEVEMENTS = [
   { id: 'subjects2', emoji: '🌏', name: '두 과목 탐험가', desc: '두 과목을 각각 10시간 이상', check: (s) => deepSubjects(s) >= 2 },
   { id: 'goal7', emoji: '🎯', name: '목표 지킴이', desc: '과목 하루 목표를 7번 채우기', check: (s) => goalDays(s) >= 7 },
   // 나의 섬
-  { id: 'island1', emoji: '🏠', name: '첫 건물', desc: '섬에 건물 하나 완성', check: (s) => s.island.lots.some((l) => l && l.done) },
-  { id: 'island4', emoji: '🏘️', name: '섬마을', desc: '섬에 건물 4개 완성', check: (s) => s.island.lots.filter((l) => l && l.done).length >= 4 },
+  { id: 'island1', emoji: '🏠', name: '첫 건물', desc: '섬에 건물 하나 완성', check: (s) => builtCount(s) >= 1 },
+  { id: 'island4', emoji: '🏘️', name: '섬마을', desc: '섬에 건물 4개 완성', check: (s) => builtCount(s) >= 4 },
   { id: 'resident1', emoji: '🧚', name: '첫 이웃', desc: '섬에 주민이 이사 오기', check: (s) => Object.keys(s.island.residents).length >= 1 },
   { id: 'resident8', emoji: '🎎', name: '북적이는 섬', desc: '주민 8명 모두 이사 오기', check: (s) => Object.keys(s.island.residents).length >= 8 },
-  { id: 'level3', emoji: '🌟', name: '최고의 건물', desc: '건물 하나를 Lv.3으로', check: (s) => s.island.lots.some((l) => l && l.done && l.lv >= 3) },
-  { id: 'island8', emoji: '🏝️', name: '섬나라의 시작', desc: '섬의 자리 8곳을 모두 채우기', check: (s) => s.island.lots.filter((l) => l && l.done).length >= 8 },
+  { id: 'level3', emoji: '🌟', name: '최고의 건물', desc: '건물 하나를 Lv.3으로', check: (s) => hasLevel(s, 3) },
+  { id: 'isle2', emoji: '🌉', name: '두 번째 섬', desc: '세계수를 완성해 새 섬 만들기', check: (s) => s.island.isles.length >= 1 },
+  { id: 'isle4', emoji: '🗺️', name: '군도', desc: '섬 4개 잇기', check: (s) => s.island.isles.length >= 3 },
+  { id: 'nation', emoji: '👑', name: '섬나라', desc: '섬 8개와 건물 40개', check: (s) => s.island.isles.length >= 7 && builtCount(s) >= 40 },
+  { id: 'island8', emoji: '🏝️', name: '꽉 찬 섬', desc: '본섬의 자리 8곳을 모두 채우기', check: (s) => s.island.lots.filter((l) => l && l.done).length >= 8 },
   // 미니게임
   { id: 'kana1', emoji: '🎌', name: '가나 첫걸음', desc: '가나 퀴즈 한 판', check: (s) => s.kana.plays >= 1 },
   { id: 'kana-perfect', emoji: '💮', name: '꽃동그라미', desc: '가나 퀴즈 만점', check: (s) => s.kana.perfect >= 1 },

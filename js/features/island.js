@@ -1,21 +1,23 @@
-// 나의 섬: 세계수가 서 있는 떠 있는 섬에 건물을 지어 마을로 키운다.
-// 1단계 - 빈 자리를 눌러 건물을 고르면 포인트를 내고 짓기 시작 (한 번에 하나)
+// 나의 섬: 세계수가 서 있는 떠 있는 섬에 건물을 지어 마을로, 섬을 늘려 군도와 나라로 키운다.
+// 1단계 - 빈 자리를 눌러 건물을 고르면 포인트를 내고 짓기 시작 (모든 섬을 통틀어 한 번에 하나)
 //        - 다 지을 때까지 필요한 성장 점수는 운동·공부·식단 기록으로 차오른다 (app/wallet.js gain)
-//        - 자리는 세계수가 자랄수록 열리고, 세계수를 하나 완성하면 모두 열린다
-// 2단계 - 건물 레벨 Lv.1~3 (집은 레벨마다 주민 2명, 찻집·도서관·등대는 Lv.2부터 1명씩)
-//        - 정령 친구(주민)가 조건을 채우면 빈 집으로 이사 와서 섬을 거닌다 (core/island.js RESIDENTS)
-//        - 주민들이 하루 한 번 선물을 준다
+//        - 본섬 자리는 세계수가 자랄수록 열리고, 세계수를 하나 완성하면 모두 열린다
+// 2단계 - 건물 레벨 Lv.1~3, 정령 친구(주민)가 빈 집으로 이사 와서 거닌다, 하루 한 번 선물
+// 3단계 - 세계수를 완성할 때마다 그 세계수가 선 새 섬이 생긴다 (features/home.js home.complete)
+//        - 위쪽 군도 지도에서 섬을 골라 오가고, 섬마다 건물 8곳을 따로 짓는다 (건물 종류는 섬마다 하나씩)
+//        - 섬 수에 따라 작은 군도 → 군도 → 작은 나라 → 섬나라
 // 아래 탭이 없는 전체 화면 (정원과 같다).
 import { ctx, rerender, commit } from '../app/context.js';
 import { go } from '../app/render.js';
 import { canAfford, pay, gain, settle } from '../app/wallet.js';
-import { builtCount, buildingNow, shownLevel, RESIDENTS, residentCount, bedCount, waitingCount, giftOf } from '../core/island.js';
+import { builtCount, buildingNow, shownLevel, lotsOf, isleCount, RESIDENTS, residentCount, residentsOn, bedCount, waitingCount, giftOf } from '../core/island.js';
 import { todayKey } from '../core/dates.js';
 import { STAGES, stageOf, plantXp } from '../core/scoring.js';
 import { moodOf } from '../core/records.js';
 import { BUILDINGS, buildingById, LOT_COUNT, lotsOpen, islandLevel, costOf, workOf, bedsOf, MAX_LEVEL } from '../data/buildings.js';
+import { themeOf, nationName, ISLE_EMOJI } from '../data/isles.js';
 import { treeById } from '../data/trees.js';
-import { islandMap, LOTS, MAP } from '../art/island.js';
+import { islandMap, archipelagoArt, LOTS, MAP, STRIP } from '../art/island.js';
 import { buildingArt, constructionArt } from '../art/buildings.js';
 import { spiritArt } from '../art/spirit.js';
 import { nextUid } from '../art/svg.js';
@@ -23,10 +25,15 @@ import { esc, bar, costHtml, rewardHtml, amountText, title } from '../ui/dom.js'
 import { icon } from '../ui/icons.js';
 import { toast, chime, confetti } from '../ui/effects.js';
 
-// 자리가 열리는 순서: 세계수에 가까운 곳부터
+// 본섬 자리가 열리는 순서: 세계수에 가까운 곳부터
 const OPEN_ORDER = [3, 4, 2, 5, 1, 6, 0, 7];
+const MAX_ISLES = 9; // 본섬 + 세계수 8종
 
-function openSet(state) {
+// 지금 보고 있는 섬 번호 (0 = 본섬)
+const isleNow = (state) => Math.min(ctx.ui.isle || 0, isleCount(state) - 1);
+
+function openSet(state, k) {
+  if (k > 0) return new Set(OPEN_ORDER); // 새 섬은 처음부터 모두 열려 있다
   const n = lotsOpen(stageOf(plantXp(state)), state.dex.length);
   return new Set(OPEN_ORDER.slice(0, n));
 }
@@ -37,9 +44,9 @@ function unlockStageName(i) {
   return STAGES[Math.max(0, k - 1)]?.name || '세계수';
 }
 
-function lotStates(state) {
-  const open = openSet(state);
-  return state.island.lots.map((l, i) => {
+function lotStates(state, k) {
+  const open = openSet(state, k);
+  return lotsOf(state, k).map((l, i) => {
     if (!l) return { state: open.has(i) ? 'empty' : 'locked' };
     const ratio = Math.min(1, l.progress / workOf(buildingById(l.b), l.lv));
     if (l.done) return { state: 'built', id: l.b, lv: l.lv };
@@ -48,7 +55,12 @@ function lotStates(state) {
   });
 }
 
-const residentsHere = (state) => RESIDENTS.filter((r) => state.island.residents[r.id]);
+// 섬 정보: 이름, 세계수 종류, 그림 테마
+function isleInfo(state, k) {
+  if (!k) return { name: '본섬', species: state.plant.species, theme: {}, emoji: '🏡' };
+  const x = state.island.isles[k - 1];
+  return { name: x.name, species: x.species, theme: themeOf(x.species), emoji: ISLE_EMOJI[x.species] || '🏝️', date: x.date };
+}
 
 const smallArt = (id, building, lv = 1) =>
   `<svg viewBox="-40 -104 80 110" aria-hidden="true">${building ? constructionArt(0.4, nextUid()) : buildingArt(id, nextUid(), lv)}</svg>`;
@@ -59,12 +71,14 @@ const residentFace = (r, tree) =>
 /* ---------- 화면 ---------- */
 
 export function view(state, ui) {
-  const lots = lotStates(state);
-  const built = builtCount(state);
+  const k = isleNow(state);
+  const info = isleInfo(state, k);
+  const lots = lotStates(state, k);
+  const built = builtCount(state, k);
   const lvl = islandLevel(built);
-  const now = buildingNow(state);
-  const open = openSet(state).size;
-  const tree = treeById(state.plant.species);
+  const isles = isleCount(state);
+  const nation = nationName(isles);
+  const tree = treeById(info.species);
   const buttons = LOTS.map(({ x, y }, i) => {
     const l = lots[i];
     const name = l.id && buildingById(l.id).name;
@@ -74,38 +88,57 @@ export function view(state, ui) {
   return `<div class="island">
     <header class="garden-top">
       <button class="x" data-act="island.close" aria-label="섬 닫기">${icon('left')}</button>
-      <div class="grow"><b>나의 섬</b><span class="tiny">${lvl.name} · 건물 ${built} / ${LOT_COUNT} · 주민 ${residentCount(state)}명</span></div>
+      <div class="grow"><b>${info.emoji} ${esc(info.name)}</b><span class="tiny">${nation ? `${nation} · 섬 ${isles}개 · ` : ''}${lvl.name} · 건물 ${built} / ${LOT_COUNT} · 주민 ${residentCount(state)}명</span></div>
       <button class="x" data-act="garden.open" aria-label="정원에서 꾸미기">${icon('tree')}</button>
     </header>
+    ${stripView(state, k)}
     <div class="island-map" id="island-map">
       <div class="map-inner">${islandMap({
-        growth: Math.min(1, plantXp(state) / STAGES[STAGES.length - 1].at),
-        stage: stageOf(plantXp(state)),
+        growth: k ? 1 : Math.min(1, plantXp(state) / STAGES[STAGES.length - 1].at),
+        stage: k ? STAGES.length - 1 : stageOf(plantXp(state)),
         tree,
-        equipped: state.equipped,
-        custom: state.custom,
+        equipped: k ? {} : state.equipped,
+        custom: k ? {} : state.custom,
         mood: moodOf(state),
         lots,
-        residents: residentsHere(state),
+        residents: residentsOn(state, k),
+        theme: info.theme,
+        spirit: !k,
       })}${buttons}</div>
     </div>
     <p class="tiny center map-hint">← 옆으로 밀어서 섬 전체를 봐요 · 건물을 누르면 레벨을 올려요 →</p>
     ${giftCard(state)}
-    ${nowCard(state, now)}
-    ${residentsCard(state, tree)}
+    ${nowCard(state)}
+    ${nationCard(state, k, lvl, built)}
+    ${residentsCard(state, treeById(state.plant.species))}
     <section class="card">
-      ${title(`섬 단계 · ${lvl.name}`, { iconName: 'forest', aside: `열린 자리 ${open} / ${LOT_COUNT}` })}
-      ${lvl.next ? `${bar((built - lvl.at) / (lvl.next.at - lvl.at))}<p class="tiny">건물 ${lvl.next.at - built}개를 더 지으면 '${lvl.next.name}'</p>` : '<p class="tiny">모든 자리를 채웠어요. 건물 레벨을 올려 마을을 키워요!</p>'}
-      <p class="tiny">${open < LOT_COUNT ? '세계수가 자랄수록 자리가 하나씩 열려요. 세계수를 완성하면 모든 자리가 열려요.' : '모든 자리가 열렸어요.'}</p>
-    </section>
-    <section class="card">
-      ${title('건물 도감', { iconName: 'scroll', aside: `${built} / ${BUILDINGS.length}` })}
+      ${title(`${esc(info.name)} 건물 도감`, { iconName: 'scroll', aside: `${built} / ${BUILDINGS.length}` })}
       <div class="grid four bdex">${BUILDINGS.map((b) => {
-        const l = state.island.lots.find((x) => x && x.b === b.id && (x.done || x.lv > 1));
+        const l = lotsOf(state, k).find((x) => x && x.b === b.id && (x.done || x.lv > 1));
         return `<div class="bcell ${l ? 'on' : ''}"><span class="bart">${smallArt(b.id, false, l ? shownLevel(l) : 1)}</span><b>${l ? `${b.name}${shownLevel(l) > 1 ? ` Lv.${shownLevel(l)}` : ''}` : '???'}</b></div>`;
       }).join('')}</div>
     </section>
   </div>`;
+}
+
+// 위쪽 군도 지도: 섬들을 다리로 잇고, 다음 섬 자리(?)는 세계수를 완성하면 생긴다
+function stripView(state, k) {
+  const list = Array.from({ length: isleCount(state) }, (_, j) => {
+    const info = isleInfo(state, j);
+    const t = treeById(info.species);
+    return { palette: t.palette, grass: { ...{ grass: ['#8ccc72'] }, ...themeOf(info.species) }.grass[0], built: builtCount(state, j), name: info.name, emoji: info.emoji };
+  });
+  const next = isleCount(state) < MAX_ISLES;
+  if (next) list.push({ locked: true });
+  const pct = Math.floor(Math.min(1, plantXp(state) / STAGES[STAGES.length - 1].at) * 100);
+  const buttons = list
+    .map((t, j) =>
+      t.locked
+        ? `<button class="isle-btn locked" style="left:${j * STRIP.step}px" data-act="island.next" aria-label="다음 섬: 세계수를 완성하면 생겨요 (지금 ${pct}%)"><small>다음 섬 ${pct}%</small></button>`
+        : `<button class="isle-btn ${j === k ? 'on' : ''}" style="left:${j * STRIP.step}px" data-act="island.go" data-arg="${j}" aria-pressed="${j === k}"><small>${t.emoji} ${esc(t.name)}</small></button>`
+    )
+    .join('');
+  return `<div class="isle-strip" role="tablist" aria-label="군도 지도"><div class="strip-inner" style="width:${list.length * STRIP.step}px">${archipelagoArt(list, k)}${buttons}</div></div>`;
 }
 
 // 주민들의 하루 선물
@@ -119,17 +152,35 @@ function giftCard(state) {
   </section>`;
 }
 
-function nowCard(state, now) {
-  if (now < 0) {
+function nowCard(state) {
+  const now = buildingNow(state);
+  if (!now) {
     return `<section class="card note">${icon('sparkle')} 빈 자리(＋)를 눌러 짓거나, 지은 건물을 눌러 레벨을 올려요. 기록이 쌓이면 완성돼요.</section>`;
   }
-  const l = state.island.lots[now];
+  const l = now.l;
   const b = buildingById(l.b);
   const need = workOf(b, l.lv);
+  const where = isleCount(state) > 1 ? `${isleInfo(state, now.k).name}의 ` : '';
   return `<section class="card build-now">
-    ${title(`${b.emoji} ${b.name}${l.lv > 1 ? ` Lv.${l.lv}로 올리는 중` : ' 짓는 중'}`, { iconName: 'cog', aside: `${Math.floor((l.progress / need) * 100)}%` })}
+    ${title(`${b.emoji} ${where}${b.name}${l.lv > 1 ? ` Lv.${l.lv}로 올리는 중` : ' 짓는 중'}`, { iconName: 'cog', aside: `${Math.floor((l.progress / need) * 100)}%` })}
     ${bar(l.progress / need)}
     <p class="tiny">성장 점수 ${Math.floor(l.progress)} / ${need} · 운동·공부·식단 기록으로 차올라요</p>
+    ${now.k !== isleNow(state) ? `<button class="btn small soft" data-act="island.go" data-arg="${now.k}">그 섬으로 가기</button>` : ''}
+  </section>`;
+}
+
+// 섬 단계 · 나라 단계
+function nationCard(state, k, lvl, built) {
+  const isles = isleCount(state);
+  const open = openSet(state, k).size;
+  const nation = nationName(isles);
+  const nextNation = [2, 4, 6, 8].find((n) => n > isles);
+  return `<section class="card">
+    ${title(`섬 단계 · ${lvl.name}`, { iconName: 'forest', aside: `열린 자리 ${open} / ${LOT_COUNT}` })}
+    ${lvl.next ? `${bar((built - lvl.at) / (lvl.next.at - lvl.at))}<p class="tiny">이 섬에 건물 ${lvl.next.at - built}개를 더 지으면 '${lvl.next.name}'</p>` : '<p class="tiny">이 섬의 모든 자리를 채웠어요. 레벨을 올려 마을을 키워요!</p>'}
+    ${!k && open < LOT_COUNT ? '<p class="tiny">세계수가 자랄수록 본섬 자리가 하나씩 열려요. 세계수를 완성하면 모든 자리가 열려요.</p>' : ''}
+    <div class="nation-row"><span class="em">🗺️</span><span class="grow"><b>${nation || '아직 섬 하나'}</b><span class="tiny">섬 ${isles}개 · 모든 섬의 건물 ${builtCount(state)}개${nextNation ? ` · 섬 ${nextNation}개가 되면 '${nationName(nextNation)}'` : ''}</span></span></div>
+    <p class="tiny">세계수를 하나 완성해 숲에 심을 때마다 그 세계수가 선 새 섬이 생기고, 다리로 이어져요.</p>
   </section>`;
 }
 
@@ -147,35 +198,41 @@ function residentsCard(state, tree) {
         ? `<li class="on"><span class="rface">${residentFace(r, tree)}</span><span class="grow"><b>${r.name}</b><span class="tiny">“${esc(r.line)}”</span></span><span class="tiny">${day.slice(5).replace('-', '/')} 이사</span></li>`
         : `<li><span class="rface off">${residentFace(r, tree)}</span><span class="grow"><b>???</b><span class="tiny">${r.hint} · 빈 집이 있으면 이사 와요</span></span>${r.when(state) ? '<span class="tiny ready">집이 필요해요</span>' : ''}</li>`;
     }).join('')}</ul>
-    <p class="tiny">집은 레벨마다 주민 2명, 찻집·도서관·등대는 Lv.2부터 한 명씩 더 살 수 있어요.</p>
+    <p class="tiny">집은 레벨마다 주민 2명, 찻집·도서관·등대는 Lv.2부터 한 명씩 더 살 수 있어요. 모든 섬의 집을 함께 써요.</p>
   </section>`;
 }
 
 // 지도를 그린 뒤: 처음 열면 세계수가 가운데 오게, 다시 그릴 때는 보던 자리 그대로
 export function mounted(ui) {
   const el = document.getElementById('island-map');
-  if (!el) return;
-  el.scrollLeft = ui.islandScroll ?? (el.scrollWidth - el.clientWidth) / 2;
-  el.onscroll = () => (ui.islandScroll = el.scrollLeft);
+  if (el) {
+    el.scrollLeft = ui.islandScroll ?? (el.scrollWidth - el.clientWidth) / 2;
+    el.onscroll = () => (ui.islandScroll = el.scrollLeft);
+  }
+  // 군도 지도는 고른 섬이 보이게
+  const strip = document.querySelector('.isle-strip');
+  const on = strip?.querySelector('.isle-btn.on');
+  if (strip && on) strip.scrollLeft = Math.max(0, on.offsetLeft - strip.clientWidth / 2 + STRIP.step / 2);
 }
 
 /* ---------- 창 ---------- */
 
-// 빈 자리: 건물 고르기
+// 빈 자리: 건물 고르기 (건물 종류는 섬마다 하나씩)
 export function buildModal(state, ui) {
-  const i = ui.modalData?.lot;
-  const busy = buildingNow(state) >= 0;
+  const { k = 0, lot: i } = ui.modalData || {};
+  const busy = !!buildingNow(state);
+  const lots = lotsOf(state, k);
   return `<div class="sheet" role="dialog" aria-labelledby="build-title">
-    <div class="intro"><span class="eyebrow">BUILD</span><h1 id="build-title">무엇을 지을까요?</h1>
+    <div class="intro"><span class="eyebrow">BUILD · ${esc(isleInfo(state, k).name)}</span><h1 id="build-title">무엇을 지을까요?</h1>
     <p class="muted">${busy ? '지금 짓는 건물이 있어요. 다 지으면 다음 건물을 지을 수 있어요.' : '포인트를 내면 짓기 시작해요. 기록이 쌓이면 완성돼요.'}</p></div>
     <ul class="build-list">${BUILDINGS.map((b) => {
-      const has = state.island.lots.some((l) => l && l.b === b.id);
+      const has = lots.some((l) => l && l.b === b.id);
       const cost = costOf(b, 1);
       const ok = !busy && !has && canAfford(cost);
       const beds = bedsOf(b.id, 1);
       return `<li class="${has ? 'has' : ''}"><span class="bart">${smallArt(b.id)}</span>
         <span class="grow"><b>${b.emoji} ${b.name}</b><span class="tiny">${b.desc}</span><span class="tiny">완성까지 성장 점수 ${workOf(b, 1)}${beds ? ` · 주민 ${beds}명` : ''}</span></span>
-        <button class="btn small ${ok ? '' : 'soft'}" data-act="island.build" data-arg="${i}:${b.id}" ${ok ? '' : 'disabled'}>${has ? '있어요' : costHtml(cost)}</button></li>`;
+        <button class="btn small ${ok ? '' : 'soft'}" data-act="island.build" data-arg="${k}:${i}:${b.id}" ${ok ? '' : 'disabled'}>${has ? '있어요' : costHtml(cost)}</button></li>`;
     }).join('')}</ul>
     <button class="btn ghost" data-act="modal.close">닫기</button>
   </div>`;
@@ -183,19 +240,20 @@ export function buildModal(state, ui) {
 
 // 지은 건물 · 짓는 중인 건물 보기 (레벨 올리기)
 export function lotModal(state, ui) {
-  const i = ui.modalData?.lot;
-  const l = state.island.lots[i];
+  const { k = 0, lot: i } = ui.modalData || {};
+  const l = lotsOf(state, k)[i];
   if (!l) return '';
   const b = buildingById(l.b);
   const lvNow = shownLevel(l);
-  const busy = buildingNow(state) >= 0;
+  const busy = !!buildingNow(state);
+  const ref = `${k}:${i}`;
   const head = `<div class="intro"><span class="eyebrow">${l.done ? `Lv.${l.lv}` : l.lv > 1 ? `Lv.${l.lv}로 올리는 중` : '짓는 중'}</span><h1 id="lot-title">${b.emoji} ${b.name}</h1><p class="muted">${b.desc}</p></div>
     <div class="lot-art">${smallArt(b.id, !l.done && l.lv === 1, Math.max(1, lvNow))}</div>`;
   if (!l.done) {
     const need = workOf(b, l.lv);
     return `<div class="sheet" role="dialog" aria-labelledby="lot-title">${head}
       ${bar(l.progress / need)}<p class="tiny center">성장 점수 ${Math.floor(l.progress)} / ${need}</p>
-      <div class="row two"><button class="btn ghost" data-act="modal.close">닫기</button><button class="btn small danger-text" data-act="island.cancel" data-arg="${i}">${l.lv > 1 ? '레벨 올리기 취소' : '짓기 취소'}</button></div>
+      <div class="row two"><button class="btn ghost" data-act="modal.close">닫기</button><button class="btn small danger-text" data-act="island.cancel" data-arg="${ref}">${l.lv > 1 ? '레벨 올리기 취소' : '짓기 취소'}</button></div>
     </div>`;
   }
   const next = l.lv + 1;
@@ -210,10 +268,10 @@ export function lotModal(state, ui) {
         ? `<div class="upgrade-box"><b>Lv.${next}로 올리기</b>
            <span class="tiny">${next === 2 ? '깃발과 꽃밭이 생기고 조금 커져요' : '금빛 전구가 반짝이고 더 커져요'}${b.id === 'house' && next === 2 ? ' · 2층이 올라가요' : ''}${bedsUp ? ` · 주민 +${bedsUp}명` : ''}</span>
            <span class="tiny">완성까지 성장 점수 ${workOf(b, next)}${busy ? ' · 지금 짓는 건물이 끝나면 할 수 있어요' : ''}</span>
-           <button class="btn ${ok ? 'gold' : 'soft'}" data-act="island.upgrade" data-arg="${i}" ${ok ? '' : 'disabled'}>⬆ ${costHtml(cost)}</button></div>`
+           <button class="btn ${ok ? 'gold' : 'soft'}" data-act="island.upgrade" data-arg="${ref}" ${ok ? '' : 'disabled'}>⬆ ${costHtml(cost)}</button></div>`
         : '<p class="tiny center">가장 높은 레벨이에요 ✨</p>'
     }
-    <div class="row two"><button class="btn ghost" data-act="modal.close">닫기</button><button class="btn small danger-text" data-act="island.remove" data-arg="${i}">허물기</button></div>
+    <div class="row two"><button class="btn ghost" data-act="modal.close">닫기</button><button class="btn small danger-text" data-act="island.remove" data-arg="${ref}">허물기</button></div>
   </div>`;
 }
 
@@ -223,35 +281,50 @@ const closeModal = () => {
   ctx.ui.modal = '';
   ctx.ui.modalData = null;
 };
+const refOf = (el) => el.dataset.arg.split(':').map(Number); // 'k:i' → [k, i]
 
 export const actions = {
   'island.open': () => go('island'),
   'island.close': () => go('home'),
 
+  // 군도 지도에서 다른 섬으로
+  'island.go': (el) => {
+    ctx.ui.isle = Number(el.dataset.arg) || 0;
+    ctx.ui.islandScroll = null;
+    rerender();
+  },
+
+  'island.next': () => {
+    const pct = Math.floor(Math.min(1, plantXp(ctx.state) / STAGES[STAGES.length - 1].at) * 100);
+    toast(`지금 키우는 세계수를 완성해 숲에 심으면 새 섬이 생겨요 (${pct}%)`);
+  },
+
   'island.lot': (el) => {
-    const i = Number(el.dataset.arg);
     const s = ctx.state;
-    const l = s.island.lots[i];
+    const k = isleNow(s);
+    const i = Number(el.dataset.arg);
+    const l = lotsOf(s, k)[i];
     if (l) {
       ctx.ui.modal = 'lot';
-      ctx.ui.modalData = { lot: i };
-    } else if (openSet(s).has(i)) {
+      ctx.ui.modalData = { k, lot: i };
+    } else if (openSet(s, k).has(i)) {
       ctx.ui.modal = 'build';
-      ctx.ui.modalData = { lot: i };
+      ctx.ui.modalData = { k, lot: i };
     } else return toast(`이 자리는 세계수가 '${unlockStageName(i)}' 단계가 되면 열려요`);
     rerender();
   },
 
   'island.build': (el) => {
-    const [i, id] = el.dataset.arg.split(':');
+    const [k, i, id] = el.dataset.arg.split(':');
     const s = ctx.state;
     const b = buildingById(id);
+    const lots = lotsOf(s, Number(k));
     const lot = Number(i);
-    if (!b || s.island.lots[lot] || buildingNow(s) >= 0) return;
+    if (!b || lots[lot] || buildingNow(s) || lots.some((l) => l && l.b === id)) return;
     const cost = costOf(b, 1);
     if (!canAfford(cost)) return toast('포인트가 조금 부족해요');
     pay(cost);
-    s.island.lots[lot] = { b: id, lv: 1, done: false, progress: 0 };
+    lots[lot] = { b: id, lv: 1, done: false, progress: 0 };
     closeModal();
     settle();
     chime('ok');
@@ -261,10 +334,10 @@ export const actions = {
 
   // 레벨 올리기: 지금 짓는 건물이 없을 때만. 올리는 동안에도 건물은 그대로 서 있다.
   'island.upgrade': (el) => {
-    const i = Number(el.dataset.arg);
+    const [k, i] = refOf(el);
     const s = ctx.state;
-    const l = s.island.lots[i];
-    if (!l || !l.done || l.lv >= MAX_LEVEL || buildingNow(s) >= 0) return;
+    const l = lotsOf(s, k)[i];
+    if (!l || !l.done || l.lv >= MAX_LEVEL || buildingNow(s)) return;
     const b = buildingById(l.b);
     const cost = costOf(b, l.lv + 1);
     if (!canAfford(cost)) return toast('포인트가 조금 부족해요');
@@ -279,26 +352,28 @@ export const actions = {
 
   // 취소: 낸 포인트는 돌려준다 (레벨 올리기 취소는 이전 레벨로)
   'island.cancel': (el) => {
-    const i = Number(el.dataset.arg);
+    const [k, i] = refOf(el);
     const s = ctx.state;
-    const l = s.island.lots[i];
+    const lots = lotsOf(s, k);
+    const l = lots[i];
     if (!l || l.done || !confirm('그만둘까요? 낸 포인트는 돌려받아요.')) return;
     const b = buildingById(l.b);
     const cost = costOf(b, l.lv);
-    ['sun', 'water', 'star'].forEach((k) => (s[k] += cost[k] || 0));
+    ['sun', 'water', 'star'].forEach((c) => (s[c] += cost[c] || 0));
     if (l.lv > 1) Object.assign(l, { lv: l.lv - 1, done: true, progress: workOf(b, l.lv - 1) });
-    else s.island.lots[i] = null;
+    else lots[i] = null;
     closeModal();
     commit();
     rerender();
   },
 
   'island.remove': (el) => {
-    const i = Number(el.dataset.arg);
+    const [k, i] = refOf(el);
     const s = ctx.state;
-    const l = s.island.lots[i];
+    const lots = lotsOf(s, k);
+    const l = lots[i];
     if (!l || !confirm(`${buildingById(l.b).name}을(를) 허물까요? 포인트는 돌아오지 않아요.${bedsOf(l.b, shownLevel(l)) ? ' 집 칸이 줄어도 사는 주민은 그대로예요.' : ''}`)) return;
-    s.island.lots[i] = null;
+    lots[i] = null;
     closeModal();
     commit();
     rerender();

@@ -489,3 +489,17 @@ body.immersive main { padding-top: 6px; padding-bottom: calc(28px + env(safe-are
 .file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; margin: 0; }
 #update-bar { position: fixed; left: 50%; top: calc(env(safe-area-inset-top) + 10px); transform: translateX(-50%); z-index: 60; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; border-radius: 99px; background: var(--surface-solid); color: var(--ink); border: 1px solid var(--accent); box-shadow: var(--shadow); font-size: .88rem; white-space: nowrap; animation: pop .3s ease; }
 #update-bar button { font: inherit; font-weight: 700; border: 0; border-radius: 99px; padding: 7px 14px; background: linear-gradient(180deg, #d9bd7a, #b48c43); color: #1d1a10; cursor: pointer; }
+
+/* 섬 3단계: 위쪽 군도 지도 (섬을 다리로 이은 띠) */
+.isle-strip { overflow-x: auto; margin: 0 -16px; padding: 0 16px; scrollbar-width: none; }
+.isle-strip::-webkit-scrollbar { display: none; }
+.strip-inner { position: relative; height: 92px; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); min-width: 100%; }
+.strip-inner > svg { display: block; }
+.isle-btn { position: absolute; top: 0; width: 92px; height: 92px; border: 0; background: none; cursor: pointer; padding: 0; display: flex; align-items: flex-end; justify-content: center; }
+.isle-btn small { margin-bottom: 4px; font-size: .64rem; font-weight: 700; color: #1f2d26; background: rgba(255, 252, 244, .85); border-radius: 99px; padding: 1px 7px; white-space: nowrap; }
+.isle-btn.on small { background: #ffd36b; }
+.isle-btn.locked small { background: rgba(255, 255, 255, .55); color: #2a3a30; font-weight: 600; }
+.isle-btn:focus-visible { outline: 2px solid #fff; outline-offset: -4px; border-radius: 14px; }
+.nation-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 10px 12px; border-radius: 14px; background: var(--accent-soft); }
+.nation-row .em { font-size: 1.4rem; }
+.nation-row b { display: block; }

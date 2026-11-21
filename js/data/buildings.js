@@ -48,7 +48,7 @@ export const ISLAND_LEVELS = [
   { at: 1, name: '작은 섬마을' },
   { at: 3, name: '섬마을' },
   { at: 5, name: '큰 섬마을' },
-  { at: 7, name: '섬나라의 시작' },
+  { at: 7, name: '활기찬 섬마을' },
 ];
 export function islandLevel(built) {
   let i = 0;

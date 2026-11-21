@@ -25,10 +25,13 @@ const puff = (x, y, s, o = 0.95, paint = true) =>
 const islet = (x, y, w) =>
   `<g filter="${PAINT}"><ellipse cx="${x}" cy="${y + 1.5}" rx="${n(w * 1.15)}" ry="${n(w * 0.28)}" fill="#e9ddb0" opacity=".9"/><ellipse cx="${x}" cy="${y}" rx="${w}" ry="${n(w * 0.32)}" fill="#4f9a5a"/><ellipse cx="${n(x - w * 0.25)}" cy="${n(y - w * 0.16)}" rx="${n(w * 0.5)}" ry="${n(w * 0.26)}" fill="#6fb86a"/></g>`;
 
-function backdrop(uid) {
+// theme: data/isles.js ISLE_THEMES (섬마다 하늘·바다·풀밭 색). 없는 값은 본섬 기본색
+const DEFAULT_THEME = { sky: ['#3f8fd6', '#8cc6ef', '#cfe8f7', '#e9f5fb'], sea: ['#7cc4e8', '#2f7fb8'], grass: ['#8ccc72', '#4f8a48'], rim: '#c4e6a8' };
+
+function backdrop(uid, th) {
   const r = rng('island-map');
   return (
-    `<defs>${linear(`isk-${uid}`, [[0, '#3f8fd6'], [0.5, '#8cc6ef'], [0.66, '#cfe8f7'], [1, '#e9f5fb']])}${linear(`isea-${uid}`, [[0, '#7cc4e8'], [1, '#2f7fb8']])}</defs>` +
+    `<defs>${linear(`isk-${uid}`, [[0, th.sky[0]], [0.5, th.sky[1]], [0.66, th.sky[2]], [1, th.sky[3]]])}${linear(`isea-${uid}`, [[0, th.sea[0]], [1, th.sea[1]]])}</defs>` +
     `<rect width="${MAP.w}" height="${MAP.h}" fill="url(#isk-${uid})"/>` +
     glow(`isun-${uid}`, 140, 46, 80, '#fffbe6', 0.9) +
     `<g class="cloud-pass" style="animation-duration:120s">${puff(80, 70, 1.4, 0.95, false)}${puff(560, 50, 1.6, 0.95, false)}</g>` +
@@ -40,7 +43,7 @@ function backdrop(uid) {
   );
 }
 
-function island(uid) {
+function island(uid, th) {
   const r = rng('island-ground');
   let topEdge = '';
   let cliffEdge = '';
@@ -53,7 +56,7 @@ function island(uid) {
     return `<path d="M${x} ${y0} q-2 ${n((MAP.h - y0) / 2)} ${-3 - w} ${MAP.h - y0 + 10} h${w * 2 + 3} q0 ${n(-(MAP.h - y0) / 2)} ${-w} ${n(-(MAP.h - y0) - 10)}Z" fill="#eef8ff" opacity=".85" class="shimmer"/>`;
   };
   return (
-    `<defs>${linear(`irk-${uid}`, [[0, '#8a6e52'], [0.5, '#6b5440'], [1, '#4a3a2c']])}${linear(`ig-${uid}`, [[0, '#8ccc72'], [1, '#4f8a48']])}</defs>` +
+    `<defs>${linear(`irk-${uid}`, [[0, '#8a6e52'], [0.5, '#6b5440'], [1, '#4a3a2c']])}${linear(`ig-${uid}`, [[0, th.grass[0]], [1, th.grass[1]]])}</defs>` +
     // 아래 바위 절벽 (가운데가 깊게)
     `<g filter="${PAINT}"><path d="M-10 ${n(islandTop(-10) + 12)}${cliffEdge} L${MAP.w + 10} ${n(islandTop(MAP.w + 10) + 30)} Q760 360 600 376 L300 376 Q140 360 -10 ${n(islandTop(-10) + 30)}Z" fill="url(#irk-${uid})"/>` +
     `<path d="M40 338 Q200 350 330 354 M520 352 Q700 348 860 336 M200 366 Q450 378 700 366" fill="none" stroke="#3d2f24" stroke-width="1.2" opacity=".4"/></g>` +
@@ -61,11 +64,11 @@ function island(uid) {
     puff(60, 382, 1.4) + puff(240, 392, 1.6) + puff(450, 396, 1.8) + puff(660, 392, 1.6) + puff(850, 384, 1.4) +
     // 윗면 풀밭
     `<path d="M-10 ${islandTop(-10)}${topEdge} L${MAP.w + 10} ${islandTop(MAP.w + 10) + 16} L-10 ${islandTop(-10) + 16}Z" fill="url(#ig-${uid})" filter="${PAINT}"/>` +
-    `<path d="M-10 ${islandTop(-10)}${topEdge}" fill="none" stroke="#c4e6a8" stroke-width="1.6" opacity=".75"/>` +
+    `<path d="M-10 ${islandTop(-10)}${topEdge}" fill="none" stroke="${th.rim}" stroke-width="1.6" opacity=".75"/>` +
     times(60, (i) => {
       const x = n(4 + i * 15 + r() * 6);
       const y = n(islandTop(x) + 1 + r() * 3);
-      return `<path d="M${x} ${y} q-1.5 -4 -3.5 -6 M${x} ${y} q0 -5 .8 -8 M${x} ${y} q1.4 -3.5 3.2 -5.5" stroke="#cfeaa8" stroke-width=".9" fill="none" stroke-linecap="round" opacity=".7"/>`;
+      return `<path d="M${x} ${y} q-1.5 -4 -3.5 -6 M${x} ${y} q0 -5 .8 -8 M${x} ${y} q1.4 -3.5 3.2 -5.5" stroke="${th.rim}" stroke-width=".9" fill="none" stroke-linecap="round" opacity=".7"/>`;
     }) +
     times(22, (i) => `<circle cx="${n(r() * MAP.w)}" cy="${n(304 + r() * 10)}" r="1.4" fill="${['#fff', '#ffe08a', '#ffc6d9'][i % 3]}"/>`)
   );
@@ -97,7 +100,8 @@ function residentsArt(residents, tree, uid) {
 }
 
 // lots: [{ state: 'built' | 'upgrading' | 'building' | 'empty' | 'locked', id, lv, ratio }], residents: [{ id, color }]
-export function islandMap({ growth, stage, tree, equipped = {}, custom = {}, mood = 'calm', lots = [], residents = [] }) {
+export function islandMap({ growth, stage, tree, equipped = {}, custom = {}, mood = 'calm', lots = [], residents = [], theme = {}, spirit = true }) {
+  const th = { ...DEFAULT_THEME, ...theme };
   const uid = nextUid();
   const one = (slot) => placed(equipped, slot)[0];
   const t = treeArt({ growth, stage, tree: leafTree(tree, one('leaf')), uid });
@@ -115,14 +119,45 @@ export function islandMap({ growth, stage, tree, equipped = {}, custom = {}, moo
   return (
     `<svg viewBox="0 0 ${MAP.w} ${MAP.h}" role="img" aria-label="나의 섬" xmlns="http://www.w3.org/2000/svg">` +
     hueDefs(uid, HUES) +
-    withPaint(backdrop(uid) + island(uid), `m${uid}`, { scale: 5, freq: 0.05, seed: 9 }) +
+    withPaint(backdrop(uid, th) + island(uid, th), `m${uid}`, { scale: 5, freq: 0.05, seed: 9 }) +
     `<g transform="translate(${MID - 150} ${ty})">` +
     t.svg +
     (stage >= 2 ? tint(bloomArt(one('bloom'), t.clusters, uid), uid, hue(one('bloom'))) + tint(ornamentArt(one('ornament'), t.anchors, uid), uid, hue(one('ornament'))) : '') +
     `</g>` +
     lotArt +
     residentsArt(residents, tree, uid) +
-    spiritArt({ x: MID + 74, y: islandTop(MID + 74) + 2, scale: 0.5, mood, wardrobe: Object.fromEntries(['hat', 'face', 'neck', 'hand'].map((s) => [s, one(s)])), hues: {}, tree, uid, motion: one('motion'), light: { color: '#fff1d6', wash: 0.06, halo: 0.12 } }) +
+    (spirit ? spiritArt({ x: MID + 74, y: islandTop(MID + 74) + 2, scale: 0.5, mood, wardrobe: Object.fromEntries(['hat', 'face', 'neck', 'hand'].map((s) => [s, one(s)])), hues: {}, tree, uid, motion: one('motion'), light: { color: '#fff1d6', wash: 0.06, halo: 0.12 } }) : '') +
     `</svg>`
   );
+}
+
+// 군도 지도: 섬들을 다리로 이은 작은 그림 (섬 화면 위쪽 띠). isles = [{ species, palette, grass, locked }]
+export const STRIP = { step: 92, h: 92 };
+export function archipelagoArt(isles, selected) {
+  const W = isles.length * STRIP.step;
+  const pos = (i) => ({ x: STRIP.step / 2 + i * STRIP.step, y: i % 2 ? 54 : 44 });
+  let s = `<svg viewBox="0 0 ${W} ${STRIP.h}" width="${W}" height="${STRIP.h}" aria-hidden="true">`;
+  s += `<rect width="${W}" height="${STRIP.h}" fill="#7cc4e8"/>`;
+  for (let i = 0; i < 60; i++) s += `<ellipse cx="${n((i * 37) % W)}" cy="${n(10 + ((i * 23) % 76))}" rx="${3 + (i % 4)}" ry=".6" fill="#fff" opacity=".45"/>`;
+  // 다리
+  for (let i = 1; i < isles.length; i++) {
+    const a = pos(i - 1);
+    const b = pos(i);
+    s += `<path d="M${a.x + 22} ${a.y + 6} Q${(a.x + b.x) / 2} ${Math.min(a.y, b.y) - 10} ${b.x - 22} ${b.y + 6}" fill="none" stroke="${isles[i].locked ? '#ffffff' : '#a87a4a'}" stroke-width="${isles[i].locked ? 1.5 : 3}" stroke-dasharray="${isles[i].locked ? '3 4' : '2 2'}" opacity="${isles[i].locked ? 0.7 : 1}"/>`;
+  }
+  isles.forEach((t, i) => {
+    const { x, y } = pos(i);
+    if (t.locked) {
+      s += `<ellipse cx="${x}" cy="${y + 10}" rx="26" ry="9" fill="#ffffff" opacity=".25" stroke="#fff" stroke-dasharray="4 3"/><text x="${x}" y="${y + 6}" font-size="16" text-anchor="middle" fill="#fff" opacity=".9">?</text>`;
+      return;
+    }
+    s +=
+      (i === selected ? `<ellipse cx="${x}" cy="${y + 12}" rx="36" ry="14" fill="#fff8d6" opacity=".55"/>` : '') +
+      `<path d="M${x - 26} ${y + 10} Q${x} ${y + 30} ${x + 26} ${y + 10}Z" fill="#7a5f45"/>` +
+      `<ellipse cx="${x}" cy="${y + 10}" rx="27" ry="8" fill="${t.grass}"/>` +
+      `<rect x="${x - 1.6}" y="${y - 6}" width="3.2" height="16" fill="${t.palette.trunk[1]}"/>` +
+      `<ellipse cx="${x}" cy="${y - 10}" rx="13" ry="10" fill="${t.palette.canopy[1]}"/><ellipse cx="${x - 4}" cy="${y - 13}" rx="6" ry="4.5" fill="${t.palette.canopy[2]}" opacity=".8"/>` +
+      (t.built ? times(Math.min(4, t.built), (j) => `<rect x="${x - 22 + j * 6 + (j > 1 ? 22 : 0)}" y="${y + 3}" width="5" height="5" fill="#fbf1dc" stroke="#d9584a" stroke-width=".8"/>`) : '');
+  });
+  return s + '</svg>';
 }
