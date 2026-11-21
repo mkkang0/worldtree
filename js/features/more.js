@@ -1,12 +1,15 @@
 // 더보기 메뉴
 import { ACHIEVEMENTS } from '../core/achievements.js';
 import { TREES } from '../data/trees.js';
+import { VOCAB } from '../data/vocab-n3.js';
+import { knownCount, vocabSummary } from '../core/vocab.js';
 import { icon } from '../ui/icons.js';
 
 export function view(state) {
   const entries = [
     ['island', 'forest', '나의 섬', ''],
-    ['games', 'sparkle', '미니게임', `가나 퀴즈 · ${state.kana.plays}판`],
+    ['vocab', 'book', 'N3 단어 퀴즈', `익힘 ${knownCount(state)} / ${VOCAB.length} · 오늘 복습 ${vocabSummary(state).due}개`],
+    ['games', 'sparkle', '가나 퀴즈', `${state.kana.plays}판`],
     ['forest', 'forest', '세계수의 숲', `${new Set(state.dex.map((d) => d.species)).size} / ${TREES.length} 완성`],
     ['goals', 'trophy', '퀘스트 · 업적', `업적 ${Object.keys(state.achievements).length} / ${ACHIEVEMENTS.length}`],
     ['stats', 'chart', '기록 · 달력', `운동 ${state.log.length}번${state.settings.studyEnabled ? ` · 공부 ${state.study.sessions.length}번` : ''}`],

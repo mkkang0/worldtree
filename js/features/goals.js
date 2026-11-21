@@ -25,7 +25,7 @@ export function view(state) {
 // 업적 묶음 (목록에 없는 업적은 마지막 '그 밖의' 묶음으로)
 const ACH_GROUPS = [
   { emoji: '🏃', label: '운동', ids: ['first', 'w10', 'w50', 'min1000', 'zone4', 'zone5'] },
-  { emoji: '📚', label: '공부 · 가나', ids: ['study1', 'study10h', 'study50h', 'focus5', 'study100h', 'subjects2', 'goal7', 'kana1', 'kana-perfect', 'hira-master', 'kata-master'] },
+  { emoji: '📚', label: '공부 · 가나', ids: ['study1', 'study10h', 'study50h', 'focus5', 'study100h', 'subjects2', 'goal7', 'kana1', 'kana-perfect', 'hira-master', 'kata-master', 'vocab1', 'vocab100', 'vocab-all'] },
   { emoji: '🔥', label: '꾸준함', ids: ['streak7', 'streak14', 'streak21', 'perfect', 'cups', 'cups7', 'week', 'week4', 'quest'] },
   { emoji: '🏝️', label: '섬 · 나라', ids: ['island1', 'island4', 'island8', 'level3', 'resident1', 'resident8', 'bestie', 'isle2', 'isle4', 'nation', 'festival'] },
   { emoji: '🌳', label: '세계수 · 꾸미기', ids: ['grad', 'dex4', 'dexall', 'items10', 'items30', 'items50', 'friend'] },

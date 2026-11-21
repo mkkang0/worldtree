@@ -5,6 +5,8 @@ import { DEFAULT_MISSIONS } from '../data/lists.js';
 import { TREES } from '../data/trees.js';
 import { KANA_GROUPS, toKatakana } from '../data/kana.js';
 import { builtCount, hasLevel, HEART_MAX } from './island.js';
+import { knownCount } from './vocab.js';
+import { VOCAB } from '../data/vocab-n3.js';
 
 const totalMin = (s) => s.log.reduce((a, e) => a + e.min, 0);
 const maxZone = (s) => s.log.reduce((a, e) => Math.max(a, e.zone), 0);
@@ -57,6 +59,9 @@ export const ACHIEVEMENTS = [
   { id: 'festival', emoji: '🎉', name: '축제 손님', desc: '계절 축제 도장 7개 모으기', check: (s) => Object.keys(s.festivals).length >= 1 },
   // 미니게임
   { id: 'kana1', emoji: '🎌', name: '가나 첫걸음', desc: '가나 퀴즈 한 판', check: (s) => s.kana.plays >= 1 },
+  { id: 'vocab1', emoji: '📖', name: '단어장 펼치기', desc: '단어 퀴즈 한 판', check: (s) => s.vocab.plays >= 1 },
+  { id: 'vocab100', emoji: '🈯', name: '단어 100개', desc: 'N3 단어 100개 익힘', check: (s) => knownCount(s) >= 100 },
+  { id: 'vocab-all', emoji: '🎓', name: 'N3 단어 정복', desc: '단어장의 모든 단어 익힘', check: (s) => knownCount(s) >= VOCAB.length },
   { id: 'kana-perfect', emoji: '💮', name: '꽃동그라미', desc: '가나 퀴즈 만점', check: (s) => s.kana.perfect >= 1 },
   { id: 'hira-master', emoji: '🌸', name: '히라가나 익힘', desc: '히라가나 46자 모두 익힘', check: (s) => kanaDone(s, 'h') },
   { id: 'kata-master', emoji: '🗻', name: '가타카나 익힘', desc: '가타카나 46자 모두 익힘', check: (s) => kanaDone(s, 'k') },

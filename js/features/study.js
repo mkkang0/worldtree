@@ -11,6 +11,7 @@ import { FOCUS_LEVELS, SUBJECT_EMOJIS, subjectOf, activeSubjects } from '../data
 import { newId } from '../data/store.js';
 import { esc, bar, radioChips, stat, money, title, fold, moreList } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
+import { vocabSummary } from '../core/vocab.js';
 import { barChart, ddayBadge } from '../ui/components.js';
 import { toast, chime, confetti } from '../ui/effects.js';
 import { byDateDesc } from './workout.js';
@@ -144,7 +145,10 @@ export function view(state, ui) {
              <button class="btn small ghost" data-act="study.manualOpen">${icon('edit')} 타이머 없이 직접 기록하기</button>`
       }
     </section>
-    <button class="card garden-link" data-act="nav.sub" data-arg="games"><span class="em">🎌</span><span class="grow"><b>가나 퀴즈</b><span class="tiny">쉬는 시간에 히라가나·가타카나 외우기 · 맞히면 별빛</span></span>${icon('right')}</button>
+    <div class="quiz-links">
+      <button class="card garden-link" data-act="nav.sub" data-arg="vocab"><span class="em">📖</span><span class="grow"><b>N3 단어</b><span class="tiny">${vocabSummary(state).due ? `오늘 복습 ${vocabSummary(state).due}개` : '새 단어 외우기'}</span></span></button>
+      <button class="card garden-link" data-act="nav.sub" data-arg="games"><span class="em">🎌</span><span class="grow"><b>가나 퀴즈</b><span class="tiny">히라가나·가타카나</span></span></button>
+    </div>
     <section class="row three">
       ${stat(hoursMinutes(studyMinOn(state, day)), '오늘 공부', 'timer')}
       ${stat(money('star', starsOn(state, day)), `오늘 별빛 / ${DAILY_STAR_CAP}`, 'sparkle')}

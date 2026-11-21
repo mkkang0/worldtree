@@ -56,7 +56,7 @@ export const RESIDENTS = [
   { id: 'kuku', name: '쿠쿠', color: '#bdf0c6', line: '달리기 시합 할래?', hint: '운동을 10번 기록하면', when: (s) => s.log.length >= 10 },
   { id: 'bibi', name: '비비', color: '#ffe59a', line: '책 냄새가 너무 좋아', hint: '공부를 모두 10시간 하면', when: (s) => totalStudyMin(s) >= 600 },
   { id: 'nana', name: '나나', color: '#cdeeff', line: '물 한 잔 마셨어?', hint: '물 8잔을 3일 채우면', when: (s) => Object.values(s.cups).filter((n) => n >= 8).length >= 3 },
-  { id: 'ruru', name: '루루', color: '#dccbff', line: 'あいうえお~ 같이 외워요', hint: '가나 퀴즈를 3판 하면', when: (s) => s.kana.plays >= 3 },
+  { id: 'ruru', name: '루루', color: '#dccbff', line: 'あいうえお~ 같이 외워요', hint: '가나·단어 퀴즈를 3판 하면', when: (s) => s.kana.plays + s.vocab.plays >= 3 },
   { id: 'popo', name: '포포', color: '#ffd5a8', line: '마을이 점점 커지네!', hint: '건물을 4개 지으면', when: (s) => builtCount(s) >= 4 },
   { id: 'jiji', name: '지지', color: '#f4f1ff', line: '일주일 내내 와 줘서 고마워', hint: '7일 연속으로 기록하면', when: (s) => streakOf(s) >= 7 },
 ];
@@ -97,14 +97,14 @@ export const waitingCount = (state) => RESIDENTS.filter((r) => !state.island.res
 
 // 주민마다 어울리는 부탁. study: 공부 기능을 끈 사람에게는 alt를 낸다.
 const care = (s, d) => Object.values(s.care[d] || {}).filter(Boolean).length;
-const kanaPlays = (s, d) => (s.kana.day?.date === d ? s.kana.day.plays || 0 : 0);
+const kanaPlays = (s, d) => (s.kana.day?.date === d ? s.kana.day.plays || 0 : 0) + (s.vocab.day?.date === d ? s.vocab.day.plays || 0 : 0);
 export const REQUESTS = {
   momo: { emoji: '🥗', label: '식단 미션 2개 하기', goal: 2, cur: missionsDone },
   toto: { emoji: '📝', label: '오늘 기록 3개 남기기', goal: 3, cur: (s, d) => logsOn(s, d).length + sessionsOn(s, d).length + missionsDone(s, d) },
   kuku: { emoji: '🏃', label: '운동 30분 하기', goal: 30, cur: minutesOn },
   bibi: { emoji: '📚', label: '공부 45분 하기', goal: 45, cur: studyMinOn, study: true, alt: { emoji: '🧘', label: '운동 20분 하기', goal: 20, cur: minutesOn } },
   nana: { emoji: '🥤', label: '물 6잔 마시기', goal: 6, cur: (s, d) => s.cups[d] || 0 },
-  ruru: { emoji: '🎴', label: '가나 퀴즈 한 판 하기', goal: 1, cur: kanaPlays },
+  ruru: { emoji: '🎴', label: '가나·단어 퀴즈 한 판 하기', goal: 1, cur: kanaPlays },
   popo: { emoji: '💚', label: '세계수 돌보기 (이슬 + 햇살)', goal: 2, cur: care },
   jiji: {
     emoji: '🌈',

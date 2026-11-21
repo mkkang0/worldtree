@@ -5,6 +5,7 @@ import { TREES } from './trees.js';
 import { DEFAULT_SUBJECTS } from './lists.js';
 import { buildingById } from './buildings.js';
 import { isleName, EMBLEMS } from './isles.js';
+import { vocabByWord } from './vocab-n3.js';
 import { todayKey } from '../core/dates.js';
 
 const KEY = 'sprout-diary-v1'; // 이름이 바뀌어도 예전 데이터를 이어 쓰기 위해 그대로 둔다
@@ -82,6 +83,8 @@ export function defaultState() {
     festivals: {}, // 계절 축제 선물 받은 기록 { 'autumn-2026': 'YYYY-MM-DD' } (core/festivals.js)
     // 미니게임: 가나 퀴즈 (features/games.js)
     kana: { stats: {}, plays: 0, best: 0, perfect: 0, day: null, prefs: { script: 'hira', groups: ['basic'], dir: 'both', count: 10 } },
+    // 단어 퀴즈 (features/vocab.js): cards[단어] = [칸 0~5, 다음 복습일, 맞힘, 틀림] (core/vocab.js)
+    vocab: { cards: {}, plays: 0, best: 0, perfect: 0, day: null, prefs: { dir: 'mix', tag: 'all', count: 10 } },
     // 함께하기
     friends: [], // { id, name, species, stage, weekMin, weekSun, studyMin, streak, cheer, updated }
     redeemed: [], // 받은 선물 코드 id
@@ -284,6 +287,24 @@ function sanitize(raw) {
       groups: groups.length ? groups : ['basic'],
       dir: ['read', 'write', 'both'].includes(prefs.dir) ? prefs.dir : 'both',
       count: prefs.count === 20 ? 20 : 10,
+    },
+  };
+  const vocab = obj(raw.vocab);
+  const vp = obj(vocab.prefs);
+  s.vocab = {
+    cards: Object.fromEntries(
+      Object.entries(obj(vocab.cards))
+        .filter(([k, v]) => vocabByWord[k] && Array.isArray(v) && isDate(v[1]))
+        .map(([k, v]) => [k, [clampNum(v[0], 0, 0, 5), v[1], Math.max(0, num(v[2], 0)), Math.max(0, num(v[3], 0))]])
+    ),
+    plays: Math.max(0, num(vocab.plays, 0)),
+    best: Math.max(0, num(vocab.best, 0)),
+    perfect: Math.max(0, num(vocab.perfect, 0)),
+    day: vocab.day && isDate(vocab.day.date) ? { date: vocab.day.date, stars: Math.max(0, num(vocab.day.stars, 0)), plays: Math.max(0, num(vocab.day.plays, 0)) } : null,
+    prefs: {
+      dir: ['mean', 'read', 'word', 'mix'].includes(vp.dir) ? vp.dir : 'mix',
+      tag: ['all', 'n', 'v', 'a', 'adv'].includes(vp.tag) ? vp.tag : 'all',
+      count: vp.count === 20 ? 20 : 10,
     },
   };
   s.festivals = Object.fromEntries(Object.entries(obj(raw.festivals)).filter(([k, v]) => /^[a-z]+-\d{4}$/.test(k) && isDate(v)));

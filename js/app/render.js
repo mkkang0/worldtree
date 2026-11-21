@@ -17,6 +17,7 @@ import * as onboarding from '../features/onboarding.js';
 import * as photo from '../features/photo.js';
 import * as garden from '../features/garden.js';
 import * as games from '../features/games.js';
+import * as vocab from '../features/vocab.js';
 import * as island from '../features/island.js';
 
 // 아래 탭. icon은 ui/icons.js의 이름. show가 있으면 조건이 맞을 때만 보인다.
@@ -30,7 +31,7 @@ const TABS = [
 ];
 
 // 더보기 안의 화면
-const SUB_PAGES = { forest, goals, stats, friends, settings, games };
+const SUB_PAGES = { forest, goals, stats, friends, settings, games, vocab };
 
 // 모달(아래에서 올라오는 창)
 const MODALS = {
@@ -119,7 +120,7 @@ export function render() {
 }
 
 export function go(tab, sub = '') {
-  Object.assign(ctx.ui, { tab, sub, bubble: '', mealDay: '', calDay: '', more: {}, quiz: null, islandScroll: null });
+  Object.assign(ctx.ui, { tab, sub, bubble: '', mealDay: '', calDay: '', more: {}, quiz: null, vquiz: null, islandScroll: null });
   if (tab !== 'island') ctx.ui.isle = 0; // 섬 화면을 나가면 다음엔 본섬부터
   if (tab !== 'shop') ctx.ui.preview = {};
   rerender();
@@ -149,5 +150,5 @@ export const actions = {
 export const ALL_ACTIONS = Object.assign(
   {},
   actions,
-  ...[home, workout, study, meal, shop, more, goals, stats, forest, friends, settings, onboarding, photo, garden, games, island].map((m) => m.actions)
+  ...[home, workout, study, meal, shop, more, goals, stats, forest, friends, settings, onboarding, photo, garden, games, vocab, island].map((m) => m.actions)
 );

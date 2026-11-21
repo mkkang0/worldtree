@@ -92,7 +92,8 @@ export function view(state, ui) {
   if (quiz && quiz.done) return `${backButton}${resultView(state, quiz)}`;
   if (quiz) return `${backButton}${playView(quiz)}`;
   return `${backButton}
-    <header class="page-head"><h1>미니게임</h1><span class="tiny">놀면서 외워요</span></header>
+    <header class="page-head"><h1>가나 퀴즈</h1><span class="tiny">놀면서 외워요</span></header>
+    <button class="card garden-link" data-act="nav.sub" data-arg="vocab"><span class="em">📖</span><span class="grow"><b>N3 단어 퀴즈</b><span class="tiny">가나를 익혔다면 단어로 · 오늘 복습할 단어부터</span></span>${icon('right')}</button>
     ${setupView(state)}
     ${masteryView(state)}`;
 }
