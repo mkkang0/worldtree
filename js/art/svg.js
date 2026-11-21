@@ -49,6 +49,20 @@ export const hueDefs = (uid, hues) =>
     .join('')}</defs>`;
 export const tint = (body, uid, idx) => (idx > 0 && body ? `<g filter="url(#hue${idx}-${uid})">${body}</g>` : body);
 
+// 붓 질감: 윤곽을 잡음으로 살짝 흔들어 손으로 칠한 가장자리처럼 만든다.
+// 그림 함수는 filter="${PAINT}"만 적어 두고, 마지막에 withPaint가 장면별 필터로 바꿔 끼운다.
+// 움직이는 요소(애니메이션)는 감싸지 않는다 — 매 프레임 다시 계산하게 되어 느려진다.
+export const PAINT = '%PAINT%';
+export function withPaint(svg, uid, { scale = 3, freq = 0.08, seed = 4 } = {}) {
+  if (!svg.includes(PAINT)) return svg;
+  const id = `pp-${uid}`;
+  return (
+    `<defs><filter id="${id}" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="${freq}" numOctaves="2" seed="${seed}" result="n"/>` +
+    `<feDisplacementMap in="SourceGraphic" in2="n" scale="${scale}" xChannelSelector="R" yChannelSelector="G"/></filter></defs>` +
+    svg.split(PAINT).join(`url(#${id})`)
+  );
+}
+
 // 0~count-1 반복해서 문자열을 잇는다
 export const times = (count, f) => Array.from({ length: count }, (_, i) => f(i)).join('');
 

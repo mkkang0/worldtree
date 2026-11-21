@@ -1,6 +1,6 @@
 // 배경(세계). 하늘 · 먼 풍경 · 땅까지 그린다. 장면 크기 300 x 360, 땅 높이 약 292.
 // 새 배경: data/items/scenery.js의 world 아이템과 같은 id로 WORLDS에 함수 하나를 추가한다.
-import { rng, n, linear, radial, glow, times } from './svg.js';
+import { rng, n, linear, radial, glow, times, PAINT, withPaint } from './svg.js';
 
 const W = 300;
 const H = 360;
@@ -14,7 +14,7 @@ function sky(uid, stops) {
 // 먼 산 실루엣
 function ridge(seed, baseY, amp, color, opacity) {
   const r = rng(seed);
-  let d = `M0 ${H} L0 ${baseY}`;
+  let d = `M-8 ${H} L-8 ${baseY}`;
   let prev = baseY - amp * r() * 0.5;
   d += ` L0 ${n(prev)}`;
   for (let x = 0; x < W; x += 75) {
@@ -22,7 +22,7 @@ function ridge(seed, baseY, amp, color, opacity) {
     d += ` C${x + 25} ${n(prev - amp * 0.5)} ${x + 50} ${n(next - amp * 0.3)} ${x + 75} ${n(next)}`;
     prev = next;
   }
-  return `<path d="${d} L${W} ${H}Z" fill="${color}" opacity="${opacity}"/>`;
+  return `<path d="${d} L${W + 8} ${n(prev)} L${W + 8} ${H}Z" fill="${color}" opacity="${opacity}" filter="${PAINT}"/>`;
 }
 
 // 땅 윗선 (0 304 → 150 288 → 300 300 곡선)의 높이
@@ -54,7 +54,7 @@ function ground(uid, top, bottom, rim) {
     `<defs>${linear(`gd-${uid}`, [[0, top], [1, bottom]])}${linear(`gf-${uid}`, [[0, '#000', 0], [1, '#000', 0.22]])}` +
     `<clipPath id="gc-${uid}"><path d="M0 304 Q75 284 150 288 T300 300 V${H} H0Z"/></clipPath>` +
     `<filter id="gn-${uid}" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.09 0.3" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.5 0 0 0 -0.6"/></filter></defs>` +
-    `<path d="M0 304 Q75 284 150 288 T300 300 V${H} H0Z" fill="url(#gd-${uid})"/>` +
+    `<path d="M-8 305 Q75 284 150 288 T308 300 V${H + 8} H-8Z" fill="url(#gd-${uid})" filter="${PAINT}"/>` +
     `<rect y="282" width="${W}" height="${H - 282}" filter="url(#gn-${uid})" clip-path="url(#gc-${uid})" opacity=".22"/>` +
     bits +
     `<rect y="318" width="${W}" height="${H - 318}" fill="url(#gf-${uid})"/>` +
@@ -74,7 +74,7 @@ function treeline(seed, baseY, color, opacity) {
         ? `<path d="M${n(x)} ${baseY} l${n(h * 0.32)} -${n(h)} l${n(h * 0.32)} ${n(h)}Z"/>`
         : `<ellipse cx="${n(x + h * 0.3)}" cy="${n(baseY - h * 0.45)}" rx="${n(h * 0.38)}" ry="${n(h * 0.55)}"/>`;
   }
-  return `<g fill="${color}" opacity="${opacity}">${s}<rect x="0" y="${baseY - 1}" width="${W}" height="${H - baseY}"/></g>`;
+  return `<g fill="${color}" opacity="${opacity}" filter="${PAINT}">${s}<rect x="-8" y="${baseY - 1}" width="${W + 16}" height="${H - baseY}"/></g>`;
 }
 
 // 해에서 퍼지는 빛줄기 (css .ray로 천천히 밝아졌다 어두워진다)
@@ -104,7 +104,9 @@ function cloud(y, s, color, opacity, delay, dur = 46) {
   const x = 40 + ((delay * 53) % 220);
   return (
     `<g class="cloud-pass" style="animation-duration:${dur * 1.6}s;animation-delay:-${delay * 1.6}s"><g transform="translate(${x} ${y}) scale(${s})" opacity="${opacity}">` +
-    `<ellipse cx="0" cy="0" rx="30" ry="9" fill="${color}"/><ellipse cx="-10" cy="-6" rx="14" ry="10" fill="${color}"/><ellipse cx="9" cy="-8" rx="16" ry="12" fill="${color}"/></g></g>`
+    `<ellipse cx="2" cy="3" rx="30" ry="7" fill="#000" opacity=".06"/>` +
+    `<ellipse cx="0" cy="0" rx="30" ry="9" fill="${color}"/><ellipse cx="-10" cy="-6" rx="14" ry="10" fill="${color}"/><ellipse cx="9" cy="-8" rx="16" ry="12" fill="${color}"/><ellipse cx="22" cy="-2" rx="9" ry="7" fill="${color}"/>` +
+    `<ellipse cx="4" cy="4" rx="26" ry="4" fill="#9fb4c8" opacity=".25"/><ellipse cx="4" cy="-14" rx="9" ry="4" fill="#ffffff" opacity=".7"/><ellipse cx="-12" cy="-11" rx="6" ry="3" fill="#ffffff" opacity=".6"/></g></g>`
   );
 }
 
@@ -249,12 +251,12 @@ export const WORLDS = {
     const r = rng('skyisland');
     // 멀리 바다 위의 작은 섬
     const islet = (x, y, w) =>
-      `<ellipse cx="${x}" cy="${y + 1.5}" rx="${n(w * 1.15)}" ry="${n(w * 0.28)}" fill="#e9ddb0" opacity=".9"/>` +
+      `<g filter="${PAINT}"><ellipse cx="${x}" cy="${y + 1.5}" rx="${n(w * 1.15)}" ry="${n(w * 0.28)}" fill="#e9ddb0" opacity=".9"/>` +
       `<ellipse cx="${x}" cy="${y}" rx="${w}" ry="${n(w * 0.32)}" fill="#4f9a5a"/>` +
-      `<ellipse cx="${n(x - w * 0.25)}" cy="${n(y - w * 0.16)}" rx="${n(w * 0.5)}" ry="${n(w * 0.26)}" fill="#6fb86a"/>`;
+      `<ellipse cx="${n(x - w * 0.25)}" cy="${n(y - w * 0.16)}" rx="${n(w * 0.5)}" ry="${n(w * 0.26)}" fill="#6fb86a"/></g>`;
     // 구름 덩어리 (크고 몽글몽글)
     const puff = (x, y, s, o = 0.95) =>
-      `<g transform="translate(${x} ${y}) scale(${s})" opacity="${o}"><ellipse cx="0" cy="0" rx="34" ry="13" fill="#ffffff"/><ellipse cx="-16" cy="-8" rx="16" ry="12" fill="#ffffff"/><ellipse cx="6" cy="-14" rx="20" ry="16" fill="#ffffff"/><ellipse cx="22" cy="-5" rx="14" ry="10" fill="#f3f8ff"/><ellipse cx="2" cy="4" rx="30" ry="6" fill="#dce9f5" opacity=".7"/></g>`;
+      `<g transform="translate(${x} ${y}) scale(${s})" opacity="${o}" filter="${PAINT}"><ellipse cx="0" cy="0" rx="34" ry="13" fill="#ffffff"/><ellipse cx="-16" cy="-8" rx="16" ry="12" fill="#ffffff"/><ellipse cx="6" cy="-14" rx="20" ry="16" fill="#ffffff"/><ellipse cx="22" cy="-5" rx="14" ry="10" fill="#f3f8ff"/><ellipse cx="2" cy="4" rx="30" ry="6" fill="#dce9f5" opacity=".7"/></g>`;
     // 섬 아래로 떨어지는 폭포
     const fall = (x, y0, w) =>
       `<path d="M${x} ${y0} q-2 ${n((H - y0) / 2)} ${n(-3 - w)} ${H - y0 + 10} h${n(w * 2 + 3)} q0 ${n(-(H - y0) / 2)} ${-w} ${n(-(H - y0) - 10)}Z" fill="#eef8ff" opacity=".85" class="shimmer"/>` +
@@ -273,11 +275,11 @@ export const WORLDS = {
       times(14, () => `<ellipse class="shimmer" cx="${n(r() * W)}" cy="${n(204 + r() * 70)}" rx="${n(3 + r() * 6)}" ry=".7" fill="#ffffff" opacity=".6" style="animation-delay:-${n(r() * 2.6)}s"/>`) +
       // 떠 있는 섬: 아래 바위 절벽 → 폭포 → 윗면 풀밭
       `<defs>${linear(`rk-${uid}`, [[0, '#8a6e52'], [0.5, '#6b5440'], [1, '#4a3a2c']])}${linear(`ig-${uid}`, [[0, '#86c070'], [1, '#4f8a48']])}</defs>` +
-      `<path d="M-12 312 Q60 318 150 320 T312 312 L300 330 Q250 352 214 360 L86 360 Q42 348 2 330Z" fill="url(#rk-${uid})"/>` +
-      `<path d="M10 322 Q70 330 130 332 M40 336 Q100 344 160 342 M180 334 Q230 330 290 322" fill="none" stroke="#3d2f24" stroke-width="1" opacity=".45"/>` +
+      `<g filter="${PAINT}"><path d="M-12 312 Q60 318 150 320 T312 312 L300 330 Q250 352 214 360 L86 360 Q42 348 2 330Z" fill="url(#rk-${uid})"/>` +
+      `<path d="M10 322 Q70 330 130 332 M40 336 Q100 344 160 342 M180 334 Q230 330 290 322" fill="none" stroke="#3d2f24" stroke-width="1" opacity=".45"/></g>` +
       fall(18, 318, 5) + fall(286, 316, 6) + fall(118, 330, 3) +
       puff(30, 352, 1.1, 0.95) + puff(278, 350, 1.2, 0.95) + puff(150, 362, 1.4, 0.9) +
-      `<path d="M-12 300 Q75 282 150 288 T312 298 L312 314 Q150 326 -12 314Z" fill="url(#ig-${uid})"/>` +
+      `<path d="M-12 300 Q75 282 150 288 T312 298 L312 314 Q150 326 -12 314Z" fill="url(#ig-${uid})" filter="${PAINT}"/>` +
       `<path d="M-12 300 Q75 282 150 288 T312 298" fill="none" stroke="#c4e6a8" stroke-width="1.4" opacity=".7"/>` +
       times(26, (i) => {
         const x = n(2 + i * 11.5 + r() * 5);
@@ -415,5 +417,5 @@ const TIME_LIGHT = (hour) => (hour >= 5 && hour < 10 ? LIGHT.dawn : hour >= 10 &
 export const lightOf = (id, hour) => LIGHT[id] || (WORLDS[id] ? LIGHT.day : TIME_LIGHT(hour));
 
 export function worldArt(id, uid, hour) {
-  return (WORLDS[id] || timeOfDay(hour))(uid);
+  return withPaint((WORLDS[id] || timeOfDay(hour))(uid), `w${uid}`, { scale: 4, freq: 0.06, seed: 9 });
 }

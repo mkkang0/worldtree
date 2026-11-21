@@ -1,6 +1,6 @@
 // 나의 섬 지도: 가로로 넓은 떠 있는 섬. 가운데 세계수, 양옆에 건물 자리 8곳.
 // 크기 900 x 390. 섬 윗면 높이는 islandTop(x). 건물 자리 위치는 LOTS (features/island.js가 눌림 버튼을 같은 자리에 둔다).
-import { nextUid, rng, n, linear, radial, glow, times, hueDefs, tint } from './svg.js';
+import { nextUid, rng, n, linear, radial, glow, times, hueDefs, tint, PAINT, withPaint } from './svg.js';
 import { treeArt } from './tree.js';
 import { leafTree } from './leaves.js';
 import { bloomArt } from './blooms.js';
@@ -18,11 +18,12 @@ export const islandTop = (x) => n(300 + 20 * ((x - MID) / 440) ** 2);
 // 건물 자리 (세계수 뿌리를 피해 양옆에 넷씩)
 export const LOTS = [60, 134, 208, 282, 618, 692, 766, 840].map((x) => ({ x, y: islandTop(x) }));
 
-const puff = (x, y, s, o = 0.95) =>
-  `<g transform="translate(${x} ${y}) scale(${s})" opacity="${o}"><ellipse rx="34" ry="13" fill="#fff"/><ellipse cx="-16" cy="-8" rx="16" ry="12" fill="#fff"/><ellipse cx="6" cy="-14" rx="20" ry="16" fill="#fff"/><ellipse cx="22" cy="-5" rx="14" ry="10" fill="#f3f8ff"/><ellipse cx="2" cy="4" rx="30" ry="6" fill="#dce9f5" opacity=".7"/></g>`;
+// paint: 움직이지 않는 구름만 붓 질감 (움직이는 구름은 매 프레임 다시 계산되지 않게 빼 둔다)
+const puff = (x, y, s, o = 0.95, paint = true) =>
+  `<g transform="translate(${x} ${y}) scale(${s})" opacity="${o}"${paint ? ` filter="${PAINT}"` : ''}><ellipse rx="34" ry="13" fill="#fff"/><ellipse cx="-16" cy="-8" rx="16" ry="12" fill="#fff"/><ellipse cx="6" cy="-14" rx="20" ry="16" fill="#fff"/><ellipse cx="22" cy="-5" rx="14" ry="10" fill="#f3f8ff"/><ellipse cx="2" cy="4" rx="30" ry="6" fill="#dce9f5" opacity=".7"/></g>`;
 
 const islet = (x, y, w) =>
-  `<ellipse cx="${x}" cy="${y + 1.5}" rx="${n(w * 1.15)}" ry="${n(w * 0.28)}" fill="#e9ddb0" opacity=".9"/><ellipse cx="${x}" cy="${y}" rx="${w}" ry="${n(w * 0.32)}" fill="#4f9a5a"/><ellipse cx="${n(x - w * 0.25)}" cy="${n(y - w * 0.16)}" rx="${n(w * 0.5)}" ry="${n(w * 0.26)}" fill="#6fb86a"/>`;
+  `<g filter="${PAINT}"><ellipse cx="${x}" cy="${y + 1.5}" rx="${n(w * 1.15)}" ry="${n(w * 0.28)}" fill="#e9ddb0" opacity=".9"/><ellipse cx="${x}" cy="${y}" rx="${w}" ry="${n(w * 0.32)}" fill="#4f9a5a"/><ellipse cx="${n(x - w * 0.25)}" cy="${n(y - w * 0.16)}" rx="${n(w * 0.5)}" ry="${n(w * 0.26)}" fill="#6fb86a"/></g>`;
 
 function backdrop(uid) {
   const r = rng('island-map');
@@ -30,7 +31,7 @@ function backdrop(uid) {
     `<defs>${linear(`isk-${uid}`, [[0, '#3f8fd6'], [0.5, '#8cc6ef'], [0.66, '#cfe8f7'], [1, '#e9f5fb']])}${linear(`isea-${uid}`, [[0, '#7cc4e8'], [1, '#2f7fb8']])}</defs>` +
     `<rect width="${MAP.w}" height="${MAP.h}" fill="url(#isk-${uid})"/>` +
     glow(`isun-${uid}`, 140, 46, 80, '#fffbe6', 0.9) +
-    `<g class="cloud-pass" style="animation-duration:120s">${puff(80, 70, 1.4)}${puff(560, 50, 1.6)}</g>` +
+    `<g class="cloud-pass" style="animation-duration:120s">${puff(80, 70, 1.4, 0.95, false)}${puff(560, 50, 1.6, 0.95, false)}</g>` +
     puff(300, 92, 1.1, 0.9) + puff(800, 84, 1.3, 0.9) +
     `<rect y="200" width="${MAP.w}" height="${MAP.h - 200}" fill="url(#isea-${uid})"/><rect y="200" width="${MAP.w}" height="3" fill="#fff" opacity=".5"/>` +
     islet(70, 220, 26) + islet(250, 210, 12) + islet(640, 214, 18) + islet(860, 224, 28) + islet(470, 206, 9) +
@@ -54,12 +55,12 @@ function island(uid) {
   return (
     `<defs>${linear(`irk-${uid}`, [[0, '#8a6e52'], [0.5, '#6b5440'], [1, '#4a3a2c']])}${linear(`ig-${uid}`, [[0, '#8ccc72'], [1, '#4f8a48']])}</defs>` +
     // 아래 바위 절벽 (가운데가 깊게)
-    `<path d="M-10 ${n(islandTop(-10) + 12)}${cliffEdge} L${MAP.w + 10} ${n(islandTop(MAP.w + 10) + 30)} Q760 360 600 376 L300 376 Q140 360 -10 ${n(islandTop(-10) + 30)}Z" fill="url(#irk-${uid})"/>` +
-    `<path d="M40 338 Q200 350 330 354 M520 352 Q700 348 860 336 M200 366 Q450 378 700 366" fill="none" stroke="#3d2f24" stroke-width="1.2" opacity=".4"/>` +
+    `<g filter="${PAINT}"><path d="M-10 ${n(islandTop(-10) + 12)}${cliffEdge} L${MAP.w + 10} ${n(islandTop(MAP.w + 10) + 30)} Q760 360 600 376 L300 376 Q140 360 -10 ${n(islandTop(-10) + 30)}Z" fill="url(#irk-${uid})"/>` +
+    `<path d="M40 338 Q200 350 330 354 M520 352 Q700 348 860 336 M200 366 Q450 378 700 366" fill="none" stroke="#3d2f24" stroke-width="1.2" opacity=".4"/></g>` +
     fall(26, 5) + fall(874, 6) + fall(330, 3) + fall(570, 4) +
     puff(60, 382, 1.4) + puff(240, 392, 1.6) + puff(450, 396, 1.8) + puff(660, 392, 1.6) + puff(850, 384, 1.4) +
     // 윗면 풀밭
-    `<path d="M-10 ${islandTop(-10)}${topEdge} L${MAP.w + 10} ${islandTop(MAP.w + 10) + 16} L-10 ${islandTop(-10) + 16}Z" fill="url(#ig-${uid})"/>` +
+    `<path d="M-10 ${islandTop(-10)}${topEdge} L${MAP.w + 10} ${islandTop(MAP.w + 10) + 16} L-10 ${islandTop(-10) + 16}Z" fill="url(#ig-${uid})" filter="${PAINT}"/>` +
     `<path d="M-10 ${islandTop(-10)}${topEdge}" fill="none" stroke="#c4e6a8" stroke-width="1.6" opacity=".75"/>` +
     times(60, (i) => {
       const x = n(4 + i * 15 + r() * 6);
@@ -114,8 +115,7 @@ export function islandMap({ growth, stage, tree, equipped = {}, custom = {}, moo
   return (
     `<svg viewBox="0 0 ${MAP.w} ${MAP.h}" role="img" aria-label="나의 섬" xmlns="http://www.w3.org/2000/svg">` +
     hueDefs(uid, HUES) +
-    backdrop(uid) +
-    island(uid) +
+    withPaint(backdrop(uid) + island(uid), `m${uid}`, { scale: 5, freq: 0.05, seed: 9 }) +
     `<g transform="translate(${MID - 150} ${ty})">` +
     t.svg +
     (stage >= 2 ? tint(bloomArt(one('bloom'), t.clusters, uid), uid, hue(one('bloom'))) + tint(ornamentArt(one('ornament'), t.anchors, uid), uid, hue(one('ornament'))) : '') +
