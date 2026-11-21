@@ -44,7 +44,7 @@ export function view(state, ui) {
     </section>
     ${wallet(state)}
     ${backupNote(state, ui)}
-    ${festivalCard(state)}
+    ${festivalCard(state, { compact: true })}
     ${islandLink(state)}
     ${needsRest(state) ? '<section class="card note">3일 연속 하루 상한까지 달렸어요. 오늘은 스트레칭이나 푹 쉬는 것도 세계수에게 좋아요.</section>' : ''}
     ${todayCard(state)}
@@ -126,8 +126,8 @@ function backupNote(state, ui) {
   if (ui.backupLater || !backupDue(state)) return '';
   const d = daysSinceBackup(state);
   return `<section class="card note backup-note"><span class="em">💾</span>
-    <span class="grow"><b>${d === null ? '아직 백업한 적이 없어요' : `마지막 백업이 ${d}일 전이에요`}</b><span class="tiny">데이터는 이 폰 안에만 있어요. 파일로 저장해 두면 폰을 바꿔도 이어서 키울 수 있어요.</span></span>
-    <span class="backup-btns"><button class="btn small gold" data-act="backup.save">파일로 저장</button><button class="btn small ghost" data-act="backup.later">나중에</button></span></section>`;
+    <span class="grow"><b>${d === null ? '아직 백업하지 않았어요' : `백업한 지 ${d}일 됐어요`}</b><span class="tiny">파일로 저장하면 폰을 바꿔도 이어서 키워요</span></span>
+    <button class="btn small gold" data-act="backup.save">저장</button><button class="x" data-act="backup.later" aria-label="백업 알림 나중에 보기">${icon('close')}</button></section>`;
 }
 
 // 홈의 '나의 섬' 바로 가기: 섬 단계와 짓는 중인 건물
@@ -138,13 +138,18 @@ function islandLink(state) {
   const b = l && buildingById(l.b);
   const nation = nationName(isleCount(state));
   const need = b && workOf(b, l.lv);
+  // 섬 소식은 아래 작은 칩으로 (선물 · 부탁)
   const asks = openRequests(state);
-  const gift = (residentCount(state) && state.island.giftDay !== todayKey() ? ' · 🎁 선물이 있어요' : '') + (asks.length ? ` · 💌 부탁 ${asks.length}개${asks.some((q) => q.ready) ? ' (완료!)' : ''}` : '');
+  const chips = [
+    residentCount(state) && state.island.giftDay !== todayKey() ? '<i>🎁 선물</i>' : '',
+    asks.length ? `<i class="${asks.some((q) => q.ready) ? 'ready' : ''}">💌 부탁 ${asks.length}${asks.some((q) => q.ready) ? ' ✓' : ''}</i>` : '',
+  ].join('');
+  const gift = '';
   const nationLabel = state.island.nation.name ? `${state.island.nation.emblem || '🗺️'} ${esc(state.island.nation.name)}` : nation;
   const sub = b
     ? `${b.emoji} ${b.name}${l.lv > 1 ? ` Lv.${l.lv}로 올리는 중` : ' 짓는 중'} · ${Math.floor((l.progress / need) * 100)}%${gift}`
     : `${nation ? `${nationLabel} · 섬 ${isleCount(state)}개` : islandLevel(built).name} · 건물 ${built}${nation ? '' : ' / 8'} · 주민 ${residentCount(state)}명${gift}`;
-  return `<button class="card garden-link" data-act="island.open"><span class="em">🏝️</span><span class="grow"><b>나의 섬</b><span class="tiny">${sub}</span>${b ? bar(l.progress / need) : ''}</span>${icon('right')}</button>`;
+  return `<button class="card garden-link" data-act="island.open"><span class="em">🏝️</span><span class="grow"><b>나의 섬</b><span class="tiny">${sub}</span>${b ? bar(l.progress / need) : ''}${chips ? `<span class="link-chips">${chips}</span>` : ''}</span>${icon('right')}</button>`;
 }
 
 // 하루 목표를 정한 과목들 (예: 🇯🇵 30/60분 · 🇨🇳 60/60분 ✓)

@@ -16,15 +16,21 @@ const nowHour = () => new Date().getHours();
 
 // 지금 키우는 세계수 장면. equipped에 미리보기 아이템 { slot: id }를 넘기면 겹쳐 그린다.
 // base·custom을 넘기면 저장한 코디처럼 다른 꾸미기로 그린다.
-// 계절 축제 카드 (홈 · 섬): 도장 7칸, 남은 날, 선물 받기, 한정 아이템 보러 가기
-export function festivalCard(state) {
+// 계절 축제 카드 (섬): 도장 7칸, 남은 날, 선물 받기, 한정 아이템 보러 가기
+// compact: 한 줄 띠 (홈, 그리고 선물을 받은 뒤의 섬) — 누르면 섬에서 도장판을 본다
+export function festivalCard(state, { compact = false } = {}) {
   const fs = festivalState(state);
   if (!fs) return '';
   const { f, stamps, claimed, ready, left } = fs;
   const prize = itemById(f.prize);
+  if (compact) {
+    const sub = claimed ? `선물 받음 ✓ · ${left}일 남음` : `도장 ${Math.min(stamps, STAMP_GOAL)} / ${STAMP_GOAL} · ${left}일 남음`;
+    const btn = ready ? '<button class="btn small gold" data-act="festival.claim">🎁 선물 받기</button>' : `<button class="btn small fest-go" data-act="${claimed ? 'festival.shop' : 'island.open'}">${claimed ? '한정 아이템' : '도장판'}</button>`;
+    return `<section class="card fest-banner fest-${f.id}"><span class="em">${f.emoji}</span><span class="grow"><b>${f.name}</b><span class="tiny">${sub}</span></span>${btn}</section>`;
+  }
   const cells = Array.from({ length: STAMP_GOAL }, (_, i) => `<i class="${i < stamps ? 'on' : ''}">${i < stamps ? f.emoji : i + 1}</i>`).join('');
   return `<section class="card fest-card fest-${f.id}">
-    <div class="fest-head"><span class="em">${f.emoji}</span><span class="grow"><b>${f.name}</b><span class="tiny">${f.line} · ${left}일 남음</span></span><span class="tiny">${Math.min(stamps, STAMP_GOAL)} / ${STAMP_GOAL}</span></div>
+    <div class="fest-head"><span class="em">${f.emoji}</span><span class="grow"><b>${f.name} <small class="fest-left">${left}일 남음</small></b><span class="tiny">${f.line}</span></span><span class="tiny fest-count">${Math.min(stamps, STAMP_GOAL)} / ${STAMP_GOAL}</span></div>
     <div class="stamps" role="img" aria-label="축제 도장 ${Math.min(stamps, STAMP_GOAL)} / ${STAMP_GOAL}">${cells}</div>
     <p class="tiny">${claimed ? `선물 '${prize.name}'을(를) 받았어요. 축제를 마음껏 즐겨요!` : `축제 동안 기록한 날마다 도장 하나 · ${STAMP_GOAL}개 모으면 '${prize.name}' 선물`}</p>
     <div class="fest-btns">${ready ? '<button class="btn small gold" data-act="festival.claim">🎁 선물 받기</button>' : ''}<button class="btn small soft" data-act="festival.shop">🎉 축제 한정 아이템</button></div>

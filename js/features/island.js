@@ -24,7 +24,7 @@ import { islandMap, archipelagoArt, LOTS, MAP, STRIP } from '../art/island.js';
 import { buildingArt, constructionArt } from '../art/buildings.js';
 import { spiritArt } from '../art/spirit.js';
 import { nextUid } from '../art/svg.js';
-import { esc, bar, costHtml, rewardHtml, amountText, title } from '../ui/dom.js';
+import { esc, bar, costHtml, rewardHtml, amountText, title, fold } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { toast, chime, confetti } from '../ui/effects.js';
 
@@ -103,7 +103,7 @@ export function view(state, ui) {
   return `<div class="island">
     <header class="garden-top">
       <button class="x" data-act="island.close" aria-label="섬 닫기">${icon('left')}</button>
-      <div class="grow"><b>${info.emoji} ${esc(info.name)}</b><span class="tiny">${nation ? `${nationLabel(state)} · 섬 ${isles}개 · ` : ''}${lvl.name} · 건물 ${built} / ${LOT_COUNT} · 주민 ${residentCount(state)}명</span></div>
+      <div class="grow"><b>${info.emoji} ${esc(info.name)}</b><span class="tiny">${nation ? `${nationLabel(state)} · ` : ''}건물 ${built}/${LOT_COUNT} · 주민 ${residentCount(state)}명 · ${lvl.name}</span></div>
       <button class="x" data-act="garden.open" aria-label="정원에서 꾸미기">${icon('tree')}</button>
     </header>
     ${stripView(state, k)}
@@ -123,10 +123,10 @@ export function view(state, ui) {
         hour: new Date().getHours(),
       })}${buttons}</div>
     </div>
-    <p class="tiny center map-hint">← 옆으로 밀어서 섬 전체를 봐요 · 건물을 누르면 레벨을 올려요 →</p>
+    <p class="tiny center map-hint">← 밀어서 섬 둘러보기 · 건물을 눌러 레벨 업 →</p>
     ${giftCard(state)}
     ${requestsCard(state, treeById(state.plant.species))}
-    ${festivalCard(state)}
+    ${festivalCard(state, { compact: !!state.festivals[festivalOn()?.key] })}
     ${nowCard(state)}
     ${nationCard(state, k, lvl, built)}
     ${residentsCard(state, treeById(state.plant.species))}
@@ -166,6 +166,7 @@ function giftCard(state) {
   if (!n) return '';
   const got = state.island.giftDay === todayKey();
   const best = bestFriendCount(state);
+  if (got) return '<p class="tiny center gift-done">🎁 오늘 주민 선물을 받았어요 · 내일 또 와요!</p>';
   return `<section class="card gift-card">
     <span class="em">🎁</span><span class="grow"><b>주민들의 선물</b><span class="tiny">${got ? '오늘 선물을 받았어요. 내일 또 와요!' : `주민 ${n}명이 선물을 준비했어요${best ? ` · 단짝 ${best}명이 한 몫 더` : ''}`}</span></span>
     <button class="btn small ${got ? 'soft' : 'gold'} fit" data-act="island.gift" ${got ? 'disabled' : ''}>${got ? '받음' : rewardHtml(giftOf(n, best))}</button>
@@ -183,12 +184,12 @@ function requestsCard(state, tree) {
       .map(
         (q) => `<li class="${q.claimed ? 'done' : q.ready ? 'ready' : ''}">
         <span class="rface">${residentFace(q.r, tree, q.hearts)}</span>
-        <span class="grow"><b>${q.r.name} ${heartRow(q.hearts)}</b><span class="tiny">${q.emoji} ${q.label} · ${q.cur} / ${q.goal}</span>${q.claimed ? '' : bar(q.cur / q.goal)}</span>
-        ${q.claimed ? '<span class="tiny thanks">고마워!</span>' : `<button class="btn small ${q.ready ? 'gold' : 'soft'} fit" data-act="island.request" data-arg="${q.r.id}" ${q.ready ? '' : 'disabled'}>${q.ready ? rewardHtml(REQUEST_REWARD) : '하는 중'}</button>`}
+        <span class="grow"><b>${q.r.name} ${heartRow(q.hearts)}</b><span class="tiny">${q.emoji} ${q.label} · <span class="nw">${q.cur}/${q.goal}</span></span>${q.claimed ? '' : bar(q.cur / q.goal)}</span>
+        ${q.claimed ? '<span class="tiny thanks">고마워!</span>' : `<button class="btn small ${q.ready ? 'gold' : 'soft'} fit" data-act="island.request" data-arg="${q.r.id}" ${q.ready ? '' : 'disabled'}>${q.ready ? '🎁 받기' : '하는 중'}</button>`}
       </li>`
       )
       .join('')}</ul>
-    <p class="tiny">부탁을 들어주면 우정 하트가 하나씩 쌓여요. 하트 ${CROWN_AT}개면 꽃 화관을 쓰고, ${HEART_MAX}개면 단짝이 되어 하루 선물이 늘어나요.</p>
+    <p class="tiny">부탁 하나마다 ${rewardHtml(REQUEST_REWARD)} · 들어주면 우정 하트가 하나씩 쌓여요. 하트 ${CROWN_AT}개면 꽃 화관을 쓰고, ${HEART_MAX}개면 단짝이 되어 하루 선물이 늘어나요.</p>
   </section>`;
 }
 
@@ -233,12 +234,18 @@ function residentsCard(state, tree) {
   return `<section class="card">
     ${title('섬 주민', { iconName: 'users', aside: `${n}명 · 집 ${beds}칸` })}
     ${waiting && n >= beds ? `<p class="tiny warn">이사 오고 싶은 친구가 ${waiting}명 기다려요! 집을 짓거나 레벨을 올려 집 칸을 늘려 주세요.</p>` : ''}
-    <ul class="residents">${RESIDENTS.map((r) => {
+    <ul class="residents">${RESIDENTS.filter((r) => state.island.residents[r.id] || r.when(state)).map((r) => {
       const day = state.island.residents[r.id];
       return day
         ? `<li class="on"><span class="rface">${residentFace(r, tree, heartsOf(state, r.id))}</span><span class="grow"><b>${r.name} ${heartRow(heartsOf(state, r.id))}</b><span class="tiny">“${esc(r.line)}”</span></span><span class="tiny">${heartsOf(state, r.id) >= HEART_MAX ? '단짝 💛' : `${day.slice(5).replace('-', '/')} 이사`}</span></li>`
         : `<li><span class="rface off">${residentFace(r, tree)}</span><span class="grow"><b>???</b><span class="tiny">${r.hint} · 빈 집이 있으면 이사 와요</span></span>${r.when(state) ? '<span class="tiny ready">집이 필요해요</span>' : ''}</li>`;
     }).join('')}</ul>
+    ${(() => {
+      const later = RESIDENTS.filter((r) => !state.island.residents[r.id] && !r.when(state));
+      return later.length
+        ? fold(`아직 오지 않은 친구 ${later.length}명 · 오는 방법`, `<ul class="residents">${later.map((r) => `<li><span class="rface off">${residentFace(r, tree)}</span><span class="grow"><b>???</b><span class="tiny">${r.hint} · 빈 집이 있으면 이사 와요</span></span></li>`).join('')}</ul>`)
+        : '';
+    })()}
     <p class="tiny">집은 레벨마다 주민 2명, 찻집·도서관·등대는 Lv.2부터 한 명씩 더 살 수 있어요. 모든 섬의 집을 함께 써요.</p>
   </section>`;
 }
@@ -289,7 +296,7 @@ export function buildModal(state, ui) {
         <span class="grow"><b>${b.emoji} ${b.name}</b><span class="tiny">${b.desc}</span><span class="tiny">완성까지 성장 점수 ${workOf(b, 1)}${beds ? ` · 주민 ${beds}명` : ''}</span></span>
         <button class="btn small ${ok ? '' : 'soft'}" data-act="island.build" data-arg="${k}:${i}:${b.id}" ${ok ? '' : 'disabled'}>${has ? '있어요' : costHtml(cost)}</button></li>`;
     }).join('')}</ul>
-    <button class="btn ghost" data-act="modal.close">닫기</button>
+    <div class="sheet-foot"><button class="btn ghost" data-act="modal.close">닫기</button></div>
   </div>`;
 }
 

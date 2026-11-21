@@ -58,10 +58,11 @@ function body(state, ui) {
   return slot ? slotList(state, ui, slot) : home(state, ui);
 }
 
-// 처음 화면: 오늘의 추천 + 종류 + 정원 안내 + 교환소
+// 처음 화면: 종류(찾는 길) → 오늘의 추천 → 축제 한정 → 전설(옆으로 넘기기) → 정원 안내 → 교환소
 function home(state, ui) {
   const picks = dailyPicks().map(itemById);
   return `
+    ${categories(state)}
     <section class="card">
       ${title('오늘의 추천', { iconName: 'gift', aside: '매일 바뀌어요' })}
       <div class="grid items picks">${picks.map((i) => itemCard(state, ui, i, { showSlot: true })).join('')}</div>
@@ -69,10 +70,16 @@ function home(state, ui) {
     ${festivalShop(state, ui)}
     <section class="card legend-card">
       ${title('✨ 전설 아이템', { aside: `${ITEMS.filter((i) => i.rare && state.owned.includes(i.id)).length} / ${ITEMS.filter((i) => i.rare).length}` })}
-      <p class="tiny">빛나고 움직이는 특별한 꾸미기예요. 포인트를 모아 하나씩 데려와요.</p>
-      <div class="grid three items">${ITEMS.filter((i) => i.rare).map((i) => itemCard(state, ui, i, { showSlot: true })).join('')}</div>
+      <p class="tiny">빛나고 움직이는 특별한 꾸미기예요. 옆으로 밀어서 둘러봐요 →</p>
+      <div class="items hrow">${ITEMS.filter((i) => i.rare).map((i) => itemCard(state, ui, i, { showSlot: true })).join('')}</div>
     </section>
-    <section class="card">
+    <button class="card garden-link" data-act="garden.open">${icon('tree')}<span class="grow"><b>나의 정원</b><span class="tiny">가진 아이템으로 꾸미고 코디를 저장해요</span></span>${icon('right')}</button>
+    ${exchangeCard(state)}`;
+}
+
+// 종류 버튼 (상점에 들어오면 바로 보이게 맨 위)
+function categories(state) {
+  return `<section class="card">
       ${title('종류', { iconName: 'gem' })}
       ${['세계수의 풍경', '정령 옷장', '앱']
         .map(
@@ -85,9 +92,7 @@ function home(state, ui) {
             .join('')}</div></div>`
         )
         .join('')}
-    </section>
-    <button class="card garden-link" data-act="garden.open">${icon('tree')}<span class="grow"><b>나의 정원</b><span class="tiny">가진 아이템으로 꾸미고 코디를 저장해요</span></span>${icon('right')}</button>
-    ${exchangeCard(state)}`;
+    </section>`;
 }
 
 // 🎉 축제 한정: 축제 동안 파는 아이템 + 도장 선물 (축제가 아니면 다음 축제 안내)

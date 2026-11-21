@@ -550,3 +550,35 @@ body.immersive main { padding-top: 6px; padding-bottom: calc(28px + env(safe-are
 .ach-group > summary .tiny::after { content: ' ▾'; }
 .ach-group[open] > summary .tiny::after { content: ' ▴'; }
 .friend-isle { color: var(--accent); font-weight: 600; }
+
+/* 폰 사용감 다듬기: 상점 전설 한 줄, 축제 띠, 백업 한 줄, 섬 칩, 닫기 버튼 고정 */
+.hrow { display: grid; grid-auto-flow: column; grid-auto-columns: 112px; gap: 8px; overflow-x: auto; margin: 0 -18px; padding: 2px 18px 6px; scroll-snap-type: x proximity; scrollbar-width: none; align-items: start; }
+.hrow::-webkit-scrollbar { display: none; }
+.hrow .item { scroll-snap-align: start; }
+.fest-banner { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
+.fest-banner .em { font-size: 1.5rem; }
+.fest-banner .grow { min-width: 0; }
+.fest-banner b, .fest-banner .tiny { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fest-banner .btn { width: auto; flex: none; }
+.fest-banner.fest-autumn, .fest-banner.fest-spring, .fest-banner.fest-summer, .fest-banner.fest-winter { color: #2f2418; }
+.fest-banner.fest-autumn { background: linear-gradient(135deg, #fff4e6, #fbe0c4); }
+.fest-banner.fest-spring { background: linear-gradient(135deg, #fff6fa, #ffe0ec); }
+.fest-banner.fest-summer { background: linear-gradient(135deg, #f0fbff, #d4f0fb); }
+.fest-banner.fest-winter { background: linear-gradient(135deg, #f8fbff, #e2ecf7); }
+.fest-banner .tiny { color: inherit; opacity: .75; }
+.fest-card .btn.soft, .fest-banner .fest-go { background: rgba(60, 40, 20, .1); color: inherit; border: 1px solid rgba(60, 40, 20, .18); }
+.fest-left { font-size: .72rem; font-weight: 600; white-space: nowrap; opacity: .75; }
+.fest-count { white-space: nowrap; font-weight: 700; }
+.backup-note { flex-wrap: nowrap; padding: 12px 14px; }
+.backup-note .grow { min-width: 0; }
+.backup-note .btn { width: auto; flex: none; }
+.backup-note .x { flex: none; }
+.link-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.link-chips i { font-style: normal; font-size: .72rem; padding: 2px 8px; border-radius: 99px; background: var(--accent-soft); }
+.link-chips i.ready { background: #ffe9a8; color: #3b2a10; font-weight: 700; }
+.garden-top .grow { min-width: 0; }
+.garden-top .tiny { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.map-hint { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gift-done { margin: 0 0 12px; }
+.sheet-foot { position: sticky; bottom: calc(-22px - env(safe-area-inset-bottom)); margin: 12px -18px calc(-22px - env(safe-area-inset-bottom)); padding: 10px 18px calc(12px + env(safe-area-inset-bottom)); background: linear-gradient(180deg, transparent, var(--surface-solid) 30%); }
+.nw { white-space: nowrap; }
