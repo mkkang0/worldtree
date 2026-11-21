@@ -99,6 +99,15 @@ export function treeArt({ growth, stage, tree, uid }) {
     linear(`tk-${uid}`, [[0, pal.trunk[0]], [0.3, pal.trunk[1]], [0.55, pal.trunk[2]], [0.8, pal.trunk[1]], [1, pal.trunk[0]]], [0, 0, 1, 0]) +
     radial(`cp-${uid}`, [[0, pal.canopy[2]], [0.55, pal.canopy[1]], [1, pal.canopy[1]]], { cx: 0.36, cy: 0.28, r: 0.85 }) +
     radial(`ch-${uid}`, [[0, '#ffffff', 0.22], [1, '#ffffff', 0]]);
+  // 그림 같은 질감 필터 (그림 파일 없이 SVG로)
+  //   paint: 잎 덩어리 윤곽을 흔들어 붓으로 칠한 가장자리처럼
+  //   leafDark / leafLight: 잎 안쪽의 어두운 얼룩과 밝은 반점
+  //   bark: 세로로 긴 나무껍질 결
+  defs +=
+    `<filter id="paint-${uid}" x="-8%" y="-8%" width="116%" height="116%"><feTurbulence type="fractalNoise" baseFrequency="0.075" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="${n(lerp(3, 10, e))}" xChannelSelector="R" yChannelSelector="G"/></filter>` +
+    `<filter id="ldk-${uid}" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.2" numOctaves="2" seed="11"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.6 0 0 0 -0.62"/></filter>` +
+    `<filter id="llt-${uid}" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.16" numOctaves="1" seed="23"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 0.85  0 1.8 0 0 -1.08"/></filter>` +
+    `<filter id="bark-${uid}" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.05 0.5" numOctaves="2" seed="5"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.5 0 0 0 -0.55"/></filter>`;
   let back = '';
   let front = '';
 
@@ -115,10 +124,10 @@ export function treeArt({ growth, stage, tree, uid }) {
   back += `<ellipse cx="${n(cx)}" cy="${y + 4}" rx="${n(rx * 0.85)}" ry="${n(lerp(3, 9, e))}" fill="#000" opacity="${n(lerp(0.06, 0.16, e))}"/>`;
 
   // 뒤쪽 잎 덩어리: 어둡게 한 겹 더 깔아 수관이 둥글고 깊어 보이게
-  back += clusters
+  back += `<g filter="url(#paint-${uid})">${clusters
     .filter((_, i) => i % 3 === 0)
     .map((c) => `<ellipse cx="${n(c.x - c.r * 0.15)}" cy="${n(c.y - c.r * 0.4)}" rx="${n(c.r * 1.15)}" ry="${n(c.r * 0.9)}" fill="${pal.canopy[0]}" opacity=".9"/>`)
-    .join('');
+    .join('')}</g>`;
 
   // 뿌리: 땅 위로 드러나 굽이친다
   if (stage >= ROOTS_FROM) {
@@ -151,6 +160,11 @@ export function treeArt({ growth, stage, tree, uid }) {
   }
   // 빛 받는 왼쪽 면
   back += `<path d="${trunkPath(x - wb * 0.18, y, h * 0.96, wb * 0.28, wt * 0.3, bend)}" fill="#fff" opacity=".08"/>`;
+  // 나무껍질 결
+  if (e > 0.1) {
+    defs += `<clipPath id="tc-${uid}"><path d="${trunkPath(x, y, h, wb, wt, bend)}"/></clipPath>`;
+    back += `<g clip-path="url(#tc-${uid})"><rect x="${n(x - wb)}" y="${n(top - 4)}" width="${n(wb * 2)}" height="${n(h + 8)}" filter="url(#bark-${uid})" opacity=".55"/></g>`;
+  }
   // 옹이
   if (e > 0.35) {
     const kx = x + (r() - 0.5) * wb * 0.3;
@@ -200,6 +214,17 @@ export function treeArt({ growth, stage, tree, uid }) {
     const bh = n(ry * 1.6 + leaf * 2.6);
     front += `<g clip-path="url(#cc-${uid})"><rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="url(#cs-${uid})"/><rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="url(#cl-${uid})"/></g>`;
   }
+
+  // 잎 안쪽 얼룩과 반점 (수관 모양으로 잘라서)
+  if (e > 0.15) {
+    const bx = n(cx - rx - leaf * 1.3);
+    const by = n(cy - ry - leaf * 1.3);
+    const bw = n(rx * 2 + leaf * 2.6);
+    const bh = n(ry * 1.6 + leaf * 2.6);
+    front += `<g clip-path="url(#cc-${uid})"><rect x="${bx}" y="${by}" width="${bw}" height="${bh}" filter="url(#ldk-${uid})" opacity=".32"/><rect x="${bx}" y="${by}" width="${bw}" height="${bh}" filter="url(#llt-${uid})" opacity=".35"/></g>`;
+  }
+  // 여기까지 그린 수관(잎 덩어리·색·명암·얼룩)에 붓 가장자리
+  front = `<g filter="url(#paint-${uid})">${front}</g>`;
 
   // 붓결: 잎 덩어리 위의 짧은 곡선 (손으로 그린 듯한 잎 질감)
   const strokes = Math.round(lerp(0, 3, e));

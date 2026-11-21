@@ -51,8 +51,11 @@ function ground(uid, top, bottom, rim) {
     return `<ellipse cx="${x}" cy="${y}" rx="${n(2 + r() * 3)}" ry="${n(1 + r() * 1.2)}" fill="${bottom}" opacity=".55"/>`;
   });
   return (
-    `<defs>${linear(`gd-${uid}`, [[0, top], [1, bottom]])}${linear(`gf-${uid}`, [[0, '#000', 0], [1, '#000', 0.22]])}</defs>` +
+    `<defs>${linear(`gd-${uid}`, [[0, top], [1, bottom]])}${linear(`gf-${uid}`, [[0, '#000', 0], [1, '#000', 0.22]])}` +
+    `<clipPath id="gc-${uid}"><path d="M0 304 Q75 284 150 288 T300 300 V${H} H0Z"/></clipPath>` +
+    `<filter id="gn-${uid}" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.09 0.3" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.5 0 0 0 -0.6"/></filter></defs>` +
     `<path d="M0 304 Q75 284 150 288 T300 300 V${H} H0Z" fill="url(#gd-${uid})"/>` +
+    `<rect y="282" width="${W}" height="${H - 282}" filter="url(#gn-${uid})" clip-path="url(#gc-${uid})" opacity=".22"/>` +
     bits +
     `<rect y="318" width="${W}" height="${H - 318}" fill="url(#gf-${uid})"/>` +
     `<path d="M0 304 Q75 284 150 288 T300 300" fill="none" stroke="${rim}" stroke-width="1.2" opacity=".6"/>` +
