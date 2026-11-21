@@ -157,7 +157,11 @@ export const WORLDS = {
       mist(uid, 256, '#e6ece8', 0.55) +
       ridge('rain-b', 272, 28, '#647c6a', 0.7) +
       ground(uid, '#5f7d58', '#3d5539', '#9fbf94') +
-      times(46, (i) => `<line class="rain" x1="${n(r() * W)}" y1="${n(r() * 60 - 60)}" x2="${n(r() * W - 4)}" y2="${n(r() * 60 - 46)}" stroke="#e8f2f8" stroke-width=".8" opacity=".55" style="animation-delay:-${n(r() * 1.2)}s;animation-duration:${n(0.8 + r() * 0.5)}s"/>`) +
+      times(46, () => {
+        const x = n(r() * W);
+        const y = n(r() * 320);
+        return `<line class="rain" x1="${x}" y1="${y}" x2="${n(x - 4)}" y2="${n(y + 14)}" stroke="#e8f2f8" stroke-width=".8" opacity=".55" style="animation-delay:-${n(r() * 1.2)}s;animation-duration:${n(0.8 + r() * 0.5)}s"/>`;
+      }) +
       times(7, (i) => `<ellipse class="ripple" cx="${n(20 + r() * 260)}" cy="${n(310 + r() * 40)}" rx="7" ry="2" fill="none" stroke="#e8f2f8" stroke-width=".7" style="animation-delay:-${n(r() * 1.8)}s"/>`)
     );
   },

@@ -15,6 +15,7 @@ import * as forest from '../features/forest.js';
 import * as friends from '../features/friends.js';
 import * as settings from '../features/settings.js';
 import * as onboarding from '../features/onboarding.js';
+import * as photo from '../features/photo.js';
 
 // 아래 탭. icon은 ui/icons.js의 이름. show가 있으면 조건이 맞을 때만 보인다.
 const TABS = [
@@ -35,6 +36,7 @@ const MODALS = {
   complete: home.completeModal,
   stageup: home.stageUpModal,
   stages: home.stagesModal,
+  photo: photo.photoModal,
   'study-finish': study.finishModal,
   'study-edit': study.editModal,
   'study-manual': study.manualModal,
@@ -137,5 +139,5 @@ export const actions = {
 export const ALL_ACTIONS = Object.assign(
   {},
   actions,
-  ...[home, workout, study, meal, shop, more, goals, stats, forest, friends, settings, onboarding].map((m) => m.actions)
+  ...[home, workout, study, meal, shop, more, goals, stats, forest, friends, settings, onboarding, photo].map((m) => m.actions)
 );

@@ -73,7 +73,7 @@ main.entering > *:nth-child(4) { animation-delay: .12s; }
 @keyframes pop { from { transform: scale(.85); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes cloud-pass { from { transform: translateX(-340px); } to { transform: translateX(340px); } }
 @keyframes shoot { 0% { transform: translate(0, 0); opacity: 0; } 4% { opacity: 1; } 16% { transform: translate(130px, 60px); opacity: 0; } 100% { transform: translate(130px, 60px); opacity: 0; } }
-@keyframes rain { from { transform: translateY(0); } to { transform: translateY(400px); } }
+@keyframes rain { from { transform: translateY(-200px); } to { transform: translateY(200px); } }
 @keyframes ripple { from { transform: scale(.2); opacity: .8; } to { transform: scale(1.5); opacity: 0; } }
 @keyframes wave { from { transform: translateX(-14px); } to { transform: translateX(14px); } }
 @keyframes hop { 0%, 55%, 100% { transform: translateY(0) scale(1, 1); } 65% { transform: translateY(0) scale(1.08, .9); } 78% { transform: translateY(-14px) scale(.95, 1.06); } 90% { transform: translateY(0) scale(1.05, .95); } }

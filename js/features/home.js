@@ -20,6 +20,7 @@ export function view(state, ui) {
     <section class="hero">
       <div class="bubble">${esc(ui.bubble || greeting(state))}</div>
       <div class="scene" id="scene" role="button" tabindex="0" data-act="home.pet" aria-label="정령 ${esc(state.settings.name)} 쓰다듬기">${sceneSvg(state)}</div>
+      <button class="photo-btn" data-act="photo.make" aria-label="세계수 사진으로 저장">${icon('camera')}</button>
       <div class="card hero-info">
         <div class="hero-top">
           <div><span class="eyebrow">${j.tree.label} · ${j.day}일째</span><h1>${j.stageName}</h1></div>
