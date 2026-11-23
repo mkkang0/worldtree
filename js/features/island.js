@@ -20,7 +20,9 @@ import { moodOf } from '../core/records.js';
 import { BUILDINGS, buildingById, LOT_COUNT, lotsOpen, islandLevel, costOf, workOf, bedsOf, MAX_LEVEL } from '../data/buildings.js';
 import { themeOf, nationName, ISLE_EMOJI, EMBLEMS } from '../data/isles.js';
 import { treeById } from '../data/trees.js';
-import { islandMap, archipelagoArt, LOTS, MAP, STRIP } from '../art/island.js';
+import { islandMap, archipelagoArt, LOTS, MAP, STRIP, islandTop, propY, GROUND, PROP_X } from '../art/island.js';
+import { PROPS, propById, PROP_SIZES, MAX_PROPS } from '../data/props.js';
+import { propThumb } from '../art/props.js';
 import { buildingArt, constructionArt } from '../art/buildings.js';
 import { spiritArt } from '../art/spirit.js';
 import { nextUid } from '../art/svg.js';
@@ -85,8 +87,15 @@ export function nationLabel(state) {
 
 /* ---------- 화면 ---------- */
 
+const state_nation = (s) => (s.island.nation.name ? ` · ${s.island.nation.name}` : '');
+
+// 이 섬에 놓은 소품 (원래 번호 i를 붙여서)
+const propsOn = (state, k) => state.island.decor.placed.map((p, i) => ({ ...p, i })).filter((p) => p.k === k);
+const stockTotal = (state) => Object.values(state.island.decor.stock).reduce((a, b) => a + b, 0);
+
 export function view(state, ui) {
   const k = isleNow(state);
+  const editing = !!ui.decor;
   const info = isleInfo(state, k);
   const lots = lotStates(state, k);
   const built = builtCount(state, k);
@@ -100,13 +109,20 @@ export function view(state, ui) {
     const label = { built: `${name} 보기`, upgrading: `${name} 레벨 올리는 중`, building: `${name} 짓는 중`, empty: '빈 자리에 건물 짓기', locked: '잠긴 자리' }[l.state];
     return `<button class="lot-btn ${l.state}" style="left:${((x / MAP.w) * 100).toFixed(2)}%;top:${((y / MAP.h) * 100).toFixed(2)}%" data-act="island.lot" data-arg="${i}" aria-label="${label}"></button>`;
   }).join('');
-  return `<div class="island">
-    <header class="garden-top">
+  const here = propsOn(state, k);
+  const head = editing
+    ? `<header class="garden-top decor-top">
+      <div class="grow"><b>🎨 ${esc(info.name)} 꾸미기</b><span class="tiny">소품을 손가락으로 끌어 옮겨요 · 소품 ${here.length} / ${MAX_PROPS}</span></div>
+      <button class="btn small gold fit" data-act="decor.done">완료</button>
+    </header>`
+    : `<header class="garden-top">
       <button class="x" data-act="island.close" aria-label="섬 닫기">${icon('left')}</button>
       <div class="grow"><b>${info.emoji} ${esc(info.name)}</b><span class="tiny">${nation ? `${nationLabel(state)} · ` : ''}건물 ${built}/${LOT_COUNT} · 주민 ${residentCount(state)}명 · ${lvl.name}</span></div>
       <button class="x" data-act="garden.open" aria-label="정원에서 꾸미기">${icon('tree')}</button>
     </header>
-    ${stripView(state, k)}
+    ${stripView(state, k)}`;
+  return `<div class="island ${editing ? 'editing' : ''}">
+    ${head}
     <div class="island-map" id="island-map">
       <div class="map-inner">${islandMap({
         growth: k ? 1 : Math.min(1, plantXp(state) / STAGES[STAGES.length - 1].at),
@@ -121,9 +137,19 @@ export function view(state, ui) {
         spirit: !k,
         festival: festivalOn(),
         hour: new Date().getHours(),
+        props: here,
+        sel: editing ? ui.decor.sel : null,
+        editing,
+        emblem: state.island.nation.name ? state.island.nation.emblem : '',
       })}${buttons}</div>
     </div>
-    <p class="tiny center map-hint">← 밀어서 섬 둘러보기 · 건물을 눌러 레벨 업 →</p>
+    ${editing ? decorPanel(state, ui, k, here) : islandBody(state, ui, k, info, lvl, built)}
+  </div>`;
+}
+
+// 꾸미기 모드가 아닐 때 지도 아래
+function islandBody(state, ui, k, info, lvl, built) {
+  return `<div class="map-tools"><span class="tiny">← 밀어서 둘러보기 · 소품을 눌러 봐요 →</span><button class="btn small gold fit" data-act="decor.open">🎨 섬 꾸미기</button></div>
     ${giftCard(state)}
     ${requestsCard(state, treeById(state.plant.species))}
     ${festivalCard(state, { compact: !!state.festivals[festivalOn()?.key] })}
@@ -136,8 +162,45 @@ export function view(state, ui) {
         const l = lotsOf(state, k).find((x) => x && x.b === b.id && (x.done || x.lv > 1));
         return `<div class="bcell ${l ? 'on' : ''}"><span class="bart">${smallArt(b.id, false, l ? shownLevel(l) : 1)}</span><b>${l ? `${b.name}${shownLevel(l) > 1 ? ` Lv.${shownLevel(l)}` : ''}` : '???'}</b></div>`;
       }).join('')}</div>
-    </section>
-  </div>`;
+    </section>`;
+}
+
+// 꾸미기 모드: 고른 소품 도구 + 보관함 / 소품 가게
+function decorPanel(state, ui, k, here) {
+  const d = ui.decor;
+  const p = d.sel != null && state.island.decor.placed[d.sel];
+  const def = p && propById(p.id);
+  const sizeName = (s) => ({ 0.8: '작게', 1: '보통', 1.25: '크게' })[s];
+  const tools = p
+    ? `<section class="card decor-tools">
+      <div class="dt-head"><span class="dt-art">${propThumb(p.id, nextUid(), { emblem: state.island.nation.emblem })}</span><span class="grow"><b>${def.name}</b><span class="tiny">끌어서 옮기고, 아래 버튼으로 다듬어요</span></span></div>
+      <div class="dt-btns">
+        <button class="btn small soft" data-act="decor.flip">↔ 뒤집기</button>
+        <button class="btn small soft" data-act="decor.size">크기 · ${sizeName(p.s)}</button>
+        <button class="btn small soft" data-act="decor.store">📦 넣기</button>
+        <button class="btn small ghost" data-act="decor.deselect">다 했어요</button>
+      </div>
+    </section>`
+    : `<p class="tiny center decor-hint">소품을 누르면 고를 수 있어요. 보관함에서 고른 소품은 지금 보이는 자리에 놓여요.</p>`;
+  const stock = state.island.decor.stock;
+  const tab = d.tab || 'mine';
+  const mine = PROPS.filter((x) => stock[x.id] > 0);
+  const tiles =
+    tab === 'mine'
+      ? mine.length
+        ? mine.map((x) => `<button class="ptile" data-act="decor.place" data-arg="${x.id}"><span class="pt-art">${propThumb(x.id, nextUid(), { emblem: state.island.nation.emblem })}</span><b>${x.name}</b><small>× ${stock[x.id]}</small></button>`).join('')
+        : '<p class="muted ptile-empty">보관함이 비었어요. 소품 가게에서 사 보세요!</p>'
+      : PROPS.map((x) => {
+          const have = (stock[x.id] || 0) + state.island.decor.placed.filter((q) => q.id === x.id).length;
+          const ok = canAfford(x.cost);
+          return `<div class="ptile shop"><span class="pt-art">${propThumb(x.id, nextUid(), { emblem: state.island.nation.emblem })}</span><b>${x.name}</b><small>${x.desc ? esc(x.desc) : have ? `가진 것 ${have}개` : '&nbsp;'}</small>
+            <button class="btn small ${ok ? '' : 'soft'}" data-act="decor.buy" data-arg="${x.id}" ${ok ? '' : 'disabled'}>${costHtml(x.cost)}</button></div>`;
+        }).join('');
+  return `${tools}
+    <section class="card decor-drawer">
+      <div class="seg">${[['mine', `📦 보관함 ${stockTotal(state)}`], ['shop', '🛒 소품 가게']].map(([id, label]) => `<button class="${tab === id ? 'on' : ''}" data-act="decor.tab" data-arg="${id}" aria-pressed="${tab === id}">${label}</button>`).join('')}</div>
+      <div class="ptiles">${tiles}</div>
+    </section>`;
 }
 
 // 위쪽 군도 지도: 섬들을 다리로 잇고, 다음 섬 자리(?)는 세계수를 완성하면 생긴다
@@ -261,6 +324,92 @@ export function mounted(ui) {
   const strip = document.querySelector('.isle-strip');
   const on = strip?.querySelector('.isle-btn.on');
   if (strip && on) strip.scrollLeft = Math.max(0, on.offsetLeft - strip.clientWidth / 2 + STRIP.step / 2);
+  if (ui.decor && el) enableDrag(el);
+}
+
+/* ---------- 꾸미기 모드: 소품을 손가락으로 끌어 옮기기 ---------- */
+
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+function enableDrag(mapEl) {
+  const svg = mapEl.querySelector('.map-inner > svg');
+  if (!svg) return;
+  const toMap = (ev) => {
+    const pt = svg.createSVGPoint();
+    pt.x = ev.clientX;
+    pt.y = ev.clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse());
+  };
+  svg.addEventListener('pointerdown', (e) => {
+    const g = e.target.closest('.prop');
+    if (!g) return;
+    e.preventDefault();
+    const i = Number(g.dataset.prop);
+    const p = ctx.state.island.decor.placed[i];
+    if (!p) return;
+    g.setPointerCapture(e.pointerId);
+    g.classList.add('dragging');
+    const start = toMap(e);
+    const off = { x: p.x - start.x, y: propY(p.x, p.d) - start.y };
+    let next = { x: p.x, d: p.d };
+    let moved = false;
+    const move = (ev) => {
+      const m = toMap(ev);
+      const x = clamp(m.x + off.x, PROP_X[0], PROP_X[1]);
+      const d = clamp((m.y + off.y - islandTop(x) - 3) / (GROUND - 8), 0, 1);
+      if (Math.abs(x - p.x) + Math.abs(d - p.d) * 30 > 3) moved = true;
+      next = { x, d };
+      g.setAttribute('transform', `translate(${x.toFixed(1)} ${propY(x, d)})`);
+      // 지도 가장자리로 끌면 옆으로 넘어간다
+      const r = mapEl.getBoundingClientRect();
+      if (ev.clientX < r.left + 36) mapEl.scrollLeft -= 8;
+      else if (ev.clientX > r.right - 36) mapEl.scrollLeft += 8;
+    };
+    const up = () => {
+      g.removeEventListener('pointermove', move);
+      g.removeEventListener('pointerup', up);
+      g.removeEventListener('pointercancel', up);
+      if (moved) {
+        p.x = Math.round(next.x);
+        p.d = Math.round(next.d * 100) / 100;
+        commit();
+      }
+      ctx.ui.decor.sel = i;
+      rerender();
+    };
+    g.addEventListener('pointermove', move);
+    g.addEventListener('pointerup', up);
+    g.addEventListener('pointercancel', up);
+  });
+}
+
+/* ---------- 소품을 눌렀을 때 (꾸미기 모드가 아닐 때) ---------- */
+
+const BURST = { shake: ['🍃', '🍃', '✨'], flutter: ['🦋', '🌸', '🦋'], splash: ['💧', '💧', '🐟'], sparks: ['✨', '🔥', '✨'], bounce: ['✨', '⭐', '✨'], letter: ['💌'], sign: ['✨'] };
+
+function poke(g, kind) {
+  const anim = g.querySelector('.prop-anim');
+  if (anim) {
+    anim.classList.remove('poke', 'wiggle');
+    void anim.getBBox(); // 애니메이션 다시 시작
+    anim.classList.add(kind === 'shake' || kind === 'flutter' ? 'wiggle' : 'poke');
+  }
+  const ns = 'http://www.w3.org/2000/svg';
+  const burst = document.createElementNS(ns, 'g');
+  burst.setAttribute('class', 'burst-group');
+  (BURST[kind] || BURST.bounce).forEach((ch, j, all) => {
+    const t = document.createElementNS(ns, 'text');
+    t.setAttribute('x', String((j - (all.length - 1) / 2) * 12));
+    t.setAttribute('y', '-30');
+    t.setAttribute('font-size', '11');
+    t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('class', 'burst');
+    t.setAttribute('style', `animation-delay:${j * 0.08}s`);
+    t.textContent = ch;
+    burst.appendChild(t);
+  });
+  g.appendChild(burst);
+  setTimeout(() => burst.remove(), 1400);
 }
 
 /* ---------- 창 ---------- */
@@ -439,6 +588,112 @@ export const actions = {
     closeModal();
     commit();
     rerender();
+  },
+
+  /* ----- 섬 꾸미기 (소품 자유 배치) ----- */
+  'decor.open': () => {
+    ctx.ui.decor = { sel: null, tab: stockTotal(ctx.state) ? 'mine' : 'shop' };
+    rerender();
+    window.scrollTo(0, 0);
+  },
+  'decor.done': () => {
+    ctx.ui.decor = null;
+    rerender();
+    toast('꾸민 섬을 저장했어요 🎨');
+  },
+  'decor.tab': (el) => {
+    ctx.ui.decor.tab = el.dataset.arg;
+    rerender();
+  },
+  'decor.deselect': () => {
+    ctx.ui.decor.sel = null;
+    rerender();
+  },
+
+  'decor.buy': (el) => {
+    const p = propById(el.dataset.arg);
+    if (!p) return;
+    if (!canAfford(p.cost)) return toast('포인트가 조금 부족해요');
+    pay(p.cost);
+    const stock = ctx.state.island.decor.stock;
+    stock[p.id] = Math.min(99, (stock[p.id] || 0) + 1);
+    settle();
+    chime('ok');
+    rerender();
+    toast(`${p.name}을(를) 보관함에 넣었어요`);
+  },
+
+  // 보관함에서 꺼내 지금 보이는 자리 가운데에 놓는다
+  'decor.place': (el) => {
+    const s = ctx.state;
+    const p = propById(el.dataset.arg);
+    const stock = s.island.decor.stock;
+    if (!p || !(stock[p.id] > 0)) return;
+    const k = isleNow(s);
+    if (propsOn(s, k).length >= MAX_PROPS) return toast(`섬 하나에 소품은 ${MAX_PROPS}개까지 놓을 수 있어요`);
+    const map = document.getElementById('island-map');
+    const inner = map?.querySelector('.map-inner');
+    const mid = map && inner ? ((map.scrollLeft + map.clientWidth / 2 - inner.offsetLeft) / inner.offsetWidth) * MAP.w : MAP.w / 2;
+    const x = Math.round(clamp(mid + (Math.random() - 0.5) * 40, PROP_X[0], PROP_X[1]));
+    stock[p.id] -= 1;
+    if (!stock[p.id]) delete stock[p.id];
+    s.island.decor.placed.push({ id: p.id, k, x, d: 0.6, f: 0, s: 1, on: false });
+    ctx.ui.decor.sel = s.island.decor.placed.length - 1;
+    commit();
+    chime('ok');
+    rerender();
+  },
+
+  'decor.flip': () => {
+    const p = ctx.state.island.decor.placed[ctx.ui.decor?.sel];
+    if (!p) return;
+    p.f = p.f ? 0 : 1;
+    commit();
+    rerender();
+  },
+  'decor.size': () => {
+    const p = ctx.state.island.decor.placed[ctx.ui.decor?.sel];
+    if (!p) return;
+    p.s = PROP_SIZES[(PROP_SIZES.indexOf(p.s) + 1) % PROP_SIZES.length];
+    commit();
+    rerender();
+  },
+  // 보관함으로 되돌리기
+  'decor.store': () => {
+    const s = ctx.state;
+    const i = ctx.ui.decor?.sel;
+    const p = s.island.decor.placed[i];
+    if (!p) return;
+    s.island.decor.placed.splice(i, 1);
+    s.island.decor.stock[p.id] = Math.min(99, (s.island.decor.stock[p.id] || 0) + 1);
+    ctx.ui.decor.sel = null;
+    commit();
+    rerender();
+  },
+
+  // 소품을 누르면: 통통 · 흔들흔들 · 켜고 끄기 · 편지 · 표지판
+  'prop.tap': (el) => {
+    const s = ctx.state;
+    const p = s.island.decor.placed[Number(el.dataset.arg)];
+    const def = p && propById(p.id);
+    if (!def) return;
+    if (def.react === 'toggle') {
+      p.on = !p.on;
+      commit();
+      chime('soft');
+      rerender();
+      return;
+    }
+    poke(el, def.react);
+    chime('soft');
+    if (def.react === 'letter') {
+      const here = RESIDENTS.filter((r) => s.island.residents[r.id]);
+      const r = here[Math.floor(Math.random() * here.length)];
+      toast(r ? `💌 ${r.name}의 편지: “${r.line}”` : '💌 아직 편지가 없어요. 주민이 이사 오면 편지를 보내요');
+    } else if (def.react === 'sign') {
+      const info = isleInfo(s, p.k);
+      toast(`🪧 ${info.name}${state_nation(s)}에 오신 걸 환영해요!`);
+    }
   },
 
   // 주민의 부탁 들어주기 → 보상 + 우정 하트

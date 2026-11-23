@@ -6,6 +6,7 @@ import { leafTree } from './leaves.js';
 import { bloomArt } from './blooms.js';
 import { ornamentArt } from './ornaments.js';
 import { spiritArt } from './spirit.js';
+import { propArt } from './props.js';
 import { buildingArt, constructionArt, levelBadge, upgradeRing } from './buildings.js';
 import { HUES, placed } from '../data/items/index.js';
 
@@ -17,6 +18,13 @@ export const islandTop = (x) => n(300 + 20 * ((x - MID) / 440) ** 2);
 
 // 건물 자리 (세계수 뿌리를 피해 양옆에 넷씩)
 export const LOTS = [60, 134, 208, 282, 618, 692, 766, 840].map((x) => ({ x, y: islandTop(x) }));
+
+// 섬 윗면 풀밭의 깊이: 건물은 뒤쪽 가장자리(islandTop)에 서고, 그 앞 풀밭에 소품을 자유롭게 놓는다.
+// 소품 자리는 { x, d } — d는 풀밭 안쪽(0, 건물 쪽)부터 앞쪽(1)까지
+export const GROUND = 34;
+export const PROP_X = [24, 876];
+export const propY = (x, d) => n(islandTop(x) + 3 + d * (GROUND - 8));
+export const propScale = (d, s = 1) => n(1.3 * s * (0.86 + 0.14 * d)); // 건물(1.25배)과 어울리는 크기, 안쪽일수록 조금 작게 (원근)
 
 // paint: 움직이지 않는 구름만 붓 질감 (움직이는 구름은 매 프레임 다시 계산되지 않게 빼 둔다)
 const puff = (x, y, s, o = 0.95, paint = true) =>
@@ -47,30 +55,41 @@ function island(uid, th) {
   const r = rng('island-ground');
   let topEdge = '';
   let cliffEdge = '';
+  let frontEdge = '';
   for (let x = -10; x <= MAP.w + 10; x += 30) {
     topEdge += ` L${x} ${islandTop(x)}`;
-    cliffEdge += ` L${x} ${n(islandTop(x) + 12)}`;
+    cliffEdge += ` L${x} ${n(islandTop(x) + GROUND - 4)}`;
   }
+  for (let x = MAP.w + 10; x >= -10; x -= 30) frontEdge += ` L${x} ${n(islandTop(x) + GROUND)}`;
   const fall = (x, w) => {
-    const y0 = islandTop(x) + 14;
+    const y0 = islandTop(x) + GROUND;
     return `<path d="M${x} ${y0} q-2 ${n((MAP.h - y0) / 2)} ${-3 - w} ${MAP.h - y0 + 10} h${w * 2 + 3} q0 ${n(-(MAP.h - y0) / 2)} ${-w} ${n(-(MAP.h - y0) - 10)}Z" fill="#eef8ff" opacity=".85" class="shimmer"/>`;
   };
   return (
     `<defs>${linear(`irk-${uid}`, [[0, '#8a6e52'], [0.5, '#6b5440'], [1, '#4a3a2c']])}${linear(`ig-${uid}`, [[0, th.grass[0]], [1, th.grass[1]]])}</defs>` +
     // 아래 바위 절벽 (가운데가 깊게)
-    `<g filter="${PAINT}"><path d="M-10 ${n(islandTop(-10) + 12)}${cliffEdge} L${MAP.w + 10} ${n(islandTop(MAP.w + 10) + 30)} Q760 360 600 376 L300 376 Q140 360 -10 ${n(islandTop(-10) + 30)}Z" fill="url(#irk-${uid})"/>` +
+    `<g filter="${PAINT}"><path d="M-10 ${n(islandTop(-10) + GROUND - 4)}${cliffEdge} L${MAP.w + 10} ${n(islandTop(MAP.w + 10) + GROUND + 14)} Q760 372 600 382 L300 382 Q140 372 -10 ${n(islandTop(-10) + GROUND + 14)}Z" fill="url(#irk-${uid})"/>` +
     `<path d="M40 338 Q200 350 330 354 M520 352 Q700 348 860 336 M200 366 Q450 378 700 366" fill="none" stroke="#3d2f24" stroke-width="1.2" opacity=".4"/></g>` +
     fall(26, 5) + fall(874, 6) + fall(330, 3) + fall(570, 4) +
     puff(60, 382, 1.4) + puff(240, 392, 1.6) + puff(450, 396, 1.8) + puff(660, 392, 1.6) + puff(850, 384, 1.4) +
     // 윗면 풀밭
-    `<path d="M-10 ${islandTop(-10)}${topEdge} L${MAP.w + 10} ${islandTop(MAP.w + 10) + 16} L-10 ${islandTop(-10) + 16}Z" fill="url(#ig-${uid})" filter="${PAINT}"/>` +
+    `<path d="M-10 ${islandTop(-10)}${topEdge}${frontEdge}Z" fill="url(#ig-${uid})" filter="${PAINT}"/>` +
+    // 풀밭 앞 가장자리 (흙 띠) · 윗면 결
+    `<path d="M${MAP.w + 10} ${n(islandTop(MAP.w + 10) + GROUND)}${frontEdge}" fill="none" stroke="#5a7a3a" stroke-width="3" opacity=".55"/>` +
+    times(36, (i) => {
+      const x = n(10 + i * 25 + r() * 10);
+      return `<ellipse cx="${x}" cy="${n(islandTop(x) + 8 + r() * (GROUND - 14))}" rx="${n(8 + r() * 10)}" ry="${n(1.6 + r())}" fill="${i % 2 ? th.rim : '#000'}" opacity="${i % 2 ? 0.25 : 0.06}"/>`;
+    }) +
     `<path d="M-10 ${islandTop(-10)}${topEdge}" fill="none" stroke="${th.rim}" stroke-width="1.6" opacity=".75"/>` +
     times(60, (i) => {
       const x = n(4 + i * 15 + r() * 6);
       const y = n(islandTop(x) + 1 + r() * 3);
       return `<path d="M${x} ${y} q-1.5 -4 -3.5 -6 M${x} ${y} q0 -5 .8 -8 M${x} ${y} q1.4 -3.5 3.2 -5.5" stroke="${th.rim}" stroke-width=".9" fill="none" stroke-linecap="round" opacity=".7"/>`;
     }) +
-    times(22, (i) => `<circle cx="${n(r() * MAP.w)}" cy="${n(304 + r() * 10)}" r="1.4" fill="${['#fff', '#ffe08a', '#ffc6d9'][i % 3]}"/>`)
+    times(26, (i) => {
+      const x = n(r() * MAP.w);
+      return `<circle cx="${x}" cy="${n(islandTop(x) + 4 + r() * (GROUND - 8))}" r="1.4" fill="${['#fff', '#ffe08a', '#ffc6d9'][i % 3]}"/>`;
+    })
   );
 }
 
@@ -87,18 +106,47 @@ const lockedLot = (x, y) =>
 const STROLL = [98, 172, 246, 352, 548, 656, 730, 804];
 
 // 우정 하트 3개부터 꽃 화관, 5개(단짝)면 나비넥타이도 (core/island.js CROWN_AT, HEART_MAX)
-function residentsArt(residents, tree, uid) {
+// 벤치(소품)가 있으면 앞에서부터 주민이 하나씩 앉는다
+function residentsArt(residents, tree, uid, benches = []) {
   return residents
     .map((r, i) => {
-      const x = STROLL[i % STROLL.length];
-      const y = islandTop(x) + 4;
-      const dur = (7 + (i % 3) * 2.5).toFixed(1);
       const wardrobe = (r.hearts || 0) >= 3 ? { hat: 'hat-flower', ...((r.hearts || 0) >= 5 ? { neck: 'neck-bow' } : {}) } : {};
+      const light = { color: '#fff1d6', wash: 0.04, halo: 0.08 };
+      const b = benches[i];
+      if (b) {
+        const sc = propScale(b.d, b.s);
+        return `<g class="sit">${spiritArt({ x: b.x, y: n(propY(b.x, b.d) - 9 * sc), scale: n(0.25 * sc), mood: 'happy', wardrobe, hues: {}, tree, uid: `${uid}-r${i}`, body: r.color, light })}</g>`;
+      }
+      const x = STROLL[i % STROLL.length];
+      const y = islandTop(x) + 10;
+      const dur = (7 + (i % 3) * 2.5).toFixed(1);
       return `<g class="stroll" style="animation-duration:${dur}s;animation-delay:-${(i * 1.7).toFixed(1)}s">` +
-        spiritArt({ x, y, scale: 0.34, mood: 'happy', wardrobe, hues: {}, tree, uid: `${uid}-r${i}`, body: r.color, light: { color: '#fff1d6', wash: 0.04, halo: 0.08 } }) +
+        spiritArt({ x, y, scale: 0.34, mood: 'happy', wardrobe, hues: {}, tree, uid: `${uid}-r${i}`, body: r.color, light }) +
         `</g>`;
     })
     .join('');
+}
+
+// 놓은 소품: 앞쪽(d가 큰 것)일수록 나중에 그려 앞에 보인다.
+// props: [{ i, id, x, d, f, s, on }], sel: 고른 소품 번호, editing: 꾸미기 모드
+function propsArt(props, { uid, sel, editing, lit, emblem }) {
+  return [...props]
+    .sort((a, b) => a.d - b.d)
+    .map((p) => {
+      const y = propY(p.x, p.d);
+      const sc = propScale(p.d, p.s);
+      const mark = p.i === sel ? `<ellipse class="prop-sel" cx="0" cy="1" rx="${n(22 * sc)}" ry="${n(5 * sc)}" fill="#fff" opacity=".28" stroke="#fff" stroke-width="1.4" stroke-dasharray="4 3"/>` : '';
+      const act = editing ? '' : ` data-act="prop.tap" data-arg="${p.i}"`;
+      return `<g class="prop${p.i === sel ? ' sel' : ''}" data-prop="${p.i}"${act} transform="translate(${p.x} ${y})">${mark}<g class="prop-body" transform="scale(${p.f ? -sc : sc} ${sc})"><g class="prop-anim">${propArt(p.id, { uid: `${uid}-p${p.i}`, on: p.on, lit, emblem })}</g></g><rect x="-26" y="-56" width="52" height="60" fill="transparent"/></g>`;
+    })
+    .join('');
+}
+
+// 꾸미기 모드: 소품을 놓을 수 있는 풀밭에 점선 격자
+function placeGrid() {
+  let s = '';
+  for (const d of [0, 0.5, 1]) for (let x = PROP_X[0]; x <= PROP_X[1]; x += 24) s += `<circle cx="${x}" cy="${propY(x, d)}" r="1.3" fill="#fff" opacity=".55"/>`;
+  return `<g class="place-grid">${s}</g>`;
 }
 
 // 축제 깃발: 하늘을 가로지르는 두 줄 (세계수 뒤)
@@ -165,7 +213,8 @@ function nightCover(phase, uid, lots) {
 
 // lots: [{ state: 'built' | 'upgrading' | 'building' | 'empty' | 'locked', id, lv, ratio }], residents: [{ id, color }]
 // festival: core/festivals.js festivalOn() (없으면 null), hour: 지금 시각 (저녁 · 밤 그림)
-export function islandMap({ growth, stage, tree, equipped = {}, custom = {}, mood = 'calm', lots = [], residents = [], theme = {}, spirit = true, festival = null, hour = 12 }) {
+// props: 놓은 소품 (위 propsArt), sel · editing: 꾸미기 모드, emblem: 나라 문장 (깃발 소품)
+export function islandMap({ growth, stage, tree, equipped = {}, custom = {}, mood = 'calm', lots = [], residents = [], theme = {}, spirit = true, festival = null, hour = 12, props = [], sel = null, editing = false, emblem = '' }) {
   const phase = timeOfDay(hour);
   const th = { ...DEFAULT_THEME, ...theme };
   const uid = nextUid();
@@ -192,9 +241,13 @@ export function islandMap({ growth, stage, tree, equipped = {}, custom = {}, moo
     (stage >= 2 ? tint(bloomArt(one('bloom'), t.clusters, uid), uid, hue(one('bloom'))) + tint(ornamentArt(one('ornament'), t.anchors, uid), uid, hue(one('ornament'))) : '') +
     `</g>` +
     lotArt +
+    (editing ? placeGrid() : '') +
+    propsArt(props, { uid, sel, editing, lit: phase !== 'day', emblem }) +
     nightCover(phase, uid, lots) +
-    residentsArt(residents, tree, uid) +
-    (spirit ? spiritArt({ x: MID + 74, y: islandTop(MID + 74) + 2, scale: 0.5, mood, wardrobe: Object.fromEntries(['hat', 'face', 'neck', 'hand'].map((s) => [s, one(s)])), hues: {}, tree, uid, motion: one('motion'), light: { color: '#fff1d6', wash: 0.06, halo: 0.12 } }) : '') +
+    // 밤에도 가로등 · 모닥불 빛은 밝게
+    (phase !== 'day' ? props.filter((p) => p.id === 'lamp' || p.id === 'campfire').map((p) => glow(`pl-${uid}-${p.i}`, p.x, propY(p.x, p.d) - (p.id === 'lamp' ? 42 : 6) * propScale(p.d, p.s), 30, '#ffd27a', phase === 'night' ? 0.6 : 0.3)).join('') : '') +
+    residentsArt(residents, tree, uid, props.filter((p) => p.id === 'bench').sort((a, b) => a.x - b.x)) +
+    (spirit ? spiritArt({ x: MID + 74, y: islandTop(MID + 74) + 8, scale: 0.5, mood, wardrobe: Object.fromEntries(['hat', 'face', 'neck', 'hand'].map((s) => [s, one(s)])), hues: {}, tree, uid, motion: one('motion'), light: { color: '#fff1d6', wash: 0.06, halo: 0.12 } }) : '') +
     (festival ? festivalParticles(festival.particle) : '') +
     `</svg>`
   );

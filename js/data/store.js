@@ -6,6 +6,7 @@ import { DEFAULT_SUBJECTS } from './lists.js';
 import { buildingById } from './buildings.js';
 import { isleName, EMBLEMS } from './isles.js';
 import { vocabByWord } from './vocab-n3.js';
+import { propById, PROP_SIZES, MAX_PROPS } from './props.js';
 import { todayKey } from '../core/dates.js';
 
 const KEY = 'sprout-diary-v1'; // 이름이 바뀌어도 예전 데이터를 이어 쓰기 위해 그대로 둔다
@@ -77,7 +78,8 @@ export function defaultState() {
     weekClaims: [], // 보상 받은 주 시작일
     achievements: {}, // { id: 'YYYY-MM-DD' }
     // 나의 섬: 건물 자리 8곳 (features/island.js, core/island.js)
-    island: { lots: Array(8).fill(null), residents: {}, giftDay: '', isles: [], req: { date: '', done: [] }, hearts: {}, nation: { name: '', emblem: '' } },
+    island: { lots: Array(8).fill(null), residents: {}, giftDay: '', isles: [], req: { date: '', done: [] }, hearts: {}, nation: { name: '', emblem: '' }, decor: { stock: {}, placed: [] } },
+    // decor: 섬 소품 (data/props.js) — stock: 보관함 { 소품 id: 개수 }, placed: 놓은 소품 [{ id, k: 섬 번호, x, d: 풀밭 깊이 0~1, f: 뒤집기, s: 크기, on: 켜짐 }]
     // isles: 완성한 세계수마다 생기는 새 섬 { species, name, date, lots }
     // req: 오늘 들어준 주민 부탁, hearts: 주민마다 우정 하트 0~5, nation: 섬이 2개부터 정하는 나라 이름 · 문장
     festivals: {}, // 계절 축제 선물 받은 기록 { 'autumn-2026': 'YYYY-MM-DD' } (core/festivals.js)
@@ -254,6 +256,17 @@ function sanitize(raw) {
       return isDate(r.date) ? { date: r.date, done: strs(r.done, 8) } : { date: '', done: [] };
     })(),
     hearts: Object.fromEntries(Object.entries(obj(obj(raw.island).hearts)).filter(([k, v]) => /^[a-z]{2,10}$/.test(k) && Number.isFinite(v)).map(([k, v]) => [k, clampNum(v, 0, 0, 5)])),
+    decor: (() => {
+      const dc = obj(obj(raw.island).decor);
+      const islesN = 1 + isles.length;
+      return {
+        stock: Object.fromEntries(Object.entries(obj(dc.stock)).filter(([k, v]) => propById(k) && Number.isFinite(v) && v > 0).map(([k, v]) => [k, clampNum(Math.floor(v), 0, 0, 99)])),
+        placed: arr(dc.placed)
+          .filter((p) => p && propById(p.id) && Number.isInteger(p.k) && p.k >= 0 && p.k < islesN)
+          .slice(0, MAX_PROPS * islesN)
+          .map((p) => ({ id: p.id, k: p.k, x: clampNum(p.x, 450, 24, 876), d: clampNum(p.d, 0.5, 0, 1), f: p.f ? 1 : 0, s: PROP_SIZES.includes(p.s) ? p.s : 1, on: p.on === true })),
+      };
+    })(),
     nation: (() => {
       const x = obj(obj(raw.island).nation);
       return { name: str(x.name, '', 12).trim(), emblem: EMBLEMS.includes(x.emblem) ? x.emblem : '' };

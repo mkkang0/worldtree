@@ -611,3 +611,40 @@ body.immersive main { padding-top: 6px; padding-bottom: calc(28px + env(safe-are
 .quiz-links { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .quiz-links .garden-link { padding: 12px; gap: 8px; }
 .quiz-links .garden-link .em { font-size: 1.3rem; }
+
+/* 섬 꾸미기: 소품 자유 배치 */
+.map-tools { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: -4px 0 12px; }
+.map-tools .tiny { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.map-tools .btn { flex: none; }
+.decor-top { padding: 4px 0; }
+.island.editing .lot-btn { pointer-events: none; }
+.island.editing .prop { cursor: grab; touch-action: none; }
+.island.editing .prop.dragging { cursor: grabbing; }
+.island.editing .map-inner { box-shadow: 0 0 0 3px #e8c36a, 0 16px 36px rgba(0, 0, 0, .22); }
+.prop[data-act] { cursor: pointer; }
+.prop-sel { animation: glow-pulse 1.6s ease-in-out infinite; }
+.prop-anim { transform-box: fill-box; transform-origin: center bottom; }
+.prop-anim.poke { animation: prop-poke .5s ease; }
+.prop-anim.wiggle { animation: prop-wiggle .7s ease; }
+.burst { animation: burst-up 1.2s ease-out forwards; }
+.flicker { transform-box: fill-box; transform-origin: center bottom; animation: flicker .5s ease-in-out infinite alternate; }
+@keyframes prop-poke { 0% { transform: scale(1); } 30% { transform: scale(1.12, .86); } 60% { transform: scale(.94, 1.1); } 100% { transform: scale(1); } }
+@keyframes prop-wiggle { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-7deg); } 45% { transform: rotate(6deg); } 70% { transform: rotate(-3deg); } }
+@keyframes burst-up { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-26px); opacity: 0; } }
+@keyframes flicker { from { transform: scale(1, 1); } to { transform: scale(.92, 1.08); } }
+.decor-hint { margin: 2px 0 12px; }
+.decor-tools .dt-head { display: flex; align-items: center; gap: 10px; }
+.decor-tools .dt-art svg { width: 48px; height: 48px; display: block; }
+.decor-tools b { display: block; }
+.dt-btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+.dt-btns .btn { padding-left: 2px; padding-right: 2px; font-size: .74rem; }
+.decor-drawer .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; }
+.decor-drawer .seg button { font: inherit; font-weight: 700; padding: 9px 4px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-solid); color: var(--ink); cursor: pointer; }
+.decor-drawer .seg button.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.ptiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.ptile { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 4px; border-radius: 14px; background: var(--surface-solid); border: 1px solid var(--line); font: inherit; color: var(--ink); cursor: pointer; text-align: center; }
+.ptile .pt-art svg { width: 56px; height: 56px; display: block; }
+.ptile b { font-size: .76rem; line-height: 1.2; }
+.ptile small { font-size: .64rem; color: var(--muted); line-height: 1.2; min-height: 1.6em; }
+.ptile.shop .btn { width: 100%; min-height: 32px; padding: 4px; font-size: .72rem; }
+.ptile-empty { grid-column: 1 / -1; text-align: center; }

@@ -122,6 +122,7 @@ export function render() {
 export function go(tab, sub = '') {
   Object.assign(ctx.ui, { tab, sub, bubble: '', mealDay: '', calDay: '', more: {}, quiz: null, vquiz: null, islandScroll: null });
   if (tab !== 'island') ctx.ui.isle = 0; // 섬 화면을 나가면 다음엔 본섬부터
+  ctx.ui.decor = null; // 꾸미기 모드도 끝
   if (tab !== 'shop') ctx.ui.preview = {};
   rerender();
   window.scrollTo(0, 0);
